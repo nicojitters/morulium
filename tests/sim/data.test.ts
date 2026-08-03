@@ -109,4 +109,25 @@ describe('data integrity', () => {
     expect(LOCI['carapace']!.alleles[0]).toBe('cara_bare');
     expect(LOCI['locomotion']!.alleles[0]).toBe('loco_plain');
   });
+
+  it('has the eyes locus with 4 alleles, baseline eyes_plain listed first', () => {
+    expect(LOCI['eyes']).toBeDefined();
+    expect(LOCI['eyes']!.type).toBe('qualitative');
+    expect(LOCI['eyes']!.alleles).toEqual(['eyes_plain', 'eyes_bright', 'eyes_multi', 'eyes_singular']);
+  });
+
+  it('eyes alleles have expected rarity + draw weights', () => {
+    expect(ALLELES['eyes_plain']!.rarityWeight).toBe(0);
+    expect(ALLELES['eyes_plain']!.drawWeight).toBe(180);
+    expect(ALLELES['eyes_plain']!.dominance).toBe('dominant');
+
+    expect(ALLELES['eyes_bright']!.rarityWeight).toBe(1);
+    expect(ALLELES['eyes_bright']!.dominance).toBe('dominant');
+
+    expect(ALLELES['eyes_multi']!.rarityWeight).toBe(3);
+    expect(ALLELES['eyes_multi']!.dominance).toBe('dominant');
+
+    expect(ALLELES['eyes_singular']!.rarityWeight).toBe(3);
+    expect(ALLELES['eyes_singular']!.dominance).toBe('recessive');
+  });
 });

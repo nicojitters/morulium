@@ -101,6 +101,12 @@ const QUALITATIVE: Allele[] = [
   qual('app_spinneret', 'appendage', 'Spinneret', 3, 'dominant', { GUI: 2 },   'Cloak'),
   qual('app_none',      'appendage', 'None',      0, 'recessive'),
 
+  // eyes — perception slot; baseline first
+  qual('eyes_plain',    'eyes', 'Plain Eyes',    0, 'dominant',  { GUI: 1 },          undefined, 180),
+  qual('eyes_bright',   'eyes', 'Bright Eyes',   1, 'dominant',  { INT: 1 }),
+  qual('eyes_multi',    'eyes', 'Multi-Facet',   3, 'dominant',  { INT: 2 }),
+  qual('eyes_singular', 'eyes', 'Singular Eye',  3, 'recessive', { GUI: 3, INT: -1 }),
+
   // aberration (rare recessive tree — game spec §2)
   qual('ab_none',       'aberration', 'None',       0, 'dominant',  {},          undefined, 60),
   qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock',   5),

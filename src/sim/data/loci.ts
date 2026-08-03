@@ -24,6 +24,7 @@ export const LOCI: Readonly<Record<string, Locus>> = Object.freeze({
   carapace:         locus('carapace',         'qualitative'),
   locomotion:       locus('locomotion',       'qualitative'),
   appendage:        locus('appendage',        'qualitative'),
+  eyes:             locus('eyes',             'qualitative'),
   aberration:       locus('aberration',       'qualitative'),
   palette:          locus('palette',          'qualitative'),
 });
