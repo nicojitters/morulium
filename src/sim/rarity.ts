@@ -1,20 +1,22 @@
 import type { Genome, Tier } from './types';
-import { ALLELES } from './data/loci';
+import { LOCI } from './data/loci';
+import { resolveExpressed } from './genome';
 
 /**
- * Sum rarityWeight over both alleles at every locus. Returning only a tier
- * (never the score) keeps the number hidden from any caller — principle 5.
+ * Rarity sums the expressed allele's rarityWeight over every QUALITATIVE locus.
+ * Quantitative loci contribute 0 — rarity and combat power are independent axes.
+ * A recessive carrier scores 0 at that locus because the recessive isn't expressed.
+ * Returns both the raw score (needed for tuning / verify harness) and the tier.
  */
-export function computeRarity(genome: Genome): Tier {
+export function computeRarity(genome: Genome): { score: number; tier: Tier } {
   let score = 0;
-  for (const pair of Object.values(genome.loci)) {
-    for (const alleleId of pair) {
-      const allele = ALLELES[alleleId];
-      if (!allele) throw new Error(`unknown allele in genome: ${alleleId}`);
-      score += allele.rarityWeight;
-    }
+  for (const [locusId, pair] of Object.entries(genome.loci)) {
+    const locus = LOCI[locusId];
+    if (!locus) throw new Error(`unknown locus in genome: ${locusId}`);
+    if (locus.type !== 'qualitative') continue;
+    score += resolveExpressed(locus, pair).rarityWeight;
   }
-  return tierForScore(score);
+  return { score, tier: tierForScore(score) };
 }
 
 function tierForScore(score: number): Tier {

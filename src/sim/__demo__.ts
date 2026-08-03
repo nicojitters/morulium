@@ -20,9 +20,10 @@ export function runDemo(seed = 1): DemoRow[] {
     const rng = createRng(rowSeed);
     const genome = rollGenome(rng);
     const phen = expressPhenotype(genome);
+    const { tier } = computeRarity(genome);
     rows.push({
       seed: rowSeed,
-      tier: computeRarity(genome),
+      tier,
       base: computeBaseStats(genome),
       current: computeCurrentStats(genome, 20),
       expressed: phen.expressed,

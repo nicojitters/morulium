@@ -6,11 +6,13 @@ function genome(pairs: Record<string, [string, string]>): Genome {
   return { loci: pairs };
 }
 
-// A minimum-score genome from the current allele table: every quantitative locus
-// uses its 0-weight allele; every qualitative locus uses its lowest-weight allele.
-// Score = head_mandible(1) + cara_chitin(1) + loco_bulk(1) + app_none(0) + ab_none(0) + pal_ash(0) = 3.
-// (There is no 0-weight allele for head/carapace/locomotion in the MVP table.)
-const MIN_SCORE_LOCI: Record<string, [string, string]> = {
+// A "min-qualitative" genome: every qualitative locus expresses its lowest-weight allele.
+// Under the NEW allele table order, aberration is [ab_none, ab_voltaic, ab_corrosive],
+// palette is [pal_ash, pal_rust, pal_moss, pal_bloom].
+// Expressed weights: head_mandible=1, cara_chitin=1, loco_bulk=1 (recessive but homozygous),
+// app_none=0 (recessive homozygous), ab_none=0 (dominant homozygous), pal_ash=0.
+// Score = 1 + 1 + 1 + 0 + 0 + 0 = 3 → Variant.
+const MIN_QUALITATIVE: Record<string, [string, string]> = {
   musculature:      ['mus_neutral', 'mus_neutral'],
   neural_tissue:    ['neu_neutral', 'neu_neutral'],
   predator_drive:   ['prd_neutral', 'prd_neutral'],
@@ -27,30 +29,55 @@ const MIN_SCORE_LOCI: Record<string, [string, string]> = {
   palette:          ['pal_ash',       'pal_ash'],
 };
 
-describe('computeRarity', () => {
-  it('the minimum-weight genome in the current table lands in Variant (score 3)', () => {
-    expect(computeRarity(genome(MIN_SCORE_LOCI))).toBe('Variant');
+describe('computeRarity — expressed-only, qualitative-only', () => {
+  it('returns { score, tier } for the min-qualitative genome (score 3 → Variant)', () => {
+    const result = computeRarity(genome(MIN_QUALITATIVE));
+    expect(result.score).toBe(3);
+    expect(result.tier).toBe('Variant');
   });
 
-  it('two Apex aberration alleles push the genome to Apex', () => {
-    // 20 (two ab_voltaic) + 3 (min qualitative baseline) = 23 → Apex
-    const g = genome({ ...MIN_SCORE_LOCI, aberration: ['ab_voltaic', 'ab_voltaic'] });
-    expect(computeRarity(g)).toBe('Apex');
-  });
-
-  it('threshold boundaries: 2→Basic, 3→Variant, 10→Variant, 11→Adapted, 14→Adapted, 15→Evolved, 19→Evolved, 20→Apex', () => {
-    // We can't fabricate an arbitrary total score with only the real allele table,
-    // so unit-test the pure tier function via an exported helper if needed. For now,
-    // spot-check the boundaries the current table can actually reach.
-    // Score 6 → Variant (min genome above: two alleles per locus).
-    expect(computeRarity(genome(MIN_SCORE_LOCI))).toBe('Variant');
-    // Add one Adapted-weight allele (weight 3, homozygous) to lift score by +6 → 12 → Adapted.
-    expect(computeRarity(genome({ ...MIN_SCORE_LOCI, musculature: ['mus_strong', 'mus_strong'] }))).toBe('Adapted');
-    // Add two homozygous Adapted alleles → +12 → 18 → Evolved.
-    expect(computeRarity(genome({
-      ...MIN_SCORE_LOCI,
+  it('quantitative-only spike does not raise score', () => {
+    // Adding heavy quantitative alleles must not change the score.
+    const base = computeRarity(genome(MIN_QUALITATIVE)).score;
+    const withSpike = computeRarity(genome({
+      ...MIN_QUALITATIVE,
       musculature: ['mus_strong', 'mus_strong'],
       neural_tissue: ['neu_dense', 'neu_dense'],
-    }))).toBe('Evolved');
+    })).score;
+    expect(withSpike).toBe(base);
+  });
+
+  it('recessive carrier scores 0 at that locus (expressed-only)', () => {
+    // ab_none (dominant) + ab_voltaic (recessive) → expresses ab_none → weight 0
+    const carrier = computeRarity(genome({
+      ...MIN_QUALITATIVE,
+      aberration: ['ab_none', 'ab_voltaic'],
+    }));
+    expect(carrier.score).toBe(3); // unchanged from baseline
+  });
+
+  it('homozygous ab_voltaic expresses and adds its full weight', () => {
+    // ab_voltaic homozygous expresses ab_voltaic (weight 10) → total 3 + 10 = 13 → Adapted
+    const wild = computeRarity(genome({
+      ...MIN_QUALITATIVE,
+      aberration: ['ab_voltaic', 'ab_voltaic'],
+    }));
+    expect(wild.score).toBe(13);
+    expect(wild.tier).toBe('Adapted');
+  });
+
+  it('a genome loaded with expressed Adapted alleles hits Evolved or Apex', () => {
+    // Expressed: head_maw(3), cara_bone(3), loco_sprint(3), app_stinger(3), ab_voltaic(10), pal_ash(0)
+    // Score = 3+3+3+3+10+0 = 22 → Apex
+    const loaded = computeRarity(genome({
+      ...MIN_QUALITATIVE,
+      head: ['head_maw', 'head_maw'],
+      carapace: ['cara_bone', 'cara_bone'],
+      locomotion: ['loco_sprint', 'loco_sprint'],
+      appendage: ['app_stinger', 'app_stinger'],
+      aberration: ['ab_voltaic', 'ab_voltaic'],
+    }));
+    expect(loaded.score).toBe(22);
+    expect(loaded.tier).toBe('Apex');
   });
 });
