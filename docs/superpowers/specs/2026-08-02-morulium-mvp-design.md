@@ -25,7 +25,7 @@ The game spec is the source of truth for gameplay rules. This doc does not resta
 | Stat set | 5 (PWR / VIT / SPD / INT / GUI) | Game spec §1; villain fantasy lives in flavor, not a 6th stat |
 | Level-cap contribution | ~+40% over base | Keeps genetics king (principle 2) |
 | Workflow | Milestone-by-milestone with user review | Playtest-driven; catches drift early on a feel-sensitive game |
-| Deferred | Paid avatar pipeline, gear, Egg Scanner, Codex, additional regions, market/multiplayer | Per game spec §13. `PhenotypeDescriptor` shape kept ready for later avatar hookup |
+| Deferred | Paid avatar pipeline, gear, Sequencer, the Registry, additional regions, market/multiplayer | Per game spec §13. `PhenotypeDescriptor` shape kept ready for later avatar hookup |
 
 ## Project layout
 
@@ -40,14 +40,14 @@ morulium/
       stats.ts          # computeStats, growth affinity, level scaling
       rarity.ts         # computeRarity
       mission.ts        # resolveMission (best-contributor-per-stat)
-      economy.ts        # jobs tick, credits, garrison flare
+      economy.ts        # occupations tick, serum, garrison flare
     render/
       sprite.tsx        # renderSprite(phenotype) → SVG React component
     state/
-      store.ts          # Zustand — roster, region, credits, day, current screen
+      store.ts          # Zustand — colony, region, serum, day, current screen
       persist.ts        # localStorage save/load behind a swappable interface
     ui/
-      screens/          # Home, Roster, Hatch, Breed, Mission, Grinder
+      screens/          # Vivarium, Colony, Decant, Breed, Incursion, Vat
       components/       # UnitCard, StatBar, LiveTicker, TagChip
     App.tsx
     main.tsx
@@ -84,7 +84,7 @@ Each milestone leaves the app in a working state and represents a real step chan
 
 | # | Milestone | Game spec steps | Deliverable for review |
 |---|---|---|---|
-| **M1** | Sim foundations — genome, stats, rarity | 1–3 | Printed output (via Vitest or a tiny Vite page — decide in M1's implementation plan) of 50 hatched monsters with genomes, stats, tiers. Heavy Vitest coverage on `sim/*`. Review target: does the tradeoff distribution look right? |
+| **M1** | Sim foundations — genome, stats, rarity | 1–3 | Printed output (via Vitest or a tiny Vite page — decide in M1's implementation plan) of 50 decanted specimens with genomes, stats, tiers. Heavy Vitest coverage on `sim/*`. Review target: does the tradeoff distribution look right? |
 | **M2** | Procedural sprite renderer | 4 | Gallery page: 50 sprites on screen. Visual quality gate before UI work. Review target: does the art hold up? |
 | **M3** | The Colony + decanting UI | 5 | Zustand + localStorage, Colony screen, tag/sort/cull, Decant button, daily-Harvest mechanic. First "playable-shape" milestone. |
 | **M4** | Breeding | 6 | Breed screen, Mendelian + mutation + wear + generation, lineage on UnitCard. Review target: does breeding feel meaningful? |
@@ -95,8 +95,8 @@ Each milestone leaves the app in a working state and represents a real step chan
 ## Testing approach
 
 - **`sim/*`** — Vitest, real coverage. Invariant tests on `breed()` (allele count preserved, generation increments, mutation rate bounded), `computeStats`, rarity thresholds.
-- **`render/sprite.tsx`** — SVG snapshot tests over a fixed roster of seeded genomes. Cheap regression catcher.
-- **`state/store`** — focused reducer tests on tag/sort/trash/hatch/breed.
+- **`render/sprite.tsx`** — SVG snapshot tests over a fixed set of seeded genomes. Cheap regression catcher.
+- **`state/store`** — focused reducer tests on tag/sort/cull/decant/breed.
 - **`ui/*`** — smoke tests only (React Testing Library). Screen renders given a seeded store. No obsessive presentational tests — they slow UI iteration and rarely catch real bugs.
 - **No E2E harness for MVP.** Manual playtest at each milestone is faster feedback than Playwright right now.
 
