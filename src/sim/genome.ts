@@ -1,4 +1,4 @@
-import type { Genome, PhenotypeDescriptor, Allele } from './types';
+import type { Genome, PhenotypeDescriptor, Allele, Locus } from './types';
 import { LOCI, ALLELES } from './data/loci';
 import type { SeededRng } from './rng';
 import { weightedPick } from './pick';
@@ -18,33 +18,32 @@ export function rollGenome(rng: SeededRng): Genome {
   return { loci };
 }
 
-export function expressPhenotype(genome: Genome): PhenotypeDescriptor {
-  const expressed: Record<string, string> = {};
-
-  for (const [locusId, [a, b]] of Object.entries(genome.loci)) {
-    expressed[locusId] = pickExpressedAllele(a, b);
-  }
-
-  const paletteId = expressed['palette'];
-  if (!paletteId) throw new Error('genome has no palette locus');
-
-  return { expressed, palette: paletteId };
-}
-
-function pickExpressedAllele(aId: string, bId: string): string {
-  if (aId === bId) return aId;
+export function resolveExpressed(locus: Locus, pair: readonly [string, string]): Allele {
+  const [aId, bId] = pair;
   const a = ALLELES[aId];
   const b = ALLELES[bId];
-  if (!a || !b) throw new Error(`unknown allele: ${!a ? aId : bId}`);
+  if (!a) throw new Error(`unknown allele: ${aId}`);
+  if (!b) throw new Error(`unknown allele: ${bId}`);
+  if (aId === bId) return a;
 
-  // dominant vs recessive → dominant wins
-  if (a.dominance === 'dominant' && b.dominance === 'recessive') return aId;
-  if (b.dominance === 'dominant' && a.dominance === 'recessive') return bId;
+  const aDom = a.dominance === 'dominant';
+  const bDom = b.dominance === 'dominant';
+  if (aDom && !bDom) return a;
+  if (bDom && !aDom) return b;
 
-  // same dominance class (both dominant OR both recessive from mutation) →
-  // higher rarityWeight wins; ties break by lexicographic id ascending.
-  if (a.rarityWeight !== b.rarityWeight) {
-    return a.rarityWeight > b.rarityWeight ? aId : bId;
+  // same class (both dominant, or compound-het recessive from mutation):
+  // tie-break by position in locus.alleles — earlier = more dominant.
+  return locus.alleles.indexOf(aId) <= locus.alleles.indexOf(bId) ? a : b;
+}
+
+export function expressPhenotype(genome: Genome): PhenotypeDescriptor {
+  const expressed: Record<string, string> = {};
+  for (const [locusId, pair] of Object.entries(genome.loci)) {
+    const locus = LOCI[locusId];
+    if (!locus) throw new Error(`unknown locus in genome: ${locusId}`);
+    expressed[locusId] = resolveExpressed(locus, pair).id;
   }
-  return aId < bId ? aId : bId;
+  const paletteId = expressed['palette'];
+  if (!paletteId) throw new Error('genome has no palette locus');
+  return { expressed, palette: paletteId };
 }

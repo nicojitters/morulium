@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { rollGenome, expressPhenotype } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
-import { LOCI, ALLELES } from '../../src/sim/data/loci';
+import { LOCI } from '../../src/sim/data/loci';
 import type { Genome } from '../../src/sim/types';
 
 describe('rollGenome', () => {
@@ -82,42 +82,39 @@ describe('expressPhenotype', () => {
     expect(p.expressed.aberration).toBe('ab_none'); // recessive aberration hidden as carrier
   });
 
-  it('heterozygous two-dominants — higher rarityWeight wins', () => {
-    const p = expressPhenotype(g({
+  it('heterozygous two-dominants — allele that appears earlier in locus.alleles wins', () => {
+    // In head locus, alleles list is [head_maw, head_sensor, head_mandible].
+    // head_maw is earliest, so it beats head_sensor. head_sensor beats head_mandible.
+    const p1 = expressPhenotype(g({
       musculature: ['mus_neutral', 'mus_neutral'], neural_tissue: ['neu_neutral', 'neu_neutral'],
       predator_drive: ['prd_neutral', 'prd_neutral'], carapace_density: ['car_neutral', 'car_neutral'],
       metabolism: ['met_neutral', 'met_neutral'], sinew: ['sin_neutral', 'sin_neutral'],
       vigor: ['vig_neutral', 'vig_neutral'], acuity: ['acu_neutral', 'acu_neutral'],
-      head: ['head_maw', 'head_mandible'], // weights 3 vs 1
+      head: ['head_sensor', 'head_maw'], // pair order doesn't matter — head_maw is earlier in locus
       carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_sprint', 'loco_sprint'],
       appendage: ['app_stinger', 'app_stinger'],
       aberration: ['ab_none', 'ab_none'],
       palette: ['pal_ash', 'pal_ash'],
     }));
-    expect(p.expressed.head).toBe('head_maw');
-    // Verify ALLELES data assumption for this test:
-    expect(ALLELES['head_maw']!.rarityWeight).toBeGreaterThan(ALLELES['head_mandible']!.rarityWeight);
-  });
+    expect(p1.expressed['head']).toBe('head_maw');
 
-  it('tied rarityWeight — lexicographically smaller id wins', () => {
-    // head_maw (weight 3) vs head_sensor (weight 3): 'head_maw' < 'head_sensor'
-    const p = expressPhenotype(g({
+    const p2 = expressPhenotype(g({
       musculature: ['mus_neutral', 'mus_neutral'], neural_tissue: ['neu_neutral', 'neu_neutral'],
       predator_drive: ['prd_neutral', 'prd_neutral'], carapace_density: ['car_neutral', 'car_neutral'],
       metabolism: ['met_neutral', 'met_neutral'], sinew: ['sin_neutral', 'sin_neutral'],
       vigor: ['vig_neutral', 'vig_neutral'], acuity: ['acu_neutral', 'acu_neutral'],
-      head: ['head_sensor', 'head_maw'],
+      head: ['head_mandible', 'head_sensor'],
       carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_sprint', 'loco_sprint'],
       appendage: ['app_stinger', 'app_stinger'],
       aberration: ['ab_none', 'ab_none'],
       palette: ['pal_ash', 'pal_ash'],
     }));
-    expect(p.expressed.head).toBe('head_maw');
+    expect(p2.expressed['head']).toBe('head_sensor');
   });
 
-  it('palette is passed through as-is (uses expressed rule too)', () => {
+  it('palette expresses via the same rule (order-based tie-break)', () => {
     const p = expressPhenotype(g({
       musculature: ['mus_neutral', 'mus_neutral'], neural_tissue: ['neu_neutral', 'neu_neutral'],
       predator_drive: ['prd_neutral', 'prd_neutral'], carapace_density: ['car_neutral', 'car_neutral'],
@@ -126,8 +123,8 @@ describe('expressPhenotype', () => {
       head: ['head_mandible', 'head_mandible'], carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_bulk', 'loco_bulk'], appendage: ['app_none', 'app_none'],
       aberration: ['ab_none', 'ab_none'],
-      palette: ['pal_rust', 'pal_ash'], // both dominant; pal_ash (weight 0) vs pal_rust (weight 1) → pal_rust wins
+      palette: ['pal_rust', 'pal_ash'], // pal_ash is earlier in the palette locus → wins
     }));
-    expect(p.palette).toBe('pal_rust');
+    expect(p.palette).toBe('pal_ash');
   });
 });
