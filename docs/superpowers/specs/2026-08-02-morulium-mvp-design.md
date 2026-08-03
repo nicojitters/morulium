@@ -86,11 +86,11 @@ Each milestone leaves the app in a working state and represents a real step chan
 |---|---|---|---|
 | **M1** | Sim foundations — genome, stats, rarity | 1–3 | Printed output (via Vitest or a tiny Vite page — decide in M1's implementation plan) of 50 hatched monsters with genomes, stats, tiers. Heavy Vitest coverage on `sim/*`. Review target: does the tradeoff distribution look right? |
 | **M2** | Procedural sprite renderer | 4 | Gallery page: 50 sprites on screen. Visual quality gate before UI work. Review target: does the art hold up? |
-| **M3** | Roster + hatching UI | 5 | Zustand + localStorage, roster screen, tag/sort/trash, hatch button, daily-pull mechanic. First "playable-shape" milestone. |
+| **M3** | The Colony + decanting UI | 5 | Zustand + localStorage, Colony screen, tag/sort/cull, Decant button, daily-Harvest mechanic. First "playable-shape" milestone. |
 | **M4** | Breeding | 6 | Breed screen, Mendelian + mutation + wear + generation, lineage on UnitCard. Review target: does breeding feel meaningful? |
-| **M5** | Missions & fronts | 7 | One region, 3 fronts, hidden thresholds, best-contributor resolve, live ticker, qualitative feedback. First real gameplay loop. |
-| **M6** | Rest, injury, garrison economy | 8 | Rest state, Stim consumable, injury bench, Jobs income, under-garrison flare. Failure now has teeth. |
-| **M7** | Grinder + minimal Home | 9–10 | 10→1 fusion, auto-trash rules, Barracks / Medbay / roster cap. Full MVP + global tuning pass. |
+| **M5** | Incursions & fronts | 7 | One region, 3 fronts, hidden thresholds, best-contributor resolve, live ticker, qualitative feedback. First real gameplay loop. |
+| **M6** | Rest, injury, Occupation economy | 8 | Rest state, Stim consumable, injury bench, Occupation income, under-garrison flare. Failure now has teeth. |
+| **M7** | The Vat + minimal Vivarium | 9–10 | 10→1 Vat, auto-cull rules, Barracks / Medbay / Colony cap. Full MVP + global tuning pass. |
 
 ## Testing approach
 
@@ -107,7 +107,7 @@ These are not designed on paper. They will be resolved in context at the relevan
 1. **Sprite visual style** (M2) — palette ramps, part silhouettes, per-allele variance.
 2. **Live ticker feel** (M5) — pacing, SFX, "juice."
 3. **Exact tuning numbers** — allele weights, mission thresholds per front, mutation rate, wear rate, level curve, injury durations, credit rates. Game spec explicitly calls these placeholders. Seeded with reasonable defaults; tuned each playtest.
-4. **Auto-trash rule UX** (M3) — chip-based filter builder vs. simple predicate list.
+4. **Auto-cull rule UX** (M3) — chip-based filter builder vs. simple predicate list.
 5. **Garrison flare trigger** (M6) — time-based vs. mission-based.
 
 Anything else in the game spec is implemented as written. Any ambiguity found mid-milestone that isn't on this list triggers a stop-and-ask, not a guess.

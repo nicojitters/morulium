@@ -8,7 +8,7 @@ function genome(pairs: Record<string, [string, string]>): Genome {
 
 // A "min-qualitative" genome using the weight-0 baselines wherever available.
 // Expressed weights: head_plain=0, cara_bare=0, loco_plain=0, app_none=0,
-// eyes_plain=0, hide_plain=0, ab_none=0, pal_ash=0. Score = 0 → Basic.
+// eyes_plain=0, hide_plain=0, ab_none=0, pal_ash=0. Score = 0 → Baseline.
 const MIN_QUALITATIVE: Record<string, [string, string]> = {
   musculature:      ['mus_neutral', 'mus_neutral'],
   neural_tissue:    ['neu_neutral', 'neu_neutral'],
@@ -29,7 +29,7 @@ const MIN_QUALITATIVE: Record<string, [string, string]> = {
 };
 
 describe('computeRarity — expressed-only, qualitative-only', () => {
-  it('returns { score, tier } for the all-baseline genome (score 0 → Basic)', () => {
+  it('returns { score, tier } for the all-baseline genome (score 0 → Baseline)', () => {
     const result = computeRarity(genome(MIN_QUALITATIVE));
     expect(result.score).toBe(0);
     expect(result.tier).toBe('baseline');
@@ -55,7 +55,7 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
   });
 
   it('homozygous ab_voltaic expresses and adds its full weight', () => {
-    // ab_voltaic homozygous → weight 10. Total 0 + 10 = 10 → Evolved (thresholds: Basic≤2, Variant≤4, Adapted≤5, Evolved≤11)
+    // ab_voltaic homozygous → weight 10. Total 0 + 10 = 10 → Chimera (thresholds: Baseline≤2, Strain≤4, Mutant≤5, Chimera≤11)
     const wild = computeRarity(genome({
       ...MIN_QUALITATIVE,
       aberration: ['ab_voltaic', 'ab_voltaic'],
@@ -64,9 +64,9 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
     expect(wild.tier).toBe('chimera');
   });
 
-  it('a genome loaded with expressed Adapted alleles hits Apex', () => {
+  it('a genome loaded with expressed Mutant alleles hits Progenitor', () => {
     // Expressed: head_maw(3), cara_bone(3), loco_sprint(3), app_stinger(3), ab_voltaic(10), pal_ash(0)
-    // Score = 3+3+3+3+10+0 = 22 → Apex
+    // Score = 3+3+3+3+10+0 = 22 → Progenitor
     const loaded = computeRarity(genome({
       ...MIN_QUALITATIVE,
       head: ['head_maw', 'head_maw'],

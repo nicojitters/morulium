@@ -77,7 +77,7 @@ describe('data integrity', () => {
     const none = ALLELES['ab_none']!.drawWeight;
     const voltaic = ALLELES['ab_voltaic']!.drawWeight;
     const corrosive = ALLELES['ab_corrosive']!.drawWeight;
-    // ab_none must dominate the pool so most hatches express ab_none
+    // ab_none must dominate the pool so most decants express ab_none
     expect(none).toBeGreaterThan(voltaic + corrosive);
     // Wild aberrations must be genuinely rare
     expect(voltaic).toBeLessThan(none / 4);
