@@ -87,8 +87,8 @@ describe('expressPhenotype', () => {
   });
 
   it('heterozygous two-dominants — allele that appears earlier in locus.alleles wins', () => {
-    // In head locus, alleles list is [head_plain, head_maw, head_sensor, head_mandible].
-    // Baseline head_plain is at index 0; head_maw at 1, head_sensor at 2, head_mandible at 3.
+    // In head locus, alleles list is [head_plain, head_maw, head_sensor, head_mandible, head_folded].
+    // Baseline head_plain is at index 0; head_maw at 1, head_sensor at 2, head_mandible at 3, head_folded at 4.
     // For pairs NOT involving head_plain, head_maw beats head_sensor (1 < 2), head_sensor
     // beats head_mandible (2 < 3). Assertions in this test use pairs that don't include
     // head_plain — the plain baseline gets its own dedicated tie-break test.
