@@ -17,6 +17,5 @@
     "resolveJsonModule": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src", "tests"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "tests"]
 }
