@@ -7,6 +7,7 @@ import { computeBaseStats, computeCurrentStats } from './stats';
 export interface DemoRow {
   seed: number;
   tier: Tier;
+  score: number;
   base: Record<Stat, number>;
   current: Record<Stat, number>;
   expressed: Record<string, string>;
@@ -20,10 +21,11 @@ export function runDemo(seed = 1): DemoRow[] {
     const rng = createRng(rowSeed);
     const genome = rollGenome(rng);
     const phen = expressPhenotype(genome);
-    const { tier } = computeRarity(genome);
+    const { score, tier } = computeRarity(genome);
     rows.push({
       seed: rowSeed,
       tier,
+      score,
       base: computeBaseStats(genome),
       current: computeCurrentStats(genome, 20),
       expressed: phen.expressed,
@@ -34,7 +36,7 @@ export function runDemo(seed = 1): DemoRow[] {
 }
 
 export function formatDemoTable(rows: DemoRow[]): string {
-  const header = ['#', 'seed', 'tier',
+  const header = ['#', 'seed', 'tier', 'score',
     ...STATS.map((s) => `${s}(base)`),
     ...STATS.map((s) => `${s}(L20)`),
     'head', 'appendage', 'aberration', 'palette',
@@ -45,6 +47,7 @@ export function formatDemoTable(rows: DemoRow[]): string {
       String(i),
       String(r.seed),
       r.tier,
+      String(r.score),
       ...STATS.map((s) => String(Math.round(r.base[s]))),
       ...STATS.map((s) => r.current[s].toFixed(1)),
       r.expressed['head'] ?? '',

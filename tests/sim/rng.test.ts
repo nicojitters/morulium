@@ -66,4 +66,32 @@ describe('SeededRng', () => {
     const different = createRng(100).fork(2);
     expect(createRng(100).fork(1).next()).not.toBe(different.next());
   });
+
+  it('createRng throws on non-finite seeds', () => {
+    expect(() => createRng(NaN)).toThrow(/finite/);
+    expect(() => createRng(Infinity)).toThrow(/finite/);
+    expect(() => createRng(-Infinity)).toThrow(/finite/);
+  });
+
+  it('fork determinism: two forks from equal parents produce identical streams', () => {
+    const parent1 = createRng(500);
+    const parent2 = createRng(500);
+    const child1 = parent1.fork(9);
+    const child2 = parent2.fork(9);
+    for (let i = 0; i < 10; i++) expect(child1.next()).toBe(child2.next());
+  });
+
+  it('fork does not perturb the parent stream beyond the one draw fork consumes', () => {
+    const a = createRng(700);
+    a.next(); // advance once
+    a.fork(1); // fork consumes one draw of the parent
+    const afterFork = a.next();
+
+    const b = createRng(700);
+    b.next(); // advance once
+    b.next(); // fork() would have consumed this
+    const afterAdvance = b.next();
+
+    expect(afterFork).toBe(afterAdvance);
+  });
 });

@@ -17,6 +17,19 @@ describe('runDemo', () => {
     }
   });
 
+  it('every row includes a numeric score and a tier', () => {
+    for (const row of runDemo(3)) {
+      expect(typeof row.score).toBe('number');
+      expect(row.score).toBeGreaterThanOrEqual(0);
+      expect(['Basic', 'Variant', 'Adapted', 'Evolved', 'Apex']).toContain(row.tier);
+    }
+  });
+
+  it('formatDemoTable header includes a score column', () => {
+    const s = formatDemoTable(runDemo(1));
+    expect(s.split('\n')[0]).toContain('score');
+  });
+
   it('formatDemoTable returns a non-empty string containing a header row', () => {
     const s = formatDemoTable(runDemo(1));
     expect(s.length).toBeGreaterThan(0);

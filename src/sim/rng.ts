@@ -25,6 +25,9 @@ function mix32(a: number, b: number): number {
 }
 
 export function createRng(seed: number): SeededRng {
+  if (!Number.isFinite(seed)) {
+    throw new Error(`createRng: seed must be finite, got ${seed}`);
+  }
   const src = mulberry32(seed);
 
   const api: SeededRng = {
