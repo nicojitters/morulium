@@ -107,6 +107,12 @@ const QUALITATIVE: Allele[] = [
   qual('eyes_multi',    'eyes', 'Multi-Facet',   3, 'dominant',  { INT: 2 }),
   qual('eyes_singular', 'eyes', 'Singular Eye',  3, 'recessive', { GUI: 3, INT: -1 }),
 
+  // hide_pattern — visual markings; baseline first
+  qual('hide_plain',       'hide_pattern', 'Plain Hide',    0, 'dominant',  { VIT: 1 },           undefined, 180),
+  qual('hide_spotted',     'hide_pattern', 'Spotted',       1, 'dominant',  { SPD: 1 }),
+  qual('hide_striped',     'hide_pattern', 'Striped',       3, 'dominant',  { GUI: 1, SPD: 1 }),
+  qual('hide_luminescent', 'hide_pattern', 'Luminescent',   3, 'recessive', { VIT: -1, PWR: 2 }),
+
   // aberration (rare recessive tree — game spec §2)
   qual('ab_none',       'aberration', 'None',       0, 'dominant',  {},          undefined, 60),
   qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock',   5),

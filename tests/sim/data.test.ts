@@ -130,4 +130,25 @@ describe('data integrity', () => {
     expect(ALLELES['eyes_singular']!.rarityWeight).toBe(3);
     expect(ALLELES['eyes_singular']!.dominance).toBe('recessive');
   });
+
+  it('has the hide_pattern locus with 4 alleles, baseline hide_plain listed first', () => {
+    expect(LOCI['hide_pattern']).toBeDefined();
+    expect(LOCI['hide_pattern']!.type).toBe('qualitative');
+    expect(LOCI['hide_pattern']!.alleles).toEqual(['hide_plain', 'hide_spotted', 'hide_striped', 'hide_luminescent']);
+  });
+
+  it('hide_pattern alleles have expected rarity + draw weights', () => {
+    expect(ALLELES['hide_plain']!.rarityWeight).toBe(0);
+    expect(ALLELES['hide_plain']!.drawWeight).toBe(180);
+    expect(ALLELES['hide_plain']!.dominance).toBe('dominant');
+
+    expect(ALLELES['hide_spotted']!.rarityWeight).toBe(1);
+    expect(ALLELES['hide_spotted']!.dominance).toBe('dominant');
+
+    expect(ALLELES['hide_striped']!.rarityWeight).toBe(3);
+    expect(ALLELES['hide_striped']!.dominance).toBe('dominant');
+
+    expect(ALLELES['hide_luminescent']!.rarityWeight).toBe(3);
+    expect(ALLELES['hide_luminescent']!.dominance).toBe('recessive');
+  });
 });
