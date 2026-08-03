@@ -73,21 +73,24 @@ const QUANTITATIVE: Allele[] = [
   q('acu_neutral', 'acuity', 'Baseline Acuity', 0, {}),
 ];
 
-// Qualitative — 5 loci, 15 alleles total.
+// Qualitative — 5 loci, 18 alleles total (added 3 weight-0 baselines).
 // Dominance choices: all "None"/baseline options are recessive; distinctive
 // parts are dominant; the aberration tree is recessive (per game spec).
 const QUALITATIVE: Allele[] = [
-  // head
+  // head — baseline first (weight 0, dominant, heavy draw)
+  qual('head_plain',    'head', 'Blunt Head',       0, 'dominant', { PWR: 1 }, undefined, 180),
   qual('head_maw',      'head', 'Maw',            3, 'dominant', { PWR: 3 }, 'Rend'),
   qual('head_sensor',   'head', 'Sensor-Cluster', 3, 'dominant', { INT: 3 }, 'Recon'),
   qual('head_mandible', 'head', 'Mandibles',      1, 'dominant', { PWR: 1 }, 'Grip'),
 
-  // carapace
+  // carapace — baseline first
+  qual('cara_bare',     'carapace', 'Bare Hide',    0, 'dominant',  { VIT: 1 }, undefined, 180),
   qual('cara_chitin',   'carapace', 'Chitin',     1, 'dominant', { VIT: 1 }),
   qual('cara_bone',     'carapace', 'Bone-Plate', 3, 'dominant', { VIT: 3, SPD: -1 }, 'Bulwark'),
   qual('cara_hide',     'carapace', 'Hide',       1, 'recessive', { VIT: 1, SPD: 1 }),
 
-  // locomotion
+  // locomotion — baseline first
+  qual('loco_plain',    'locomotion', 'Plain Limbs',  0, 'dominant',  { SPD: 1 }, undefined, 180),
   qual('loco_sprint',   'locomotion', 'Sprint-Limbs', 3, 'dominant', { SPD: 3 }, 'Sprint'),
   qual('loco_burrow',   'locomotion', 'Burrowers',    3, 'dominant', { GUI: 3 }, 'Ambush'),
   qual('loco_bulk',     'locomotion', 'Bulk-Treads',  1, 'recessive', { VIT: 2, SPD: -1 }),

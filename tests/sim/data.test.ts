@@ -85,4 +85,20 @@ describe('data integrity', () => {
     expect(ALLELES['mus_lean']!.drawWeight).toBe(40);    // weight 1
     expect(ALLELES['mus_strong']!.drawWeight).toBe(12);  // weight 3
   });
+
+  it('has weight-0 baseline alleles head_plain, cara_bare, loco_plain with drawWeight 180', () => {
+    for (const id of ['head_plain', 'cara_bare', 'loco_plain']) {
+      const a = ALLELES[id];
+      expect(a, `missing baseline allele ${id}`).toBeDefined();
+      expect(a!.rarityWeight).toBe(0);
+      expect(a!.drawWeight).toBe(180);
+      expect(a!.dominance).toBe('dominant');
+    }
+  });
+
+  it('baseline alleles are listed FIRST in their locus alleles array', () => {
+    expect(LOCI['head']!.alleles[0]).toBe('head_plain');
+    expect(LOCI['carapace']!.alleles[0]).toBe('cara_bare');
+    expect(LOCI['locomotion']!.alleles[0]).toBe('loco_plain');
+  });
 });
