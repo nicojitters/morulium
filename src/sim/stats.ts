@@ -1,7 +1,7 @@
 import type { Genome, Stat } from './types';
 import { STATS } from './types';
-import { ALLELES } from './data/loci';
-import { expressPhenotype } from './genome';
+import { ALLELES, LOCI } from './data/loci';
+import { resolveExpressed } from './genome';
 
 export const BASE_STATS: Readonly<Record<Stat, number>> = Object.freeze({
   PWR: 10,
@@ -17,21 +17,20 @@ export const BASE_STATS: Readonly<Record<Stat, number>> = Object.freeze({
  * For quantitative loci: BOTH alleles contribute (no dominance — that's the
  * "smooth intermediate offspring" property from game-spec §2).
  * For qualitative loci: ONLY the expressed allele contributes (dominance
- * resolved by expressPhenotype).
+ * resolved by resolveExpressed).
  * Floored at 0.
  */
 export function computeBaseStats(genome: Genome): Record<Stat, number> {
   const result: Record<Stat, number> = { ...BASE_STATS };
-  const phen = expressPhenotype(genome);
 
   for (const [locusId, pair] of Object.entries(genome.loci)) {
-    const first = alleleOrThrow(pair[0]);
-    const isQuantitative = first.dominance === undefined && locusId !== 'palette';
-    if (isQuantitative) {
+    const locus = LOCI[locusId];
+    if (!locus) throw new Error(`unknown locus in genome: ${locusId}`);
+
+    if (locus.type === 'quantitative') {
       for (const alleleId of pair) addDeltas(result, alleleOrThrow(alleleId));
     } else {
-      const expressedId = phen.expressed[locusId];
-      if (expressedId) addDeltas(result, alleleOrThrow(expressedId));
+      addDeltas(result, resolveExpressed(locus, pair));
     }
   }
 
