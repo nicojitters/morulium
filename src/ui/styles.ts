@@ -156,4 +156,17 @@ export const styles = {
     color: '#555',
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
+
+  failsafeIndicator: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    padding: '2px 8px',
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: 500,
+    color: '#92400e',           // amber-800
+    backgroundColor: '#fef3c7', // amber-100
+    border: '1px solid #fde68a',// amber-200
+  } as CSSProperties,
 };
