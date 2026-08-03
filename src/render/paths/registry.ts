@@ -14,6 +14,18 @@ import eyes_bright from './eyes/eyes_bright';
 import eyes_multi from './eyes/eyes_multi';
 import eyes_singular from './eyes/eyes_singular';
 
+// carapace
+import cara_bare from './carapace/cara_bare';
+import cara_chitin from './carapace/cara_chitin';
+import cara_bone from './carapace/cara_bone';
+import cara_hide from './carapace/cara_hide';
+
+// hide_pattern
+import hide_plain from './hide_pattern/hide_plain';
+import hide_spotted from './hide_pattern/hide_spotted';
+import hide_striped from './hide_pattern/hide_striped';
+import hide_luminescent from './hide_pattern/hide_luminescent';
+
 /**
  * A PathFn draws one allele's contribution to the sprite as a React SVG node.
  * The function receives the resolved palette colors and returns a <g>/<path>/etc.
@@ -37,4 +49,12 @@ export const PATHS: Readonly<Record<string, PathFn>> = Object.freeze({
   eyes_bright,
   eyes_multi,
   eyes_singular,
+  cara_bare,
+  cara_chitin,
+  cara_bone,
+  cara_hide,
+  hide_plain,
+  hide_spotted,
+  hide_striped,
+  hide_luminescent,
 });

@@ -31,6 +31,22 @@ export function Sprite({ phenotype, palette }: SpriteProps): ReactElement {
       continue;
     }
     layers.push(<g key={layer} data-layer={layer}>{draw(colors)}</g>);
+
+    // Hide pattern is drawn on top of the carapace layer specifically
+    if (layer === 'carapace') {
+      const hideId = phenotype['hide_pattern'];
+      if (hideId) {
+        const draw = PATHS[hideId];
+        if (!draw) {
+          layers.push(<MissingArt key="hide_pattern" layer={'carapace' as Layer} />);
+          if (typeof console !== 'undefined') {
+            console.warn(`[Sprite] missing PathFn for hide_pattern allele "${hideId}"`);
+          }
+        } else {
+          layers.push(<g key="hide_pattern" data-layer="hide_pattern">{draw(colors)}</g>);
+        }
+      }
+    }
   }
 
   return (
