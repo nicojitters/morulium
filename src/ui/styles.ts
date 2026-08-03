@@ -101,4 +101,53 @@ export const styles = {
     color: '#fff',
     backgroundColor: color,
   }),
+
+  highlightedCard: {
+    outline: '2px solid #f59e0b',    // amber — matches Mutant tier for visibility
+    outlineOffset: '2px',
+    boxShadow: '0 0 12px 2px rgba(245, 158, 11, 0.6)',
+    transition: 'outline-color 0.3s ease, box-shadow 0.3s ease',
+  } as CSSProperties,
+
+  decantButton: {
+    padding: '10px 20px',
+    borderRadius: 6,
+    border: '1px solid #14b8a6',
+    background: '#14b8a6',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  emptyState: {
+    textAlign: 'center',
+    padding: '80px 24px',
+    color: '#666',
+  } as CSSProperties,
+
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 600,
+    color: '#333',
+    marginBottom: 8,
+  } as CSSProperties,
+
+  emptyStateBody: {
+    fontSize: 14,
+    marginBottom: 32,
+  } as CSSProperties,
+
+  emptyStateCta: {
+    padding: '14px 28px',
+    borderRadius: 8,
+    border: '1px solid #14b8a6',
+    background: '#14b8a6',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
 };

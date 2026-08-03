@@ -7,20 +7,30 @@ import { styles } from '../styles';
 
 interface Props {
   readonly row: DemoRow;
+  readonly highlighted?: boolean;
 }
 
 /**
  * A single specimen card: palette-tinted panel with the sprite, tier badge,
  * and a monospace specimen ID footer.
  */
-export function SpecimenCard({ row }: Props): ReactElement {
+export function SpecimenCard({ row, highlighted = false }: Props): ReactElement {
   const colors = resolvePalette(row.palette);
   // Very faint tint of the palette base for the card background
   const bgTint = tintForCard(colors.base);
   const specimenId = `M-${String(row.seed).padStart(5, '0')}`;
 
+  const cardStyle = highlighted
+    ? { ...styles.card(bgTint), ...styles.highlightedCard }
+    : styles.card(bgTint);
+
   return (
-    <div style={styles.card(bgTint)} data-testid="specimen-card">
+    <div
+      style={cardStyle}
+      data-testid="specimen-card"
+      data-highlighted={highlighted || undefined}
+      data-unit-id={row.seed}
+    >
       <TierBadge tier={row.tier} />
       <div style={styles.cardSprite}>
         <Sprite phenotype={row.expressed} palette={row.palette} />
