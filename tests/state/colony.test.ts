@@ -1,9 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useColonyStore } from '../../src/state/colony';
+import { todayLocalKey } from '../../src/state/harvest';
+import { tierAtLeast } from '../../src/state/failsafe';
+import { computeRarity } from '../../src/sim/rarity';
 
 describe('colony store', () => {
   beforeEach(() => {
-    useColonyStore.setState({ units: [], nextId: 1, lastDecantedId: null });
+    useColonyStore.setState({
+      units: [],
+      nextId: 1,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+    });
   });
 
   it('starts empty with nextId=1 and no highlight', () => {
@@ -50,5 +60,101 @@ describe('colony store', () => {
     expect(useColonyStore.getState().lastDecantedId).toBe(1);
     useColonyStore.getState().clearHighlight();
     expect(useColonyStore.getState().lastDecantedId).toBeNull();
+  });
+
+  it('decant() enforces daily harvest limit and throws on the 4th call', () => {
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().harvestsToday).toBe(3);
+    expect(() => useColonyStore.getState().decant()).toThrow(/daily Harvest limit/);
+  });
+
+  it('day rollover resets the harvest counter', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().harvestsToday).toBe(3);
+
+    // Advance one day
+    vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
+    const unit = useColonyStore.getState().decant();
+    expect(unit.id).toBe(4);
+    expect(useColonyStore.getState().harvestsToday).toBe(1); // reset then +1
+    expect(useColonyStore.getState().harvestDayKey).toBe('2026-08-05');
+    vi.useRealTimers();
+  });
+
+  it('drought counter increments on non-Chimera+ rolls', () => {
+    // Force the harvest limit high enough not to interfere
+    useColonyStore.setState({
+      units: [], nextId: 1, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 0,
+    });
+    // The current allele distribution gives Chimera+ ~5% of the time; over
+    // three consecutive small-id rolls (id=1..3), it is overwhelmingly likely
+    // all three are dry. We just check the counter advances and is bounded by
+    // the number of dry vs. chimera+ rolls.
+    const before = useColonyStore.getState().droughtCount;
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    const after = useColonyStore.getState().droughtCount;
+    const chimeraCount = useColonyStore
+      .getState()
+      .units.filter((u) => tierAtLeast(computeRarity(u.genome).tier, 'chimera')).length;
+    // Each dry Decant increments drought by 1; each Chimera+ resets it to 0.
+    // So: after >= 0 (always) and after <= 3 (upper bound in 3 rolls).
+    expect(after).toBeGreaterThanOrEqual(0);
+    expect(after).toBeLessThanOrEqual(3);
+    // If none were Chimera+, after should equal before + 3.
+    if (chimeraCount === 0) {
+      expect(after).toBe(before + 3);
+    }
+  });
+
+  it('drought counter resets to 0 when a naturally-rolled Chimera+ appears', () => {
+    // Seed droughtCount at a middling value; if the next natural roll is Chimera+, reset
+    useColonyStore.setState({
+      units: [], nextId: 1, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 10,
+    });
+    const unit = useColonyStore.getState().decant();
+    const { tier } = computeRarity(unit.genome);
+    if (tierAtLeast(tier, 'chimera')) {
+      expect(useColonyStore.getState().droughtCount).toBe(0);
+    } else {
+      expect(useColonyStore.getState().droughtCount).toBe(11);
+    }
+  });
+
+  it('failsafe fires when droughtCount >= 50 and returns a Chimera+ genome', () => {
+    useColonyStore.setState({
+      units: [], nextId: 42, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+    });
+    const unit = useColonyStore.getState().decant();
+    expect(tierAtLeast(computeRarity(unit.genome).tier, 'chimera')).toBe(true);
+    // After the guaranteed roll, droughtCount resets to 0
+    expect(useColonyStore.getState().droughtCount).toBe(0);
+    // nextId still advances by exactly 1
+    expect(useColonyStore.getState().nextId).toBe(43);
+  });
+
+  it('failsafe is deterministic: same (nextId, droughtCount=50) yields same genome', () => {
+    useColonyStore.setState({
+      units: [], nextId: 99, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+    });
+    const first = useColonyStore.getState().decant();
+
+    useColonyStore.setState({
+      units: [], nextId: 99, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+    });
+    const second = useColonyStore.getState().decant();
+
+    expect(first.genome).toEqual(second.genome);
   });
 });
