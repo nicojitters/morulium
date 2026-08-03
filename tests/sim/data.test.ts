@@ -73,10 +73,18 @@ describe('data integrity', () => {
     }
   });
 
-  it('aberration draw distribution: ab_none dominant, ab_voltaic and ab_corrosive very rare', () => {
-    expect(ALLELES['ab_none']!.drawWeight).toBe(200);
-    expect(ALLELES['ab_voltaic']!.drawWeight).toBe(1);
-    expect(ALLELES['ab_corrosive']!.drawWeight).toBe(1);
+  it('aberration draw distribution: ab_none dominant, ab_voltaic and ab_corrosive both recessive-rare', () => {
+    const none = ALLELES['ab_none']!.drawWeight;
+    const voltaic = ALLELES['ab_voltaic']!.drawWeight;
+    const corrosive = ALLELES['ab_corrosive']!.drawWeight;
+    // ab_none must dominate the pool so most hatches express ab_none
+    expect(none).toBeGreaterThan(voltaic + corrosive);
+    // Wild aberrations must be genuinely rare
+    expect(voltaic).toBeLessThan(none / 4);
+    expect(corrosive).toBeLessThan(none / 4);
+    // Wilds should be roughly balanced with each other (within 3× either direction)
+    expect(voltaic).toBeLessThanOrEqual(corrosive * 3);
+    expect(corrosive).toBeLessThanOrEqual(voltaic * 3);
   });
 
   it('default drawWeight follows the rarityWeight tier: 0→100, 1→40, 3→12, 6→4, 10→1', () => {

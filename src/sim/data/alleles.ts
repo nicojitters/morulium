@@ -102,9 +102,9 @@ const QUALITATIVE: Allele[] = [
   qual('app_none',      'appendage', 'None',      0, 'recessive'),
 
   // aberration (rare recessive tree — game spec §2)
-  qual('ab_none',       'aberration', 'None',       0, 'dominant',  {},          undefined, 200),
-  qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock',   1),
-  qual('ab_corrosive',  'aberration', 'Corrosive', 10, 'recessive', { SPD: -2 }, 'Melt',    1),
+  qual('ab_none',       'aberration', 'None',       0, 'dominant',  {},          undefined, 60),
+  qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock',   5),
+  qual('ab_corrosive',  'aberration', 'Corrosive', 10, 'recessive', { SPD: -2 }, 'Melt',    5),
 ];
 
 // Palette (qualitative-adjacent, no stat effect)
