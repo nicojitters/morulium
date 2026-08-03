@@ -3,6 +3,8 @@ import { rollGenome } from '../src/sim/genome';
 import { computeRarity } from '../src/sim/rarity';
 import { resolveExpressed } from '../src/sim/genome';
 import { LOCI } from '../src/sim/data/loci';
+import type { Tier } from '../src/sim/types';
+import { TERMS } from '../src/ui/terms';
 
 const N = 20_000;
 
@@ -32,10 +34,11 @@ const pct = (n: number): string => `${((100 * n) / N).toFixed(2)}%`;
 
 // eslint-disable-next-line no-console
 console.log(`\n=== TIER DISTRIBUTION (N=${N}) ===`);
-for (const tier of ['Basic', 'Variant', 'Adapted', 'Evolved', 'Apex']) {
+const TIER_ORDER: Tier[] = ['baseline', 'strain', 'mutant', 'chimera', 'progenitor'];
+for (const tier of TIER_ORDER) {
   const n = tierTally[tier] ?? 0;
   // eslint-disable-next-line no-console
-  console.log(tier.padEnd(9), String(n).padStart(6), pct(n).padStart(8));
+  console.log(TERMS.tiers[tier].padEnd(11), String(n).padStart(6), pct(n).padStart(8));
 }
 
 // eslint-disable-next-line no-console

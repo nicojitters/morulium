@@ -3,6 +3,7 @@ import { createRng } from './rng';
 import { rollGenome, expressPhenotype } from './genome';
 import { computeRarity } from './rarity';
 import { computeBaseStats, computeCurrentStats } from './stats';
+import { TERMS } from '../ui/terms';
 
 export interface DemoRow {
   seed: number;
@@ -46,7 +47,7 @@ export function formatDemoTable(rows: DemoRow[]): string {
     lines.push([
       String(i),
       String(r.seed),
-      r.tier,
+      TERMS.tiers[r.tier],
       String(r.score),
       ...STATS.map((s) => String(Math.round(r.base[s]))),
       ...STATS.map((s) => r.current[s].toFixed(1)),

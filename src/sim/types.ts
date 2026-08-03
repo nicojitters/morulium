@@ -1,7 +1,7 @@
 export type Stat = 'PWR' | 'VIT' | 'SPD' | 'INT' | 'GUI';
 export const STATS: readonly Stat[] = ['PWR', 'VIT', 'SPD', 'INT', 'GUI'] as const;
 
-export type Tier = 'Basic' | 'Variant' | 'Adapted' | 'Evolved' | 'Apex';
+export type Tier = 'baseline' | 'strain' | 'mutant' | 'chimera' | 'progenitor';
 
 export type Dominance = 'dominant' | 'recessive';
 export type LocusType = 'quantitative' | 'qualitative';

@@ -32,7 +32,7 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
   it('returns { score, tier } for the all-baseline genome (score 0 → Basic)', () => {
     const result = computeRarity(genome(MIN_QUALITATIVE));
     expect(result.score).toBe(0);
-    expect(result.tier).toBe('Basic');
+    expect(result.tier).toBe('baseline');
   });
 
   it('quantitative-only spike does not raise score', () => {
@@ -61,7 +61,7 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
       aberration: ['ab_voltaic', 'ab_voltaic'],
     }));
     expect(wild.score).toBe(10);
-    expect(wild.tier).toBe('Evolved');
+    expect(wild.tier).toBe('chimera');
   });
 
   it('a genome loaded with expressed Adapted alleles hits Apex', () => {
@@ -76,6 +76,6 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
       aberration: ['ab_voltaic', 'ab_voltaic'],
     }));
     expect(loaded.score).toBe(22);
-    expect(loaded.tier).toBe('Apex');
+    expect(loaded.tier).toBe('progenitor');
   });
 });

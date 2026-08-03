@@ -12,7 +12,7 @@ describe('runDemo', () => {
 
   it('every row includes a tier and non-negative base stats', () => {
     for (const row of runDemo(3)) {
-      expect(['Basic', 'Variant', 'Adapted', 'Evolved', 'Apex']).toContain(row.tier);
+      expect(['baseline', 'strain', 'mutant', 'chimera', 'progenitor']).toContain(row.tier);
       for (const v of Object.values(row.base)) expect(v).toBeGreaterThanOrEqual(0);
     }
   });
@@ -21,7 +21,7 @@ describe('runDemo', () => {
     for (const row of runDemo(3)) {
       expect(typeof row.score).toBe('number');
       expect(row.score).toBeGreaterThanOrEqual(0);
-      expect(['Basic', 'Variant', 'Adapted', 'Evolved', 'Apex']).toContain(row.tier);
+      expect(['baseline', 'strain', 'mutant', 'chimera', 'progenitor']).toContain(row.tier);
     }
   });
 
