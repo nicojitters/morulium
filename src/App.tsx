@@ -1,5 +1,5 @@
-import { Gallery } from './ui/screens/Gallery';
+import { Colony } from './ui/screens/Colony';
 
 export function App() {
-  return <Gallery />;
+  return <Colony />;
 }
