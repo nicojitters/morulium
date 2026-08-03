@@ -5,5 +5,7 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     globals: false,
+    setupFiles: ['tests/setup-jsdom-storage.ts'],
+    environmentMatchGlobs: [['tests/state/persist.test.ts', 'jsdom']],
   },
 });
