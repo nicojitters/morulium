@@ -38,6 +38,11 @@ import app_stinger from './appendage/app_stinger';
 import app_lash from './appendage/app_lash';
 import app_spinneret from './appendage/app_spinneret';
 
+// aberration
+import ab_none from './aberration/ab_none';
+import ab_voltaic from './aberration/ab_voltaic';
+import ab_corrosive from './aberration/ab_corrosive';
+
 /**
  * A PathFn draws one allele's contribution to the sprite as a React SVG node.
  * The function receives the resolved palette colors and returns a <g>/<path>/etc.
@@ -77,4 +82,7 @@ export const PATHS: Readonly<Record<string, PathFn>> = Object.freeze({
   app_stinger,
   app_lash,
   app_spinneret,
+  ab_none,
+  ab_voltaic,
+  ab_corrosive,
 });
