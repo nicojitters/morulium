@@ -66,4 +66,23 @@ describe('data integrity', () => {
   it('has at least one palette registered', () => {
     expect(Object.values(PALETTES).length).toBeGreaterThan(0);
   });
+
+  it('every allele has a positive drawWeight', () => {
+    for (const allele of Object.values(ALLELES)) {
+      expect(allele.drawWeight).toBeGreaterThan(0);
+    }
+  });
+
+  it('aberration draw distribution: ab_none dominant, ab_voltaic and ab_corrosive very rare', () => {
+    expect(ALLELES['ab_none']!.drawWeight).toBe(200);
+    expect(ALLELES['ab_voltaic']!.drawWeight).toBe(1);
+    expect(ALLELES['ab_corrosive']!.drawWeight).toBe(1);
+  });
+
+  it('default drawWeight follows the rarityWeight tier: 0→100, 1→40, 3→12, 6→4, 10→1', () => {
+    // Sample non-aberration alleles at each rarity tier
+    expect(ALLELES['mus_neutral']!.drawWeight).toBe(100); // weight 0
+    expect(ALLELES['mus_lean']!.drawWeight).toBe(40);    // weight 1
+    expect(ALLELES['mus_strong']!.drawWeight).toBe(12);  // weight 3
+  });
 });

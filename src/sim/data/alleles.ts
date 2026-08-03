@@ -1,5 +1,10 @@
 import type { Allele, RarityWeight, Stat, Dominance } from '../types';
 
+const DRAW_WEIGHT_BY_RARITY: Readonly<Record<number, number>> = { 0: 100, 1: 40, 3: 12, 6: 4, 10: 1 };
+function defaultDraw(w: RarityWeight): number {
+  return DRAW_WEIGHT_BY_RARITY[w] ?? 1;
+}
+
 function q(
   id: string,
   locus: string,
@@ -7,7 +12,7 @@ function q(
   weight: RarityWeight,
   deltas: Partial<Record<Stat, number>>,
 ): Allele {
-  return { id, locus, label, rarityWeight: weight, statDeltas: deltas };
+  return { id, locus, label, rarityWeight: weight, drawWeight: defaultDraw(weight), statDeltas: deltas };
 }
 
 function qual(
@@ -18,10 +23,12 @@ function qual(
   dominance: Dominance,
   deltas: Partial<Record<Stat, number>> = {},
   ability?: string,
+  drawOverride?: number,
 ): Allele {
-  return dominance && ability !== undefined
-    ? { id, locus, label, rarityWeight: weight, statDeltas: deltas, ability, dominance }
-    : { id, locus, label, rarityWeight: weight, statDeltas: deltas, dominance };
+  const drawWeight = drawOverride ?? defaultDraw(weight);
+  return ability !== undefined
+    ? { id, locus, label, rarityWeight: weight, drawWeight, statDeltas: deltas, ability, dominance }
+    : { id, locus, label, rarityWeight: weight, drawWeight, statDeltas: deltas, dominance };
 }
 
 // Quantitative — 8 loci, 23 alleles total.
@@ -92,9 +99,9 @@ const QUALITATIVE: Allele[] = [
   qual('app_none',      'appendage', 'None',      0, 'recessive'),
 
   // aberration (rare recessive tree — game spec §2)
-  qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock'),
-  qual('ab_corrosive',  'aberration', 'Corrosive', 10, 'recessive', { SPD: -2 }, 'Melt'),
-  qual('ab_none',       'aberration', 'None',       0, 'dominant'),
+  qual('ab_none',       'aberration', 'None',       0, 'dominant',  {},          undefined, 200),
+  qual('ab_voltaic',    'aberration', 'Voltaic',   10, 'recessive', { VIT: -2 }, 'Shock',   1),
+  qual('ab_corrosive',  'aberration', 'Corrosive', 10, 'recessive', { SPD: -2 }, 'Melt',    1),
 ];
 
 // Palette (qualitative-adjacent, no stat effect)

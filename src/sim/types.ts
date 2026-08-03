@@ -13,6 +13,7 @@ export interface Allele {
   readonly locus: string;
   readonly label: string;
   readonly rarityWeight: RarityWeight;
+  readonly drawWeight: number;
   readonly statDeltas: Readonly<Partial<Record<Stat, number>>>;
   readonly ability?: string;
   readonly dominance?: Dominance;
