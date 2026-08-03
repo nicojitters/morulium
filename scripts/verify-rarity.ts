@@ -55,7 +55,9 @@ for (let s = 0; s <= maxScore; s++) {
 
 // eslint-disable-next-line no-console
 console.log(`\n=== PER-LOCUS EXPRESSED CONTRIBUTION (qualitative only) ===`);
-for (const [locusId, pl] of Object.entries(perLocus)) {
+for (const locusId of Object.keys(LOCI)) {
+  const pl = perLocus[locusId];
+  if (!pl) continue;
   const mean = (pl.total / N).toFixed(3);
   const breakdown = Object.entries(pl.byWeight)
     .sort((a, b) => Number(a[0]) - Number(b[0]))

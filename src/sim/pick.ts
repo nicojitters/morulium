@@ -9,5 +9,10 @@ export function weightedPick<T extends { drawWeight: number }>(items: readonly T
     r -= item.drawWeight;
     if (r < 0) return item;
   }
-  return items[items.length - 1]!; // fp safety
+  // fp-safety net: unreachable in normal arithmetic (the walk above always
+  // finds an item because total > 0 given items.length > 0), but rounding
+  // error on `r` could theoretically leave it at exactly 0 after the last
+  // decrement. Returning the last item preserves the pick's shape rather
+  // than throwing or returning undefined.
+  return items[items.length - 1]!;
 }

@@ -41,6 +41,7 @@ export function expressPhenotype(genome: Genome): PhenotypeDescriptor {
   for (const [locusId, pair] of Object.entries(genome.loci)) {
     const locus = LOCI[locusId];
     if (!locus) throw new Error(`unknown locus in genome: ${locusId}`);
+    if (locus.type !== 'qualitative') continue;
     expressed[locusId] = resolveExpressed(locus, pair).id;
   }
   const paletteId = expressed['palette'];
