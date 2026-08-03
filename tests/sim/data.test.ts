@@ -110,6 +110,21 @@ describe('data integrity', () => {
     expect(LOCI['locomotion']!.alleles[0]).toBe('loco_plain');
   });
 
+  it('has the head locus with 5 alleles, baseline head_plain listed first', () => {
+    expect(LOCI['head']).toBeDefined();
+    expect(LOCI['head']!.type).toBe('qualitative');
+    expect(LOCI['head']!.alleles).toEqual(['head_plain', 'head_maw', 'head_sensor', 'head_mandible', 'head_folded']);
+  });
+
+  it('head_folded is w1-recessive with expected drawWeight and dominance', () => {
+    const a = ALLELES['head_folded'];
+    expect(a, 'missing head_folded').toBeDefined();
+    expect(a!.rarityWeight).toBe(1);
+    expect(a!.drawWeight).toBe(40);   // default for w1 via DRAW_WEIGHT_BY_RARITY
+    expect(a!.dominance).toBe('recessive');
+    expect(a!.locus).toBe('head');
+  });
+
   it('has the eyes locus with 4 alleles, baseline eyes_plain listed first', () => {
     expect(LOCI['eyes']).toBeDefined();
     expect(LOCI['eyes']!.type).toBe('qualitative');

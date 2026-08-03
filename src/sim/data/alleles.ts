@@ -77,11 +77,12 @@ const QUANTITATIVE: Allele[] = [
 // Dominance choices: all "None"/baseline options are recessive; distinctive
 // parts are dominant; the aberration tree is recessive (per game spec).
 const QUALITATIVE: Allele[] = [
-  // head — baseline first (weight 0, dominant, heavy draw)
+  // head — baseline first, dominants, then recessive last
   qual('head_plain',    'head', 'Blunt Head',       0, 'dominant', { PWR: 1 }, undefined, 180),
-  qual('head_maw',      'head', 'Maw',            3, 'dominant', { PWR: 3 }, 'Rend'),
-  qual('head_sensor',   'head', 'Sensor-Cluster', 3, 'dominant', { INT: 3 }, 'Recon'),
-  qual('head_mandible', 'head', 'Mandibles',      1, 'dominant', { PWR: 1 }, 'Grip'),
+  qual('head_maw',      'head', 'Maw',              3, 'dominant', { PWR: 3 }, 'Rend'),
+  qual('head_sensor',   'head', 'Sensor-Cluster',   3, 'dominant', { INT: 3 }, 'Recon'),
+  qual('head_mandible', 'head', 'Mandibles',        1, 'dominant', { PWR: 1 }, 'Grip'),
+  qual('head_folded',   'head', 'Folded Head',      1, 'recessive', { GUI: 1 }),
 
   // carapace — baseline first
   qual('cara_bare',     'carapace', 'Bare Hide',    0, 'dominant',  { VIT: 1 }, undefined, 180),
