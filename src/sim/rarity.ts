@@ -21,8 +21,8 @@ export function computeRarity(genome: Genome): { score: number; tier: Tier } {
 
 function tierForScore(score: number): Tier {
   if (score <= 2) return 'Basic';
-  if (score <= 10) return 'Variant';
-  if (score <= 14) return 'Adapted';
-  if (score <= 19) return 'Evolved';
+  if (score <= 4) return 'Variant';
+  if (score <= 5) return 'Adapted';
+  if (score <= 11) return 'Evolved';
   return 'Apex';
 }

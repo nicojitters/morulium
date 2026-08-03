@@ -53,13 +53,13 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
   });
 
   it('homozygous ab_voltaic expresses and adds its full weight', () => {
-    // ab_voltaic homozygous → weight 10. Total 0 + 10 = 10 → Variant (upper edge)
+    // ab_voltaic homozygous → weight 10. Total 0 + 10 = 10 → Evolved (thresholds: Basic≤2, Variant≤4, Adapted≤5, Evolved≤11)
     const wild = computeRarity(genome({
       ...MIN_QUALITATIVE,
       aberration: ['ab_voltaic', 'ab_voltaic'],
     }));
     expect(wild.score).toBe(10);
-    expect(wild.tier).toBe('Variant');
+    expect(wild.tier).toBe('Evolved');
   });
 
   it('a genome loaded with expressed Adapted alleles hits Apex', () => {
