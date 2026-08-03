@@ -23,22 +23,25 @@ const NEUTRAL_QUANT: Record<string, [string, string]> = {
 };
 
 const NEUTRAL_QUAL: Record<string, [string, string]> = {
-  head:       ['head_mandible', 'head_mandible'],
-  carapace:   ['cara_chitin',   'cara_chitin'],
-  locomotion: ['loco_bulk',     'loco_bulk'],
-  appendage:  ['app_none',      'app_none'],
-  aberration: ['ab_none',       'ab_none'],
-  palette:    ['pal_ash',       'pal_ash'],
+  head:         ['head_mandible', 'head_mandible'],
+  carapace:     ['cara_chitin',   'cara_chitin'],
+  locomotion:   ['loco_bulk',     'loco_bulk'],
+  appendage:    ['app_none',      'app_none'],
+  eyes:         ['eyes_plain',    'eyes_plain'],
+  hide_pattern: ['hide_plain',    'hide_plain'],
+  aberration:   ['ab_none',       'ab_none'],
+  palette:      ['pal_ash',       'pal_ash'],
 };
 
 describe('computeBaseStats', () => {
   it('a wholly-neutral genome returns BASE_STATS (adjusted for baseline qualitative deltas)', () => {
     const base = computeBaseStats(g({ ...NEUTRAL_QUANT, ...NEUTRAL_QUAL }));
-    // NEUTRAL_QUAL includes head_mandible (PWR +1), cara_chitin (VIT +1), loco_bulk (VIT +2, SPD -1).
+    // NEUTRAL_QUAL includes head_mandible (PWR+1), cara_chitin (VIT+1), loco_bulk (VIT+2, SPD-1),
+    // eyes_plain (GUI+1), hide_plain (VIT+1).
     expect(base.PWR).toBe(BASE_STATS.PWR + 1);
     expect(base.INT).toBe(BASE_STATS.INT);
-    expect(base.GUI).toBe(BASE_STATS.GUI);
-    expect(base.VIT).toBe(BASE_STATS.VIT + 1 + 2);
+    expect(base.GUI).toBe(BASE_STATS.GUI + 1);
+    expect(base.VIT).toBe(BASE_STATS.VIT + 1 + 2 + 1);
     expect(base.SPD).toBe(BASE_STATS.SPD - 1);
   });
 

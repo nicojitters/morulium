@@ -7,8 +7,8 @@ function genome(pairs: Record<string, [string, string]>): Genome {
 }
 
 // A "min-qualitative" genome using the weight-0 baselines wherever available.
-// Expressed weights: head_plain=0, cara_bare=0, loco_plain=0, app_none=0, ab_none=0, pal_ash=0.
-// Score = 0 → Basic.
+// Expressed weights: head_plain=0, cara_bare=0, loco_plain=0, app_none=0,
+// eyes_plain=0, hide_plain=0, ab_none=0, pal_ash=0. Score = 0 → Basic.
 const MIN_QUALITATIVE: Record<string, [string, string]> = {
   musculature:      ['mus_neutral', 'mus_neutral'],
   neural_tissue:    ['neu_neutral', 'neu_neutral'],
@@ -22,6 +22,8 @@ const MIN_QUALITATIVE: Record<string, [string, string]> = {
   carapace:         ['cara_bare',   'cara_bare'],
   locomotion:       ['loco_plain',  'loco_plain'],
   appendage:        ['app_none',    'app_none'],
+  eyes:             ['eyes_plain',  'eyes_plain'],
+  hide_pattern:     ['hide_plain',  'hide_plain'],
   aberration:       ['ab_none',     'ab_none'],
   palette:          ['pal_ash',     'pal_ash'],
 };
