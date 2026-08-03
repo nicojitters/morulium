@@ -150,4 +150,10 @@ export const styles = {
     cursor: 'pointer',
     fontFamily: 'inherit',
   } as CSSProperties,
+
+  harvestIndicator: {
+    fontSize: 13,
+    color: '#555',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
 };
