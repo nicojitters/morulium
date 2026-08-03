@@ -26,6 +26,18 @@ import hide_spotted from './hide_pattern/hide_spotted';
 import hide_striped from './hide_pattern/hide_striped';
 import hide_luminescent from './hide_pattern/hide_luminescent';
 
+// locomotion
+import loco_plain from './locomotion/loco_plain';
+import loco_sprint from './locomotion/loco_sprint';
+import loco_burrow from './locomotion/loco_burrow';
+import loco_bulk from './locomotion/loco_bulk';
+
+// appendage
+import app_none from './appendage/app_none';
+import app_stinger from './appendage/app_stinger';
+import app_lash from './appendage/app_lash';
+import app_spinneret from './appendage/app_spinneret';
+
 /**
  * A PathFn draws one allele's contribution to the sprite as a React SVG node.
  * The function receives the resolved palette colors and returns a <g>/<path>/etc.
@@ -57,4 +69,12 @@ export const PATHS: Readonly<Record<string, PathFn>> = Object.freeze({
   hide_spotted,
   hide_striped,
   hide_luminescent,
+  loco_plain,
+  loco_sprint,
+  loco_burrow,
+  loco_bulk,
+  app_none,
+  app_stinger,
+  app_lash,
+  app_spinneret,
 });
