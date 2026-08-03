@@ -1,12 +1,18 @@
-import type { Genome, PhenotypeDescriptor } from './types';
+import type { Genome, PhenotypeDescriptor, Allele } from './types';
 import { LOCI, ALLELES } from './data/loci';
 import type { SeededRng } from './rng';
+import { weightedPick } from './pick';
 
 export function rollGenome(rng: SeededRng): Genome {
   const loci: Record<string, readonly [string, string]> = {};
   for (const locus of Object.values(LOCI)) {
-    const a = rng.pick(locus.alleles);
-    const b = rng.pick(locus.alleles);
+    const pool: Allele[] = locus.alleles.map((id) => {
+      const a = ALLELES[id];
+      if (!a) throw new Error(`unknown allele in locus ${locus.id}: ${id}`);
+      return a;
+    });
+    const a = weightedPick(pool, rng).id;
+    const b = weightedPick(pool, rng).id;
     loci[locus.id] = [a, b] as const;
   }
   return { loci };
