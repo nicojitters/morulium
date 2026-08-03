@@ -71,7 +71,12 @@ Data flows one way; purity increases as you go deeper. Every function is determi
 
 - **Genome is the only source of truth.** Stats, rarity, sprite, phenotype are all recomputed on demand and memoized in the store. Only genome, level, xp, rest/injury state, and tags are persisted.
 - **RNG is always passed in, never global.** Same seed + same actions ⇒ same outcome. Enables replay debugging of weird breeding outcomes.
-- **Hidden info is enforced at the module boundary.** Mission thresholds, allele weights, dominance/recessive carriers are never returned to the UI layer — principle 5 becomes a compile-time guarantee, not a discipline.
+- **Hidden info is enforced at the module boundary — with one deliberate exception.**
+  Mission thresholds, allele weights, dominance/recessive carriers are never returned to the
+  UI layer — principle 5 becomes a compile-time guarantee, not a discipline. The one exception
+  is `computeRarity`, which returns `{ score, tier }`: the numeric score is exposed so the
+  tuning/verify harness can measure and iterate on the distribution. The UI layer should
+  render only the tier, not the score, but the module boundary permits both.
 
 ## Milestone plan
 
