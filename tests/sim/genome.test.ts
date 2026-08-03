@@ -55,6 +55,8 @@ describe('expressPhenotype', () => {
       carapace:         ['cara_chitin',    'cara_chitin'],
       locomotion:       ['loco_sprint',    'loco_sprint'],
       appendage:        ['app_stinger',    'app_stinger'],
+      eyes:             ['eyes_plain',     'eyes_plain'],
+      hide_pattern:     ['hide_plain',     'hide_plain'],
       aberration:       ['ab_voltaic',     'ab_voltaic'],
       palette:          ['pal_ash',        'pal_ash'],
     }));
@@ -73,6 +75,8 @@ describe('expressPhenotype', () => {
       carapace: ['cara_chitin', 'cara_hide'], // dominant vs. recessive
       locomotion: ['loco_sprint', 'loco_bulk'], // dominant vs. recessive
       appendage: ['app_stinger', 'app_none'], // dominant vs. recessive
+      eyes: ['eyes_plain', 'eyes_plain'],
+      hide_pattern: ['hide_plain', 'hide_plain'],
       aberration: ['ab_none', 'ab_voltaic'], // dominant (none) vs. recessive (voltaic)
       palette: ['pal_ash', 'pal_ash'],
     }));
@@ -97,6 +101,8 @@ describe('expressPhenotype', () => {
       carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_sprint', 'loco_sprint'],
       appendage: ['app_stinger', 'app_stinger'],
+      eyes: ['eyes_plain', 'eyes_plain'],
+      hide_pattern: ['hide_plain', 'hide_plain'],
       aberration: ['ab_none', 'ab_none'],
       palette: ['pal_ash', 'pal_ash'],
     }));
@@ -111,10 +117,40 @@ describe('expressPhenotype', () => {
       carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_sprint', 'loco_sprint'],
       appendage: ['app_stinger', 'app_stinger'],
+      eyes: ['eyes_plain', 'eyes_plain'],
+      hide_pattern: ['hide_plain', 'hide_plain'],
       aberration: ['ab_none', 'ab_none'],
       palette: ['pal_ash', 'pal_ash'],
     }));
     expect(p2.expressed['head']).toBe('head_sensor');
+  });
+
+  it('baseline wins any same-class het pairing (head_plain vs any other head dominant)', () => {
+    // head_plain is at index 0 in LOCI.head.alleles; all other head alleles are dominant.
+    // So head_plain beats head_maw, head_sensor, and head_mandible in any heterozygous pair.
+    const pairs: Array<[string, string]> = [
+      ['head_plain', 'head_maw'],
+      ['head_maw',   'head_plain'],  // pair order should not matter
+      ['head_plain', 'head_sensor'],
+      ['head_plain', 'head_mandible'],
+    ];
+    for (const pair of pairs) {
+      const p = expressPhenotype(g({
+        musculature: ['mus_neutral', 'mus_neutral'], neural_tissue: ['neu_neutral', 'neu_neutral'],
+        predator_drive: ['prd_neutral', 'prd_neutral'], carapace_density: ['car_neutral', 'car_neutral'],
+        metabolism: ['met_neutral', 'met_neutral'], sinew: ['sin_neutral', 'sin_neutral'],
+        vigor: ['vig_neutral', 'vig_neutral'], acuity: ['acu_neutral', 'acu_neutral'],
+        head: pair,
+        carapace: ['cara_bare', 'cara_bare'],
+        locomotion: ['loco_plain', 'loco_plain'],
+        appendage: ['app_none', 'app_none'],
+        eyes: ['eyes_plain', 'eyes_plain'],
+        hide_pattern: ['hide_plain', 'hide_plain'],
+        aberration: ['ab_none', 'ab_none'],
+        palette: ['pal_ash', 'pal_ash'],
+      }));
+      expect(p.expressed['head']).toBe('head_plain');
+    }
   });
 
   it('palette expresses via the same rule (order-based tie-break)', () => {
@@ -125,6 +161,8 @@ describe('expressPhenotype', () => {
       vigor: ['vig_neutral', 'vig_neutral'], acuity: ['acu_neutral', 'acu_neutral'],
       head: ['head_mandible', 'head_mandible'], carapace: ['cara_chitin', 'cara_chitin'],
       locomotion: ['loco_bulk', 'loco_bulk'], appendage: ['app_none', 'app_none'],
+      eyes: ['eyes_plain', 'eyes_plain'],
+      hide_pattern: ['hide_plain', 'hide_plain'],
       aberration: ['ab_none', 'ab_none'],
       palette: ['pal_rust', 'pal_ash'], // pal_ash is earlier in the palette locus → wins
     }));
