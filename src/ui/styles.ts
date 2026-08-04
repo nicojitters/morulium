@@ -151,6 +151,30 @@ export const styles = {
     fontFamily: 'inherit',
   } as CSSProperties,
 
+  decantButtonDisabled: {
+    padding: '10px 20px',
+    borderRadius: 6,
+    border: '1px solid #cbd5e1',   // slate-300
+    background: '#e2e8f0',          // slate-200
+    color: '#64748b',               // slate-500
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  emptyStateCtaDisabled: {
+    padding: '14px 28px',
+    borderRadius: 8,
+    border: '1px solid #cbd5e1',
+    background: '#e2e8f0',
+    color: '#64748b',
+    fontSize: 16,
+    fontWeight: 600,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
   harvestIndicator: {
     fontSize: 13,
     color: '#555',
