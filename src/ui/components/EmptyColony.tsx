@@ -7,7 +7,7 @@ export function EmptyColony(): ReactElement {
     <div style={styles.emptyState} data-testid="empty-colony">
       <div style={styles.emptyStateTitle}>Your Colony is empty</div>
       <div style={styles.emptyStateBody}>
-        Decant your first Morula to seed the collection.
+        Decant a Morula to seed the collection. You get 3 free Harvests each day.
       </div>
       <DecantButton label="Decant your first Morula" variant="empty-cta" />
     </div>

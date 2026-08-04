@@ -10,6 +10,8 @@ import { styles, TIER_COLORS } from '../styles';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { DecantButton } from '../components/DecantButton';
 import { EmptyColony } from '../components/EmptyColony';
+import { HarvestIndicator } from '../components/HarvestIndicator';
+import { FailsafeIndicator } from '../components/FailsafeIndicator';
 import type { DemoRow } from '../../sim/__demo__';
 
 const TIERS: readonly Tier[] = ['baseline', 'strain', 'mutant', 'chimera', 'progenitor'];
@@ -66,7 +68,11 @@ export function Colony(): ReactElement {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <h1 style={styles.headerTitle}>Morulium</h1>
-          <p style={styles.headerSub}>Your Colony — {units.length} specimens</p>
+          <p style={styles.headerSub}>
+            Your Colony — {units.length} specimens
+            {' · '}<HarvestIndicator />
+            {' '}<FailsafeIndicator />
+          </p>
         </div>
         <DecantButton />
       </div>

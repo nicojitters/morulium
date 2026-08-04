@@ -3,10 +3,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, fireEvent, act, cleanup } from '@testing-library/react';
 import { Colony } from '../../src/ui/screens/Colony';
 import { useColonyStore } from '../../src/state/colony';
+import { todayLocalKey } from '../../src/state/harvest';
 
 describe('Colony screen', () => {
   beforeEach(() => {
-    useColonyStore.setState({ units: [], nextId: 1, lastDecantedId: null });
+    useColonyStore.setState({
+      units: [],
+      nextId: 1,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+    });
     vi.useRealTimers();
   });
 
@@ -86,6 +94,52 @@ describe('Colony screen', () => {
 
     expect(useColonyStore.getState().lastDecantedId).toBeNull();
     vi.useRealTimers();
+  });
+
+  it('renders the FailsafeIndicator in the header when droughtCount >= 40', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome() },
+      ],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 45,
+    });
+    const { getByTestId } = render(<Colony />);
+    const pill = getByTestId('failsafe-indicator');
+    expect(pill.textContent).toContain('Failsafe in 5');
+  });
+
+  it('does not render the FailsafeIndicator when droughtCount < 40', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome() },
+      ],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 20,
+    });
+    const { queryByTestId } = render(<Colony />);
+    expect(queryByTestId('failsafe-indicator')).toBeNull();
+  });
+
+  it('always renders the HarvestIndicator', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome() },
+      ],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+    });
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('harvest-indicator').textContent).toBe('Harvest 3/3');
   });
 });
 
