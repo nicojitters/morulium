@@ -4,6 +4,7 @@ import { render, cleanup } from '@testing-library/react';
 import { FailsafeIndicator } from '../../src/ui/components/FailsafeIndicator';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 function resetStore(droughtCount: number): void {
   useColonyStore.setState({
@@ -11,6 +12,8 @@ function resetStore(droughtCount: number): void {
     harvestsToday: 0, harvestDayKey: todayLocalKey(),
     droughtCount,
     breedsToday: 0, breedDayKey: todayLocalKey(),
+    fronts: FRESH_FRONTS,
+    activeIncursion: null,
   });
 }
 

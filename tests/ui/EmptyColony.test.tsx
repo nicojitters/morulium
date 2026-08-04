@@ -4,6 +4,7 @@ import { render, fireEvent, cleanup } from '@testing-library/react';
 import { EmptyColony } from '../../src/ui/components/EmptyColony';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('EmptyColony', () => {
   beforeEach(() => {
@@ -16,6 +17,8 @@ describe('EmptyColony', () => {
       droughtCount: 0,
       breedsToday: 0,
       breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
   });
 

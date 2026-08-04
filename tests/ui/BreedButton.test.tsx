@@ -4,6 +4,7 @@ import { render, fireEvent, cleanup } from '@testing-library/react';
 import { BreedButton } from '../../src/ui/components/BreedButton';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('BreedButton', () => {
   beforeEach(() => {
@@ -12,6 +13,8 @@ describe('BreedButton', () => {
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
   });
   afterEach(() => {

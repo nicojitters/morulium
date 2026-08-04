@@ -4,6 +4,7 @@ import { render, fireEvent, cleanup } from '@testing-library/react';
 import { Breed } from '../../src/ui/screens/Breed';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 function resetStore(): void {
   useColonyStore.setState({
@@ -15,6 +16,8 @@ function resetStore(): void {
     droughtCount: 0,
     breedsToday: 0,
     breedDayKey: todayLocalKey(),
+    fronts: FRESH_FRONTS,
+    activeIncursion: null,
   });
 }
 

@@ -4,6 +4,7 @@ import { render, cleanup, act } from '@testing-library/react';
 import { HarvestIndicator } from '../../src/ui/components/HarvestIndicator';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('HarvestIndicator', () => {
   beforeEach(() => {
@@ -12,6 +13,8 @@ describe('HarvestIndicator', () => {
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
   });
   afterEach(() => {

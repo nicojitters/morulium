@@ -4,6 +4,7 @@ import { render, fireEvent, act, cleanup } from '@testing-library/react';
 import { Colony } from '../../src/ui/screens/Colony';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('Colony screen', () => {
   beforeEach(() => {
@@ -16,6 +17,8 @@ describe('Colony screen', () => {
       droughtCount: 0,
       breedsToday: 0,
       breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
     vi.useRealTimers();
   });

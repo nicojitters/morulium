@@ -4,6 +4,7 @@ import { render, fireEvent, cleanup } from '@testing-library/react';
 import { DecantButton } from '../../src/ui/components/DecantButton';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('DecantButton', () => {
   beforeEach(() => {
@@ -12,6 +13,8 @@ describe('DecantButton', () => {
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
   });
 

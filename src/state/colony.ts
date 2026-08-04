@@ -22,6 +22,12 @@ import {
 } from './breed';
 import { breedGenome, MUTATION_RATE } from '../sim/breed';
 import { nextWear } from '../sim/wear';
+import type { FrontId } from '../sim/data/fronts';
+import { FRONTS } from '../sim/data/fronts';
+import { TEAM_SIZE, resolveIncursion } from '../sim/incursion';
+import type { IncursionResolution } from '../sim/incursion';
+import { FRESH_FRONTS, FRONT_COOLDOWN_MS } from './incursion';
+import type { FrontState } from './incursion';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -32,9 +38,13 @@ interface ColonyStore {
   readonly droughtCount: number;
   readonly breedsToday: number;
   readonly breedDayKey: string;
+  readonly fronts: Readonly<Record<FrontId, FrontState>>;
+  readonly activeIncursion: IncursionResolution | null;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
+  launchIncursion: (frontId: FrontId, teamIds: readonly [number, number, number, number]) => IncursionResolution;
+  dismissIncursion: () => void;
   clearHighlight: () => void;
 }
 
@@ -49,35 +59,26 @@ export const useColonyStore = create<ColonyStore>()(
       droughtCount: 0,
       breedsToday: 0,
       breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
 
       decant: () => {
         const state = get();
         const today = todayLocalKey();
-
         const harvestsUsedToday = state.harvestDayKey === today ? state.harvestsToday : 0;
         if (harvestsUsedToday >= DAILY_HARVEST_LIMIT) {
           throw new Error('daily Harvest limit reached');
         }
-
         const id = state.nextId;
-
         const genome = state.droughtCount >= DROUGHT_THRESHOLD
           ? rollGenomeAtLeast(id * FAILSAFE_SUBSTREAM_PRIME, FAILSAFE_MIN_TIER)
           : rollGenome(createRng(id));
-
         const { tier } = computeRarity(genome);
         const newDrought = tierAtLeast(tier, 'chimera') ? 0 : state.droughtCount + 1;
-
         const unit: Unit = {
-          id,
-          seed: id,
-          decantedAt: Date.now(),
-          genome,
-          generation: 0,
-          parentIds: null,
-          wear: {},
+          id, seed: id, decantedAt: Date.now(), genome,
+          generation: 0, parentIds: null, wear: {},
         };
-
         set({
           units: [...state.units, unit],
           nextId: id + 1,
@@ -98,29 +99,20 @@ export const useColonyStore = create<ColonyStore>()(
         const pB = state.units.find((u) => u.id === parentBId);
         if (!pA) throw new Error(`breed: parent ${parentAId} not found`);
         if (!pB) throw new Error(`breed: parent ${parentBId} not found`);
-
         const today = todayLocalKey();
         const breedsUsedToday = state.breedDayKey === today ? state.breedsToday : 0;
         if (breedsUsedToday >= DAILY_BREED_LIMIT) {
           throw new Error('daily Breed limit reached');
         }
-
         const childId = state.nextId;
         const rng = createRng(childId * BREED_SUBSTREAM_PRIME);
         const { genome, mutatedLoci } = breedGenome(pA.genome, pB.genome, rng, MUTATION_RATE);
         const wear = nextWear(pA, pB, mutatedLoci);
         const generation = Math.max(pA.generation, pB.generation) + 1;
-
         const child: Unit = {
-          id: childId,
-          seed: childId,
-          decantedAt: Date.now(),
-          genome,
-          generation,
-          parentIds: [parentAId, parentBId] as const,
-          wear,
+          id: childId, seed: childId, decantedAt: Date.now(), genome,
+          generation, parentIds: [parentAId, parentBId] as const, wear,
         };
-
         set({
           units: [...state.units, child],
           nextId: childId + 1,
@@ -131,11 +123,55 @@ export const useColonyStore = create<ColonyStore>()(
         return child;
       },
 
+      launchIncursion: (frontId, teamIds) => {
+        const state = get();
+        const frontState = state.fronts[frontId];
+        if (!frontState) throw new Error(`launchIncursion: unknown front ${frontId}`);
+        if (frontState.captured) throw new Error(`launchIncursion: front ${frontId} already captured`);
+        if (frontState.cooldownUntil !== null && frontState.cooldownUntil > Date.now()) {
+          throw new Error(`launchIncursion: front ${frontId} on cooldown`);
+        }
+        if (teamIds.length !== TEAM_SIZE) {
+          throw new Error(`launchIncursion: team must have exactly ${TEAM_SIZE} members`);
+        }
+        const unique = new Set(teamIds);
+        if (unique.size !== TEAM_SIZE) {
+          throw new Error('launchIncursion: team ids must be distinct');
+        }
+        const team: Unit[] = [];
+        for (const id of teamIds) {
+          const u = state.units.find((u) => u.id === id);
+          if (!u) throw new Error(`launchIncursion: unit ${id} not found`);
+          team.push(u);
+        }
+        const resolution = resolveIncursion(team, FRONTS[frontId]);
+        set({ activeIncursion: resolution });
+        return resolution;
+      },
+
+      dismissIncursion: () => {
+        const state = get();
+        const r = state.activeIncursion;
+        if (r === null) return;
+        const target: FrontState = { ...state.fronts[r.frontId] };
+        if (r.outcome === 'won') {
+          set({
+            fronts: { ...state.fronts, [r.frontId]: { captured: true, cooldownUntil: null } },
+            activeIncursion: null,
+          });
+        } else {
+          set({
+            fronts: { ...state.fronts, [r.frontId]: { ...target, cooldownUntil: Date.now() + FRONT_COOLDOWN_MS } },
+            activeIncursion: null,
+          });
+        }
+      },
+
       clearHighlight: () => set({ lastDecantedId: null }),
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -169,6 +205,13 @@ export const useColonyStore = create<ColonyStore>()(
             })),
           };
         }
+        if (from < 4) {
+          s = {
+            ...s,
+            fronts: FRESH_FRONTS,
+            // activeIncursion is transient — no need to backfill
+          };
+        }
         return s;
       },
       partialize: (state) => ({
@@ -179,6 +222,8 @@ export const useColonyStore = create<ColonyStore>()(
         droughtCount: state.droughtCount,
         breedsToday: state.breedsToday,
         breedDayKey: state.breedDayKey,
+        fronts: state.fronts,
+        // activeIncursion excluded (transient — ticker not resumable)
       }),
     },
   ),

@@ -3,6 +3,9 @@ import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { tierAtLeast } from '../../src/state/failsafe';
 import { computeRarity } from '../../src/sim/rarity';
+import { rollGenome } from '../../src/sim/genome';
+import { createRng } from '../../src/sim/rng';
+import { FRESH_FRONTS } from '../../src/state/incursion';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -15,6 +18,8 @@ describe('colony store', () => {
       droughtCount: 0,
       breedsToday: 0,
       breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
     });
   });
 
@@ -272,5 +277,214 @@ describe('colony store', () => {
     // Cross g2 with g1 (gen 2 × gen 1) → gen 3
     const g3 = useColonyStore.getState().breed(g2.id, g1.id);
     expect(g3.generation).toBe(3);
+  });
+
+  it('launchIncursion returns a resolution with the correct frontId and teamIds', () => {
+    const u1 = useColonyStore.getState().decant();
+    const u2 = useColonyStore.getState().decant();
+    const u3 = useColonyStore.getState().decant();
+    // Need a 4th unit but we're at the daily Harvest cap — advance a day
+    vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
+    const u4 = useColonyStore.getState().decant();
+    vi.useRealTimers();
+
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [u1.id, u2.id, u3.id, u4.id]);
+    expect(r.frontId).toBe('infrastructure');
+    expect(r.teamIds).toEqual([u1.id, u2.id, u3.id, u4.id]);
+  });
+
+  it('launchIncursion sets activeIncursion but does NOT change front state yet', () => {
+    const team = [
+      useColonyStore.getState().decant(),
+      useColonyStore.getState().decant(),
+      useColonyStore.getState().decant(),
+    ];
+    vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
+    const u4 = useColonyStore.getState().decant();
+    vi.useRealTimers();
+
+    useColonyStore.getState().launchIncursion('infrastructure', [team[0]!.id, team[1]!.id, team[2]!.id, u4.id]);
+    const s = useColonyStore.getState();
+    expect(s.activeIncursion).not.toBeNull();
+    // Front state unchanged
+    expect(s.fronts.infrastructure.captured).toBe(false);
+    expect(s.fronts.infrastructure.cooldownUntil).toBeNull();
+  });
+
+  it('dismissIncursion commits captured=true on outcome=won', () => {
+    // Seed 4 units directly to bypass daily cap
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+    });
+    // Force an "always-win" scenario: mutate the activeIncursion post-launch
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    // Overwrite outcome to test dismiss logic in isolation
+    useColonyStore.setState({ activeIncursion: { ...r, outcome: 'won' } });
+    useColonyStore.getState().dismissIncursion();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.captured).toBe(true);
+    expect(s.fronts.infrastructure.cooldownUntil).toBeNull();
+    expect(s.activeIncursion).toBeNull();
+  });
+
+  it('dismissIncursion commits cooldownUntil on outcome=failed', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+    });
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    useColonyStore.setState({ activeIncursion: { ...r, outcome: 'failed' } });
+    useColonyStore.getState().dismissIncursion();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.captured).toBe(false);
+    const now = new Date(2026, 7, 4, 12, 0, 0).getTime();
+    expect(s.fronts.infrastructure.cooldownUntil).toBe(now + 30 * 60 * 1000);
+    expect(s.activeIncursion).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('dismissIncursion is a no-op when activeIncursion is null', () => {
+    const before = useColonyStore.getState();
+    useColonyStore.getState().dismissIncursion();
+    const after = useColonyStore.getState();
+    expect(after.fronts).toEqual(before.fronts);
+    expect(after.activeIncursion).toBeNull();
+  });
+
+  it('launchIncursion throws when front is captured', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      fronts: { ...FRESH_FRONTS, infrastructure: { captured: true, cooldownUntil: null } },
+    });
+    expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]))
+      .toThrow(/already captured/);
+  });
+
+  it('launchIncursion throws when front is on active cooldown', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const now = Date.now();
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now + 60_000 } },
+    });
+    expect(() => useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4]))
+      .toThrow(/on cooldown/);
+    vi.useRealTimers();
+  });
+
+  it('launchIncursion allows a front whose cooldown has passed', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const now = Date.now();
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now - 60_000 } },
+    });
+    expect(() => useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4])).not.toThrow();
+    vi.useRealTimers();
+  });
+
+  it('launchIncursion throws on team size != 4', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 4,
+    });
+    // @ts-expect-error: intentional short tuple to test defensive check
+    expect(() => useColonyStore.getState().launchIncursion('guerrilla', [1, 2, 3]))
+      .toThrow(/exactly 4 members/);
+  });
+
+  it('launchIncursion throws when team ids contain duplicates', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+    });
+    expect(() => useColonyStore.getState().launchIncursion('guerrilla', [1, 1, 3, 4]))
+      .toThrow(/must be distinct/);
+  });
+
+  it('launchIncursion throws when a team id is not a colony unit', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+    });
+    expect(() => useColonyStore.getState().launchIncursion('guerrilla', [1, 2, 3, 999]))
+      .toThrow(/unit 999 not found/);
+  });
+
+  it('launchIncursion does NOT touch droughtCount, harvestsToday, or breedsToday', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      harvestsToday: 2,
+      harvestDayKey: '2026-08-04',
+      droughtCount: 17,
+      breedsToday: 1,
+      breedDayKey: '2026-08-04',
+    });
+    useColonyStore.getState().launchIncursion('guerrilla', [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    expect(s.harvestsToday).toBe(2);
+    expect(s.droughtCount).toBe(17);
+    expect(s.breedsToday).toBe(1);
+    vi.useRealTimers();
+  });
+
+  it('full round-trip: launch on Won → dismiss captures → re-launch throws', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+    });
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    useColonyStore.setState({ activeIncursion: { ...r, outcome: 'won' } });
+    useColonyStore.getState().dismissIncursion();
+    expect(useColonyStore.getState().fronts.infrastructure.captured).toBe(true);
+    expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]))
+      .toThrow(/already captured/);
   });
 });
