@@ -63,4 +63,11 @@ describe('App', () => {
     fireEvent.click(getByTestId('nav-tab-colony'));
     expect(getByTestId('empty-colony')).toBeDefined();
   });
+
+  it('renders SerumBadge in the nav on default state', () => {
+    const { getByTestId } = render(<App />);
+    const badge = getByTestId('serum-badge');
+    expect(badge).toBeDefined();
+    expect(badge.textContent).toBe('SR 200');
+  });
 });

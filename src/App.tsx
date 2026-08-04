@@ -2,6 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { Colony } from './ui/screens/Colony';
 import { Breed } from './ui/screens/Breed';
 import { Incursion } from './ui/screens/Incursion';
+import { SerumBadge } from './ui/components/SerumBadge';
 import { styles } from './ui/styles';
 
 type Tab = 'colony' | 'breed' | 'incursion';
@@ -38,6 +39,7 @@ export function App(): ReactElement {
         >
           Incursion
         </button>
+        <SerumBadge />
       </nav>
       {tab === 'colony' && <Colony />}
       {tab === 'breed' && <Breed />}

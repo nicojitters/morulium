@@ -628,4 +628,14 @@ export const styles = {
     color: '#166534',
     textAlign: 'center',
   } as CSSProperties,
+
+  serumBadge: {
+    marginLeft: 'auto',
+    padding: '6px 12px',
+    fontSize: 13,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    fontWeight: 500,
+    color: '#334155',   // slate-700
+    alignSelf: 'center',
+  } as CSSProperties,
 };
