@@ -142,9 +142,9 @@ export const useColonyStore = create<ColonyStore>()(
       decant: () => {
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const today = todayLocalKey();
         const dayRolledOver = s.harvestDayKey !== today;
@@ -174,8 +174,8 @@ export const useColonyStore = create<ColonyStore>()(
           : s.units;
 
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           units: [...refreshedUnits, unit],
           nextId: id + 1,
           lastDecantedId: id,
@@ -193,9 +193,9 @@ export const useColonyStore = create<ColonyStore>()(
         }
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const pA = s.units.find((u) => u.id === parentAId);
         const pB = s.units.find((u) => u.id === parentBId);
@@ -229,8 +229,8 @@ export const useColonyStore = create<ColonyStore>()(
         };
 
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           units: [...s.units, child],
           nextId: childId + 1,
           lastDecantedId: childId,
@@ -244,9 +244,9 @@ export const useColonyStore = create<ColonyStore>()(
       launchIncursion: (frontId, teamIds, stimAppliedIds = []) => {
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const frontState = s.fronts[frontId];
         if (!frontState) throw new Error(`launchIncursion: unknown front ${frontId}`);
@@ -322,8 +322,8 @@ export const useColonyStore = create<ColonyStore>()(
         });
 
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           activeIncursion: resolution,
           units: newUnits,
           stims: s.stims - stimAppliedIds.length,
@@ -335,16 +335,16 @@ export const useColonyStore = create<ColonyStore>()(
       buyStim: () => {
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         if (s.serum < STIM_COST_SERUM) {
           throw new Error('buyStim: insufficient Serum');
         }
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           serum: s.serum - STIM_COST_SERUM,
           stims: s.stims + 1,
         });
@@ -353,9 +353,9 @@ export const useColonyStore = create<ColonyStore>()(
       assignToGarrison: (frontId, unitId) => {
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const front = s.fronts[frontId];
         if (!front.captured) {
@@ -384,8 +384,8 @@ export const useColonyStore = create<ColonyStore>()(
           flareStartedAt: newGarrison.length >= GARRISON_MIN ? null : front.flareStartedAt,
         };
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
       },
@@ -393,9 +393,9 @@ export const useColonyStore = create<ColonyStore>()(
       removeFromGarrison: (frontId, unitId) => {
         const state = get();
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const front = s.fronts[frontId];
         if (!front.garrison.includes(unitId)) {
@@ -411,8 +411,8 @@ export const useColonyStore = create<ColonyStore>()(
             : front.flareStartedAt,
         };
         set({
-          ...tickDelta,
           ...flareDelta,
+          ...tickDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
       },
@@ -422,9 +422,9 @@ export const useColonyStore = create<ColonyStore>()(
         const r = state.activeIncursion;
         if (r === null) return;
         const now = Date.now();
-        const tickDelta = applyGarrisonTick(state, now);
-        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
-        const s = { ...state, ...tickDelta, ...flareDelta };
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
 
         const target: FrontState = { ...s.fronts[r.frontId] };
         const nextFronts = { ...s.fronts } as Record<FrontId, FrontState>;
@@ -437,7 +437,7 @@ export const useColonyStore = create<ColonyStore>()(
         for (const fid of Object.keys(nextFronts) as FrontId[]) {
           nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
         }
-        set({ ...tickDelta, ...flareDelta, fronts: nextFronts, activeIncursion: null });
+        set({ ...flareDelta, ...tickDelta, fronts: nextFronts, activeIncursion: null });
       },
 
       clearHighlight: () => set({ lastDecantedId: null }),
