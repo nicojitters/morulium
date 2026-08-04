@@ -290,6 +290,27 @@ export const styles = {
     textAlign: 'center',
   } as CSSProperties,
 
+  restLine: {
+    marginTop: 2,
+    fontSize: 11,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    textAlign: 'center',
+  } as CSSProperties,
+
+  injuredLine: {
+    marginTop: 2,
+    fontSize: 11,
+    color: '#b45309',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    textAlign: 'center',
+  } as CSSProperties,
+
+  injuredCardOverlay: {
+    opacity: 0.55,
+    cursor: 'not-allowed',
+  } as CSSProperties,
+
   nav: {
     display: 'flex',
     gap: 4,

@@ -1,11 +1,11 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Unit } from '../../state/types';
 import { useColonyStore } from '../../state/colony';
 import { BreedButton } from '../components/BreedButton';
 import { BreedIndicator } from '../components/BreedIndicator';
 import { ParentSlot } from '../components/ParentSlot';
 import { SpecimenCard } from '../components/SpecimenCard';
-import { unitToRow } from './Colony';
+import { unitToRow, restStateFor } from './Colony';
 import { styles } from '../styles';
 import { BREED_COST_SERUM } from '../../state/serum';
 import { breedsRemaining } from '../../state/breed';
@@ -20,6 +20,11 @@ export function Breed(): ReactElement {
 
   const [parentAId, setParentAId] = useState<number | null>(null);
   const [parentBId, setParentBId] = useState<number | null>(null);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const parentA = useMemo(
     () => (parentAId === null ? null : units.find((u) => u.id === parentAId) ?? null),
@@ -111,6 +116,7 @@ export function Breed(): ReactElement {
               row={unitToRow(unit)}
               highlighted={unit.id === lastDecantedId}
               lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
+              restState={restStateFor(unit, now)}
             />
           </div>
         ))}

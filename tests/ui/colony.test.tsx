@@ -182,6 +182,22 @@ describe('Colony screen', () => {
     const lineage = getByTestId('lineage-line');
     expect(lineage.textContent).toBe('Gen 2 · from #1 × #2');
   });
+
+  it('renders rest line on every card in Colony grid', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: makeMinimalGenome(),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 75, injuredUntil: null,
+      })),
+      nextId: 3,
+    });
+    const { getAllByTestId } = render(<Colony />);
+    const restLines = getAllByTestId(/^rest-line-/);
+    expect(restLines).toHaveLength(2);
+    expect(restLines[0]!.textContent).toBe('Rest 75/100');
+  });
 });
 
 // Helper: a genome shape that resolves through the sim without errors. Uses the

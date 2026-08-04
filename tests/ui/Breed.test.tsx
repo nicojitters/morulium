@@ -24,6 +24,29 @@ function resetStore(): void {
   });
 }
 
+function makeMinimalGenome() {
+  return {
+    loci: {
+      musculature:      ['mus_neutral', 'mus_neutral'],
+      neural_tissue:    ['neu_neutral', 'neu_neutral'],
+      predator_drive:   ['prd_neutral', 'prd_neutral'],
+      carapace_density: ['car_neutral', 'car_neutral'],
+      metabolism:       ['met_neutral', 'met_neutral'],
+      sinew:            ['sin_neutral', 'sin_neutral'],
+      vigor:            ['vig_neutral', 'vig_neutral'],
+      acuity:           ['acu_neutral', 'acu_neutral'],
+      head:             ['head_plain', 'head_plain'],
+      carapace:         ['cara_bare', 'cara_bare'],
+      locomotion:       ['loco_plain', 'loco_plain'],
+      appendage:        ['app_none', 'app_none'],
+      eyes:             ['eyes_plain', 'eyes_plain'],
+      hide_pattern:     ['hide_plain', 'hide_plain'],
+      aberration:       ['ab_none', 'ab_none'],
+      palette:          ['pal_ash', 'pal_ash'],
+    } as const,
+  };
+}
+
 describe('Breed screen', () => {
   beforeEach(() => {
     resetStore();
@@ -166,5 +189,42 @@ describe('Breed screen', () => {
     fireEvent.click(cards[0]!);
     fireEvent.click(cards[1]!);
     expect(queryByText(/Not enough Serum/)).toBeNull();
+  });
+
+  it('renders rest line on every card in Breed picker (breeding orthogonal to rest)', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: makeMinimalGenome(),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 25, injuredUntil: null,
+      })),
+      nextId: 3,
+      serum: 200,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
+    });
+    const { getAllByTestId } = render(<Breed />);
+    const restLines = getAllByTestId(/^rest-line-/);
+    expect(restLines).toHaveLength(2);
+  });
+
+  it('injured units are still pickable in Breed picker (breeding ignores injury)', () => {
+    const injuredUntil = Date.now() + 30 * 60 * 1000;
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: makeMinimalGenome(),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil,
+      })),
+      nextId: 3,
+      serum: 200,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
+    });
+    const { getAllByTestId, getByTestId } = render(<Breed />);
+    const cards = getAllByTestId('specimen-card');
+    fireEvent.click(cards[0]!);
+    // Slot A filled — click was accepted despite injury
+    expect(getByTestId('parent-slot-a').textContent).not.toContain('Parent A');
   });
 });

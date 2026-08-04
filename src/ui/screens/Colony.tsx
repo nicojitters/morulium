@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Unit } from '../../state/types';
 import { useColonyStore } from '../../state/colony';
 import { expressPhenotype } from '../../sim/genome';
@@ -37,10 +37,24 @@ export function unitToRow(unit: Unit): DemoRow {
   };
 }
 
+export function restStateFor(unit: Unit, now: number) {
+  return {
+    restCurrent: unit.restCurrent,
+    injuredUntil: unit.injuredUntil,
+    now,
+  };
+}
+
 export function Colony(): ReactElement {
   const units = useColonyStore((s) => s.units);
   const lastDecantedId = useColonyStore((s) => s.lastDecantedId);
   const clearHighlight = useColonyStore((s) => s.clearHighlight);
+
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // Sort newest-first by decantedAt (stable copy — do not mutate store state).
   // id tiebreaker matches Breed screen: same-timestamp decants (fake-timer tests)
@@ -93,6 +107,7 @@ export function Colony(): ReactElement {
             row={unitToRow(unit)}
             highlighted={unit.id === lastDecantedId}
             lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
+            restState={restStateFor(unit, now)}
           />
         ))}
       </div>

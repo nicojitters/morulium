@@ -10,10 +10,24 @@ interface Lineage {
   readonly parentIds: readonly [number, number] | null;
 }
 
+interface RestState {
+  readonly restCurrent: number;
+  readonly injuredUntil: number | null;
+  readonly now: number;
+}
+
 interface Props {
   readonly row: DemoRow;
   readonly highlighted?: boolean;
   readonly lineage?: Lineage;
+  readonly restState?: RestState;
+}
+
+function formatInjuryCountdown(msRemaining: number): string {
+  const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds}s`;
 }
 
 /**
@@ -21,14 +35,21 @@ interface Props {
  * a monospace specimen ID footer, and (when lineage prop is provided) a
  * small lineage line beneath the footer.
  */
-export function SpecimenCard({ row, highlighted = false, lineage }: Props): ReactElement {
+export function SpecimenCard({ row, highlighted = false, lineage, restState }: Props): ReactElement {
   const colors = resolvePalette(row.palette);
   const bgTint = tintForCard(colors.base);
   const specimenId = `M-${String(row.seed).padStart(5, '0')}`;
 
-  const cardStyle = highlighted
+  const isInjured = restState !== undefined
+    && restState.injuredUntil !== null
+    && restState.injuredUntil > restState.now;
+
+  let cardStyle = highlighted
     ? { ...styles.card(bgTint), ...styles.highlightedCard }
     : styles.card(bgTint);
+  if (isInjured) {
+    cardStyle = { ...cardStyle, ...styles.injuredCardOverlay };
+  }
 
   return (
     <div
@@ -36,6 +57,7 @@ export function SpecimenCard({ row, highlighted = false, lineage }: Props): Reac
       data-testid="specimen-card"
       data-highlighted={highlighted || undefined}
       data-unit-id={row.seed}
+      data-injured={isInjured ? 'true' : undefined}
     >
       <TierBadge tier={row.tier} />
       <div style={styles.cardSprite}>
@@ -47,6 +69,16 @@ export function SpecimenCard({ row, highlighted = false, lineage }: Props): Reac
           {lineage.parentIds
             ? `Gen ${lineage.generation} · from #${lineage.parentIds[0]} × #${lineage.parentIds[1]}`
             : `Gen ${lineage.generation} · Harvested`}
+        </div>
+      )}
+      {restState !== undefined && (
+        <div
+          style={isInjured ? styles.injuredLine : styles.restLine}
+          data-testid={`rest-line-${row.seed}`}
+        >
+          {isInjured
+            ? `Injured, ready in ${formatInjuryCountdown(restState.injuredUntil! - restState.now)}`
+            : `Rest ${restState.restCurrent}/100`}
         </div>
       )}
     </div>
