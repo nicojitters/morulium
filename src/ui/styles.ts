@@ -193,4 +193,34 @@ export const styles = {
     backgroundColor: '#fef3c7', // amber-100
     border: '1px solid #fde68a',// amber-200
   } as CSSProperties,
+
+  breedIndicator: {
+    fontSize: 13,
+    color: '#555',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  breedButton: {
+    padding: '10px 20px',
+    borderRadius: 6,
+    border: '1px solid #7c3aed',   // violet-600
+    background: '#8b5cf6',          // violet-500
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  breedButtonDisabled: {
+    padding: '10px 20px',
+    borderRadius: 6,
+    border: '1px solid #cbd5e1',
+    background: '#e2e8f0',
+    color: '#64748b',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+  } as CSSProperties,
 };
