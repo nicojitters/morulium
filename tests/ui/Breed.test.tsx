@@ -49,14 +49,14 @@ describe('Breed screen', () => {
   });
 
   it('clicking a card fills first empty parent slot (A, then B)', () => {
-    const u1 = useColonyStore.getState().decant();
     useColonyStore.getState().decant();
+    const u2 = useColonyStore.getState().decant();
     const { getByTestId, getAllByTestId } = render(<Breed />);
     const cards = getAllByTestId('specimen-card');
     fireEvent.click(cards[0]!);
-    // Padded id format M-00001
-    const padded1 = `M-${String(u1.id).padStart(5, '0')}`;
-    expect(getByTestId('parent-slot-a').textContent).toContain(padded1);
+    // Newest-first sort: cards[0] is u2 (later decant)
+    const padded2 = `M-${String(u2.id).padStart(5, '0')}`;
+    expect(getByTestId('parent-slot-a').textContent).toContain(padded2);
     // Slot B still empty
     expect(getByTestId('parent-slot-b').textContent).toContain('Parent B');
   });
@@ -115,7 +115,7 @@ describe('Breed screen', () => {
     const s = useColonyStore.getState();
     expect(s.units).toHaveLength(3);
     const child = s.units[2]!;
-    expect(child.parentIds).toEqual([u1.id, u2.id]);
+    expect(child.parentIds).toEqual([u2.id, u1.id]);
     expect(child.generation).toBe(1);
     expect(s.breedsToday).toBe(1);
     // Slots cleared post-confirm

@@ -26,7 +26,7 @@ export function Breed(): ReactElement {
   );
 
   const sortedUnits = useMemo(
-    () => [...units].sort((a, b) => a.decantedAt - b.decantedAt),
+    () => [...units].sort((a, b) => b.decantedAt - a.decantedAt || b.id - a.id),
     [units],
   );
 
