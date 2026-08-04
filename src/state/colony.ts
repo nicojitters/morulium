@@ -29,7 +29,16 @@ import type { IncursionResolution } from '../sim/incursion';
 import { FRESH_FRONTS, FRONT_COOLDOWN_MS } from './incursion';
 import type { FrontState } from './incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from './serum';
-import { REST_MAX } from './rest';
+import {
+  REST_MAX,
+  REST_DEPLOY_COST,
+  UNDER_RESTED_THRESHOLD,
+  UNDER_RESTED_PENALTY,
+  INJURY_DURATION_MS,
+  INJURY_SUBSTREAM_PRIME,
+  STIM_COST_SERUM,
+} from './rest';
+import { rollInjuries } from '../sim/injury';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -47,8 +56,13 @@ interface ColonyStore {
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
-  launchIncursion: (frontId: FrontId, teamIds: readonly [number, number, number, number]) => IncursionResolution;
+  launchIncursion: (
+    frontId: FrontId,
+    teamIds: readonly [number, number, number, number],
+    stimAppliedIds?: readonly number[],
+  ) => IncursionResolution;
   dismissIncursion: () => void;
+  buyStim: () => void;
   clearHighlight: () => void;
 }
 
@@ -162,7 +176,7 @@ export const useColonyStore = create<ColonyStore>()(
         return child;
       },
 
-      launchIncursion: (frontId, teamIds) => {
+      launchIncursion: (frontId, teamIds, stimAppliedIds = []) => {
         const state = get();
         const frontState = state.fronts[frontId];
         if (!frontState) throw new Error(`launchIncursion: unknown front ${frontId}`);
@@ -183,9 +197,68 @@ export const useColonyStore = create<ColonyStore>()(
           if (!u) throw new Error(`launchIncursion: unit ${id} not found`);
           team.push(u);
         }
-        const resolution = resolveIncursion(team, FRONTS[frontId]);
-        set({ activeIncursion: resolution });
+
+        const now = Date.now();
+        const injuredMembers = team.filter((u) => u.injuredUntil !== null && u.injuredUntil > now);
+        if (injuredMembers.length > 0) {
+          throw new Error(`launchIncursion: units injured: ${injuredMembers.map((u) => u.id).join(', ')}`);
+        }
+
+        for (const id of stimAppliedIds) {
+          if (!teamIds.includes(id)) {
+            throw new Error(`launchIncursion: cannot apply Stim to non-team unit ${id}`);
+          }
+        }
+        if (state.stims < stimAppliedIds.length) {
+          throw new Error(`launchIncursion: need ${stimAppliedIds.length} Stim(s), have ${state.stims}`);
+        }
+
+        // Compute restPenalties: under-rested (< threshold) AND not Stimmed
+        const restPenalties: Record<number, number> = {};
+        for (const u of team) {
+          const isUnderRested = u.restCurrent < UNDER_RESTED_THRESHOLD;
+          const isStimmed = stimAppliedIds.includes(u.id);
+          if (isUnderRested && !isStimmed) {
+            restPenalties[u.id] = UNDER_RESTED_PENALTY;
+          }
+        }
+
+        // Roll injuries for at-risk units (deterministic given nextId + sorted team)
+        const childSeed = state.nextId;
+        const injuryRolls = rollInjuries(restPenalties, childSeed * INJURY_SUBSTREAM_PRIME);
+
+        const resolution = resolveIncursion(team, FRONTS[frontId], restPenalties);
+
+        // Deduct rest + apply injuries + deduct stims in ONE atomic set()
+        const teamIdSet = new Set(teamIds);
+        const newUnits = state.units.map((u) => {
+          if (!teamIdSet.has(u.id)) return u;
+          const gotInjured = injuryRolls[u.id] === true;
+          return {
+            ...u,
+            restCurrent: Math.max(0, u.restCurrent - REST_DEPLOY_COST),
+            injuredUntil: gotInjured ? now + INJURY_DURATION_MS : u.injuredUntil,
+          };
+        });
+
+        set({
+          activeIncursion: resolution,
+          units: newUnits,
+          stims: state.stims - stimAppliedIds.length,
+        });
+
         return resolution;
+      },
+
+      buyStim: () => {
+        const state = get();
+        if (state.serum < STIM_COST_SERUM) {
+          throw new Error('buyStim: insufficient Serum');
+        }
+        set({
+          serum: state.serum - STIM_COST_SERUM,
+          stims: state.stims + 1,
+        });
       },
 
       dismissIncursion: () => {

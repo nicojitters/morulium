@@ -7,7 +7,7 @@ import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from '../../src/state/serum';
-import { REST_MAX } from '../../src/state/rest';
+import { REST_MAX, REST_DEPLOY_COST, STIM_COST_SERUM } from '../../src/state/rest';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -738,5 +738,231 @@ describe('colony store', () => {
     const s = useColonyStore.getState();
     expect(s.units[0]!.restCurrent).toBe(100);   // parent unchanged
     expect(s.units[1]!.restCurrent).toBe(100);
+  });
+
+  it('launchIncursion deducts REST_DEPLOY_COST from every team member', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    for (const u of s.units) {
+      expect(u.restCurrent).toBe(100 - REST_DEPLOY_COST);
+    }
+  });
+
+  it('launchIncursion rest floors at 0 (never negative)', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,   // less than REST_DEPLOY_COST
+      })),
+      nextId: 5,
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    for (const u of s.units) {
+      expect(u.restCurrent).toBe(0);
+    }
+  });
+
+  it('launchIncursion throws when a picked unit is currently injured', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const now = Date.now();
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100,
+        injuredUntil: i === 2 ? now + 30 * 60 * 1000 : null,  // unit 2 injured
+      })),
+      nextId: 5,
+    });
+    expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]))
+      .toThrow(/units injured: 2/);
+    vi.useRealTimers();
+  });
+
+  it('launchIncursion throws when stimAppliedIds contains a non-team id', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      stims: 5,
+    });
+    expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4], [999]))
+      .toThrow(/cannot apply Stim to non-team unit 999/);
+  });
+
+  it('launchIncursion throws when stimAppliedIds.length > state.stims', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 20, injuredUntil: null,
+      })),
+      nextId: 5,
+      stims: 1,   // only 1 available
+    });
+    expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4], [1, 2, 3]))
+      .toThrow(/need 3 Stim\(s\), have 1/);
+  });
+
+  it('launchIncursion deducts stimAppliedIds.length from state.stims on success', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 20, injuredUntil: null,
+      })),
+      nextId: 5,
+      stims: 5,
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4], [1, 2]);
+    expect(useColonyStore.getState().stims).toBe(5 - 2);
+  });
+
+  it('launchIncursion fully-rested units never get injured', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    for (const u of s.units) {
+      expect(u.injuredUntil).toBeNull();
+    }
+  });
+
+  it('launchIncursion Stimmed under-rested units never get injured', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,   // all under-rested
+      })),
+      nextId: 5,
+      stims: 4,
+    });
+    // Stim all 4 under-rested units → none should be injured
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4], [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    for (const u of s.units) {
+      expect(u.injuredUntil).toBeNull();
+    }
+  });
+
+  it('launchIncursion injury determinism: same (nextId, under-rested set) yields same injuries', () => {
+    const setupState = {
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,
+      })),
+      nextId: 5,
+    };
+
+    useColonyStore.setState(setupState);
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const firstResult = useColonyStore.getState().units.map((u) => u.injuredUntil);
+
+    useColonyStore.setState(setupState);   // reset to identical state
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const secondResult = useColonyStore.getState().units.map((u) => u.injuredUntil);
+
+    // Same nextId (5) + same under-rested set → same injury outcomes
+    // (allow small variance in the actual timestamp — but injured-vs-null pattern
+    //  must match)
+    const firstPattern = firstResult.map((t) => t !== null);
+    const secondPattern = secondResult.map((t) => t !== null);
+    expect(firstPattern).toEqual(secondPattern);
+  });
+
+  it('launchIncursion does NOT touch serum, droughtCount, harvestsToday, breedsToday', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      serum: 200,
+      droughtCount: 17,
+      harvestsToday: 2,
+      harvestDayKey: '2026-08-04',
+      breedsToday: 1,
+      breedDayKey: '2026-08-04',
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    const s = useColonyStore.getState();
+    expect(s.serum).toBe(200);
+    expect(s.droughtCount).toBe(17);
+    expect(s.harvestsToday).toBe(2);
+    expect(s.breedsToday).toBe(1);
+    vi.useRealTimers();
+  });
+
+  it('buyStim throws when serum < STIM_COST_SERUM', () => {
+    useColonyStore.setState({ serum: STIM_COST_SERUM - 1, stims: 0 });
+    expect(() => useColonyStore.getState().buyStim()).toThrow(/insufficient Serum/);
+  });
+
+  it('buyStim deducts STIM_COST_SERUM and adds 1 stim on success', () => {
+    useColonyStore.setState({ serum: 200, stims: 3 });
+    useColonyStore.getState().buyStim();
+    const s = useColonyStore.getState();
+    expect(s.serum).toBe(200 - STIM_COST_SERUM);
+    expect(s.stims).toBe(4);
+  });
+
+  it('buyStim does NOT touch other fields', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({
+      units: [{
+        id: 1, seed: 1, decantedAt: 100,
+        genome: rollGenome(createRng(101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 50, injuredUntil: null,
+      }],
+      nextId: 2,
+      serum: 200,
+      stims: 0,
+      harvestsToday: 2,
+      harvestDayKey: '2026-08-04',
+      droughtCount: 5,
+      breedsToday: 1,
+      breedDayKey: '2026-08-04',
+    });
+    useColonyStore.getState().buyStim();
+    const s = useColonyStore.getState();
+    expect(s.harvestsToday).toBe(2);
+    expect(s.droughtCount).toBe(5);
+    expect(s.breedsToday).toBe(1);
+    expect(s.units[0]!.restCurrent).toBe(50);   // unit untouched
+    vi.useRealTimers();
   });
 });
