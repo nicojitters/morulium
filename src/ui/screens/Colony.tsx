@@ -5,6 +5,8 @@ import { expressPhenotype } from '../../sim/genome';
 import { computeRarity } from '../../sim/rarity';
 import { computeBaseStats, computeCurrentStats } from '../../sim/stats';
 import type { Tier } from '../../sim/types';
+import type { FrontId } from '../../sim/data/fronts';
+import type { FrontState } from '../../state/incursion';
 import { TERMS } from '../terms';
 import { styles, TIER_COLORS } from '../styles';
 import { SpecimenCard } from '../components/SpecimenCard';
@@ -45,10 +47,18 @@ export function restStateFor(unit: Unit, now: number) {
   };
 }
 
+export function garrisonedAtFor(unitId: number, fronts: Readonly<Record<FrontId, FrontState>>): FrontId | null {
+  for (const fid of Object.keys(fronts) as FrontId[]) {
+    if (fronts[fid].garrison.includes(unitId)) return fid;
+  }
+  return null;
+}
+
 export function Colony(): ReactElement {
   const units = useColonyStore((s) => s.units);
   const lastDecantedId = useColonyStore((s) => s.lastDecantedId);
   const clearHighlight = useColonyStore((s) => s.clearHighlight);
+  const fronts = useColonyStore((s) => s.fronts);
 
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -108,6 +118,7 @@ export function Colony(): ReactElement {
             highlighted={unit.id === lastDecantedId}
             lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
             restState={restStateFor(unit, now)}
+            garrisonedAt={garrisonedAtFor(unit.id, fronts)}
           />
         ))}
       </div>

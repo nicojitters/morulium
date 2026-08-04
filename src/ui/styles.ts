@@ -795,4 +795,53 @@ export const styles = {
     cursor: 'pointer',
     fontFamily: 'inherit',
   } as CSSProperties,
+
+  garrisonPickerOverlay: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    zIndex: 10,
+    marginTop: 4,
+    padding: 8,
+    background: '#ffffff',
+    border: '1px solid #cbd5e1',
+    borderRadius: 6,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    minWidth: 180,
+    maxHeight: 240,
+    overflowY: 'auto',
+  } as CSSProperties,
+
+  garrisonPickerBackdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 5,
+    background: 'transparent',
+  } as CSSProperties,
+
+  garrisonPickerRow: {
+    padding: '6px 8px',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    borderRadius: 4,
+    color: '#0f172a',
+  } as CSSProperties,
+
+  garrisonPickerRowEmpty: {
+    padding: '6px 8px',
+    fontSize: 12,
+    color: '#94a3b8',
+    fontStyle: 'italic',
+  } as CSSProperties,
+
+  garrisonBadge: {
+    marginTop: 2,
+    fontSize: 10,
+    color: '#7c3aed',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
 };

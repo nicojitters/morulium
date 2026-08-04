@@ -69,4 +69,21 @@ describe('SpecimenCard rest / injury line', () => {
     expect(getByTestId('rest-line-42').textContent).toBe('Rest 40/100');
     expect(getByTestId('specimen-card').getAttribute('data-injured')).toBeNull();
   });
+
+  it('does NOT render garrison badge when garrisonedAt is absent', () => {
+    const { queryByTestId } = render(<SpecimenCard row={stubRow} />);
+    expect(queryByTestId(/^garrison-badge-/)).toBeNull();
+  });
+
+  it('renders "Garrison: Infra" when garrisonedAt is "infrastructure"', () => {
+    const { getByTestId } = render(<SpecimenCard row={stubRow} garrisonedAt="infrastructure" />);
+    expect(getByTestId('garrison-badge-42').textContent).toBe('Garrison: Infra');
+    expect(getByTestId('specimen-card').getAttribute('data-garrisoned')).toBe('true');
+  });
+
+  it('does NOT render garrison badge when garrisonedAt is null', () => {
+    const { queryByTestId, getByTestId } = render(<SpecimenCard row={stubRow} garrisonedAt={null} />);
+    expect(queryByTestId(/^garrison-badge-/)).toBeNull();
+    expect(getByTestId('specimen-card').getAttribute('data-garrisoned')).toBeNull();
+  });
 });

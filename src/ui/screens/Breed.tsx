@@ -5,7 +5,7 @@ import { BreedButton } from '../components/BreedButton';
 import { BreedIndicator } from '../components/BreedIndicator';
 import { ParentSlot } from '../components/ParentSlot';
 import { SpecimenCard } from '../components/SpecimenCard';
-import { unitToRow, restStateFor } from './Colony';
+import { unitToRow, restStateFor, garrisonedAtFor } from './Colony';
 import { styles } from '../styles';
 import { BREED_COST_SERUM } from '../../state/serum';
 import { breedsRemaining } from '../../state/breed';
@@ -17,6 +17,7 @@ export function Breed(): ReactElement {
   const serum = useColonyStore((s) => s.serum);
   const breedsToday = useColonyStore((s) => s.breedsToday);
   const breedDayKey = useColonyStore((s) => s.breedDayKey);
+  const fronts = useColonyStore((s) => s.fronts);
 
   const [parentAId, setParentAId] = useState<number | null>(null);
   const [parentBId, setParentBId] = useState<number | null>(null);
@@ -117,6 +118,7 @@ export function Breed(): ReactElement {
               highlighted={unit.id === lastDecantedId}
               lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
               restState={restStateFor(unit, now)}
+              garrisonedAt={garrisonedAtFor(unit.id, fronts)}
             />
           </div>
         ))}

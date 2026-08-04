@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import type { DemoRow } from '../../sim/__demo__';
+import type { FrontId } from '../../sim/data/fronts';
 import { Sprite } from '../../render/sprite';
 import { resolvePalette } from '../../render/colors';
 import { TierBadge } from './TierBadge';
@@ -21,7 +22,14 @@ interface Props {
   readonly highlighted?: boolean;
   readonly lineage?: Lineage;
   readonly restState?: RestState;
+  readonly garrisonedAt?: FrontId | null;
 }
+
+const GARRISON_LABELS: Readonly<Record<FrontId, string>> = {
+  infrastructure: 'Infra',
+  military: 'Mil',
+  guerrilla: 'Guer',
+};
 
 function formatInjuryCountdown(msRemaining: number): string {
   const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
@@ -30,12 +38,7 @@ function formatInjuryCountdown(msRemaining: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
-/**
- * A single specimen card: palette-tinted panel with the sprite, tier badge,
- * a monospace specimen ID footer, and (when lineage prop is provided) a
- * small lineage line beneath the footer.
- */
-export function SpecimenCard({ row, highlighted = false, lineage, restState }: Props): ReactElement {
+export function SpecimenCard({ row, highlighted = false, lineage, restState, garrisonedAt }: Props): ReactElement {
   const colors = resolvePalette(row.palette);
   const bgTint = tintForCard(colors.base);
   const specimenId = `M-${String(row.seed).padStart(5, '0')}`;
@@ -43,6 +46,7 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState }: P
   const isInjured = restState !== undefined
     && restState.injuredUntil !== null
     && restState.injuredUntil > restState.now;
+  const isGarrisoned = garrisonedAt !== undefined && garrisonedAt !== null;
 
   let cardStyle = highlighted
     ? { ...styles.card(bgTint), ...styles.highlightedCard }
@@ -58,6 +62,7 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState }: P
       data-highlighted={highlighted || undefined}
       data-unit-id={row.seed}
       data-injured={isInjured ? 'true' : undefined}
+      data-garrisoned={isGarrisoned ? 'true' : undefined}
     >
       <TierBadge tier={row.tier} />
       <div style={styles.cardSprite}>
@@ -79,6 +84,11 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState }: P
           {isInjured
             ? `Injured, ready in ${formatInjuryCountdown(restState.injuredUntil! - restState.now)}`
             : `Rest ${restState.restCurrent}/100`}
+        </div>
+      )}
+      {isGarrisoned && (
+        <div style={styles.garrisonBadge} data-testid={`garrison-badge-${row.seed}`}>
+          Garrison: {GARRISON_LABELS[garrisonedAt!]}
         </div>
       )}
     </div>
