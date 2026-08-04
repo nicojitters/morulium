@@ -42,9 +42,11 @@ export function Colony(): ReactElement {
   const lastDecantedId = useColonyStore((s) => s.lastDecantedId);
   const clearHighlight = useColonyStore((s) => s.clearHighlight);
 
-  // Sort newest-first by decantedAt (stable copy — do not mutate store state)
+  // Sort newest-first by decantedAt (stable copy — do not mutate store state).
+  // id tiebreaker matches Breed screen: same-timestamp decants (fake-timer tests)
+  // stay deterministic across both screens.
   const sortedUnits = useMemo(
-    () => [...units].sort((a, b) => b.decantedAt - a.decantedAt),
+    () => [...units].sort((a, b) => b.decantedAt - a.decantedAt || b.id - a.id),
     [units],
   );
 
