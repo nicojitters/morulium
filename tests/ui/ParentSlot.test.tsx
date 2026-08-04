@@ -13,6 +13,8 @@ const fixture: Unit = {
   generation: 2,
   parentIds: [1, 2],
   wear: {},
+  restCurrent: 100,        // NEW
+  injuredUntil: null,      // NEW
 };
 
 describe('ParentSlot', () => {

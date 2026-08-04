@@ -15,6 +15,7 @@ function unit(id: number, seed = id): Unit {
     id, seed, decantedAt: 100 * id,
     genome: rollGenome(createRng(seed * 101)),
     generation: 0, parentIds: null, wear: {},
+    restCurrent: 100, injuredUntil: null,  // M6b — literal 100 avoids state-layer import
   };
 }
 
@@ -26,6 +27,7 @@ function reset(units: Unit[] = [], fronts = FRESH_FRONTS) {
     breedsToday: 0, breedDayKey: todayLocalKey(),
     fronts, activeIncursion: null,
     serum: SERUM_STARTING_BALANCE,
+    stims: 0,
   });
 }
 

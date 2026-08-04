@@ -7,6 +7,7 @@ import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from '../../src/state/serum';
+import { REST_MAX } from '../../src/state/rest';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('colony store', () => {
       fronts: FRESH_FRONTS,
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
+      stims: 0,
     });
   });
 
@@ -320,6 +322,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
     });
@@ -341,6 +344,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
     });
@@ -369,6 +373,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       fronts: { ...FRESH_FRONTS, infrastructure: { captured: true, cooldownUntil: null } },
@@ -385,6 +390,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now + 60_000 } },
@@ -402,6 +408,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now - 60_000 } },
@@ -416,6 +423,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 4,
     });
@@ -430,6 +438,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
     });
@@ -443,6 +452,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
     });
@@ -457,6 +467,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       harvestsToday: 2,
@@ -479,6 +490,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
     });
@@ -527,6 +539,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 3,
       serum: BREED_COST_SERUM - 1,
@@ -540,6 +553,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 3,
       serum: 200,
@@ -555,6 +569,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 3,
       breedsToday: 3,
@@ -570,6 +585,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 2,
       serum: 200,
@@ -585,6 +601,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       serum: 200,
@@ -599,6 +616,7 @@ describe('colony store', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
       serum: 200,
@@ -607,5 +625,118 @@ describe('colony store', () => {
     useColonyStore.setState({ activeIncursion: { ...r, outcome: 'won' } });
     useColonyStore.getState().dismissIncursion();
     expect(useColonyStore.getState().serum).toBe(200);
+  });
+
+  it('decant() spawns new units at full rest and no injury', () => {
+    const unit = useColonyStore.getState().decant();
+    expect(unit.restCurrent).toBe(REST_MAX);
+    expect(unit.injuredUntil).toBeNull();
+  });
+
+  it('decant() on day-rollover refreshes rest on ALL existing units', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    // Seed 2 existing units at low rest
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,
+      })),
+      nextId: 3,
+      harvestDayKey: '2026-08-03',  // yesterday
+    });
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.restCurrent).toBe(REST_MAX);
+    expect(s.units[1]!.restCurrent).toBe(REST_MAX);
+    expect(s.units[2]!.restCurrent).toBe(REST_MAX);  // the newly decanted one
+    vi.useRealTimers();
+  });
+
+  it('decant() same-day does NOT refresh existing units rest', () => {
+    useColonyStore.setState({
+      units: [{
+        id: 1, seed: 1, decantedAt: 100,
+        genome: rollGenome(createRng(101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,
+      }],
+      nextId: 2,
+      // harvestDayKey stays at today from beforeEach
+    });
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.restCurrent).toBe(10);   // preserved
+    expect(s.units[1]!.restCurrent).toBe(REST_MAX);   // new spawn
+  });
+
+  it('decant() does NOT reset injuredUntil on day-rollover', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const injuryTime = Date.now() + 30 * 60 * 1000;  // 30 min from now (still injured)
+    useColonyStore.setState({
+      units: [{
+        id: 1, seed: 1, decantedAt: 100,
+        genome: rollGenome(createRng(101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: injuryTime,
+      }],
+      nextId: 2,
+      harvestDayKey: '2026-08-03',
+    });
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.injuredUntil).toBe(injuryTime);   // preserved through refresh
+    vi.useRealTimers();
+  });
+
+  it('breed() mints child at full rest and no injury', () => {
+    // Seed 2 parents at low rest (breeding should ignore parent rest)
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 10, injuredUntil: null,
+      })),
+      nextId: 3,
+      serum: 200,
+    });
+    const child = useColonyStore.getState().breed(1, 2);
+    expect(child.restCurrent).toBe(REST_MAX);
+    expect(child.injuredUntil).toBeNull();
+  });
+
+  it('breed() does NOT gate on parent injury (injured parents can breed)', () => {
+    const injuryTime = Date.now() + 30 * 60 * 1000;
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: injuryTime,
+      })),
+      nextId: 3,
+      serum: 200,
+    });
+    // Should not throw — breeding ignores injury
+    expect(() => useColonyStore.getState().breed(1, 2)).not.toThrow();
+  });
+
+  it('breed() does NOT consume parent rest', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 3,
+      serum: 200,
+    });
+    useColonyStore.getState().breed(1, 2);
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.restCurrent).toBe(100);   // parent unchanged
+    expect(s.units[1]!.restCurrent).toBe(100);
   });
 });

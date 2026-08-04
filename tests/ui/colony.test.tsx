@@ -6,6 +6,7 @@ import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
+import { REST_MAX } from '../../src/state/rest';
 
 describe('Colony screen', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('Colony screen', () => {
       fronts: FRESH_FRONTS,
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
+      stims: 0,
     });
     vi.useRealTimers();
   });
@@ -39,9 +41,9 @@ describe('Colony screen', () => {
     // Manually seed the store — three units with ascending decantedAt
     useColonyStore.setState({
       units: [
-        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
-        { id: 2, seed: 2, decantedAt: 200, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
-        { id: 3, seed: 3, decantedAt: 300, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
+        { id: 2, seed: 2, decantedAt: 200, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
+        { id: 3, seed: 3, decantedAt: 300, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 4,
       lastDecantedId: null,
@@ -58,8 +60,8 @@ describe('Colony screen', () => {
   it('shows the specimen count in the subtitle', () => {
     useColonyStore.setState({
       units: [
-        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
-        { id: 2, seed: 2, decantedAt: 200, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
+        { id: 2, seed: 2, decantedAt: 200, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 3,
       lastDecantedId: null,
@@ -71,7 +73,7 @@ describe('Colony screen', () => {
   it('clicking the header DecantButton adds a unit and highlights it', () => {
     // Seed with one unit so the header (not empty state) shows
     useColonyStore.setState({
-      units: [{ id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} }],
+      units: [{ id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null }],
       nextId: 2,
       lastDecantedId: null,
     });
@@ -87,7 +89,7 @@ describe('Colony screen', () => {
   it('highlight auto-clears after 2000ms', async () => {
     vi.useFakeTimers();
     useColonyStore.setState({
-      units: [{ id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} }],
+      units: [{ id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null }],
       nextId: 2,
       lastDecantedId: 1,
     });
@@ -106,7 +108,7 @@ describe('Colony screen', () => {
   it('renders the FailsafeIndicator in the header when droughtCount >= 40', () => {
     useColonyStore.setState({
       units: [
-        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 2,
       lastDecantedId: null,
@@ -122,7 +124,7 @@ describe('Colony screen', () => {
   it('does not render the FailsafeIndicator when droughtCount < 40', () => {
     useColonyStore.setState({
       units: [
-        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 2,
       lastDecantedId: null,
@@ -137,7 +139,7 @@ describe('Colony screen', () => {
   it('always renders the HarvestIndicator', () => {
     useColonyStore.setState({
       units: [
-        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {} },
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 2,
       lastDecantedId: null,
@@ -153,7 +155,7 @@ describe('Colony screen', () => {
     useColonyStore.setState({
       units: [
         { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(),
-          generation: 0, parentIds: null, wear: {} },
+          generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 2, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
@@ -169,7 +171,7 @@ describe('Colony screen', () => {
     useColonyStore.setState({
       units: [
         { id: 3, seed: 3, decantedAt: 300, genome: makeMinimalGenome(),
-          generation: 2, parentIds: [1, 2], wear: {} },
+          generation: 2, parentIds: [1, 2], wear: {}, restCurrent: REST_MAX, injuredUntil: null },
       ],
       nextId: 4, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(),

@@ -17,6 +17,7 @@ describe('DecantButton', () => {
       fronts: FRESH_FRONTS,
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
+      stims: 0,
     });
   });
 

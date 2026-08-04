@@ -29,6 +29,7 @@ import type { IncursionResolution } from '../sim/incursion';
 import { FRESH_FRONTS, FRONT_COOLDOWN_MS } from './incursion';
 import type { FrontState } from './incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from './serum';
+import { REST_MAX } from './rest';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -41,7 +42,8 @@ interface ColonyStore {
   readonly breedDayKey: string;
   readonly fronts: Readonly<Record<FrontId, FrontState>>;
   readonly activeIncursion: IncursionResolution | null;
-  readonly serum: number;                          // NEW
+  readonly serum: number;
+  readonly stims: number;                          // NEW (Task 3; buyStim action lands in Task 4)
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -64,6 +66,7 @@ export const useColonyStore = create<ColonyStore>()(
       fronts: FRESH_FRONTS,
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
+      stims: 0,
 
       decant: () => {
         const state = get();
@@ -90,10 +93,18 @@ export const useColonyStore = create<ColonyStore>()(
           generation: 0,
           parentIds: null,
           wear: {},
+          restCurrent: REST_MAX,
+          injuredUntil: null,
         };
 
+        // On day-rollover: refresh rest on all EXISTING units (injuredUntil is
+        // NOT reset — injuries expire on their own timer).
+        const refreshedUnits = dayRolledOver
+          ? state.units.map((u) => ({ ...u, restCurrent: REST_MAX }))
+          : state.units;
+
         set({
-          units: [...state.units, unit],
+          units: [...refreshedUnits, unit],
           nextId: id + 1,
           lastDecantedId: id,
           harvestsToday: harvestsUsedToday + 1,
@@ -136,6 +147,8 @@ export const useColonyStore = create<ColonyStore>()(
           generation,
           parentIds: [parentAId, parentBId] as const,
           wear,
+          restCurrent: REST_MAX,
+          injuredUntil: null,
         };
 
         set({
@@ -197,7 +210,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 5,
+      version: 6,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -210,10 +223,12 @@ export const useColonyStore = create<ColonyStore>()(
           } as ColonyStore;
         }
         if (from < 3) {
-          type LegacyUnit = Omit<Unit, 'generation' | 'parentIds' | 'wear'> & {
+          type LegacyUnit = Omit<Unit, 'generation' | 'parentIds' | 'wear' | 'restCurrent' | 'injuredUntil'> & {
             generation?: number;
             parentIds?: readonly [number, number] | null;
             wear?: Readonly<Record<string, number>>;
+            restCurrent?: number;
+            injuredUntil?: number | null;
           };
           const v2 = s as ColonyStore & { units: LegacyUnit[] };
           s = {
@@ -228,6 +243,8 @@ export const useColonyStore = create<ColonyStore>()(
               generation: u.generation ?? 0,
               parentIds: u.parentIds ?? null,
               wear: u.wear ?? {},
+              restCurrent: u.restCurrent ?? REST_MAX,
+              injuredUntil: u.injuredUntil ?? null,
             })),
           };
         }
@@ -236,6 +253,17 @@ export const useColonyStore = create<ColonyStore>()(
         }
         if (from < 5) {
           s = { ...s, serum: SERUM_STARTING_BALANCE };
+        }
+        if (from < 6) {
+          s = {
+            ...s,
+            stims: 0,
+            units: s.units.map((u) => ({
+              ...u,
+              restCurrent: (u as Partial<Unit>).restCurrent ?? REST_MAX,
+              injuredUntil: (u as Partial<Unit>).injuredUntil ?? null,
+            })),
+          };
         }
         return s;
       },
@@ -249,6 +277,7 @@ export const useColonyStore = create<ColonyStore>()(
         breedDayKey: state.breedDayKey,
         fronts: state.fronts,
         serum: state.serum,
+        stims: state.stims,   // NEW
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },
