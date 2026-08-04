@@ -5,6 +5,7 @@ import { Incursion } from '../../src/ui/screens/Incursion';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import type { Unit } from '../../src/state/types';
@@ -24,6 +25,7 @@ function reset(units: Unit[] = [], fronts = FRESH_FRONTS) {
     droughtCount: 0,
     breedsToday: 0, breedDayKey: todayLocalKey(),
     fronts, activeIncursion: null,
+    serum: SERUM_STARTING_BALANCE,
   });
 }
 

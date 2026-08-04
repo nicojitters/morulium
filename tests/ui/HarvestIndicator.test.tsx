@@ -5,6 +5,7 @@ import { HarvestIndicator } from '../../src/ui/components/HarvestIndicator';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 
 describe('HarvestIndicator', () => {
   beforeEach(() => {
@@ -15,6 +16,7 @@ describe('HarvestIndicator', () => {
       breedsToday: 0, breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
       activeIncursion: null,
+      serum: SERUM_STARTING_BALANCE,
     });
   });
   afterEach(() => {

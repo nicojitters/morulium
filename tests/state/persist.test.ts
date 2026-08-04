@@ -4,6 +4,7 @@ import { useColonyStore } from '../../src/state/colony';
 import { STORAGE_KEY } from '../../src/state/persist';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 
 describe('colony persistence', () => {
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('colony persistence', () => {
       breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
       activeIncursion: null,
+      serum: SERUM_STARTING_BALANCE,
     });
   });
 
@@ -80,7 +82,7 @@ describe('colony persistence', () => {
     expect(parsed.state.harvestDayKey).toBe('2026-08-04');
     expect(parsed.state.droughtCount).toBe(17);
     expect(parsed.state.lastDecantedId).toBeUndefined(); // still transient
-    expect(parsed.version).toBe(4);
+    expect(parsed.version).toBe(5);
   });
 
   it('migrate function upgrades a v1 shape by adding M3b fields', async () => {
@@ -126,7 +128,7 @@ describe('colony persistence', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed.state.breedsToday).toBe(2);
     expect(parsed.state.breedDayKey).toBe('2026-08-04');
-    expect(parsed.version).toBe(4);
+    expect(parsed.version).toBe(5);
   });
 
   it('migrate v2 → v3 backfills unit fields and store fields with defaults', async () => {
@@ -205,7 +207,7 @@ describe('colony persistence', () => {
     expect(parsed.state.fronts.infrastructure.captured).toBe(true);
     expect(parsed.state.fronts.military.cooldownUntil).toBe(1_700_000_000_000);
     expect(parsed.state.activeIncursion).toBeUndefined(); // transient
-    expect(parsed.version).toBe(4);
+    expect(parsed.version).toBe(5);
   });
 
   it('migrate v3 → v4 adds FRESH_FRONTS', async () => {
@@ -253,6 +255,79 @@ describe('colony persistence', () => {
   });
 
   it('activeIncursion is NOT persisted (transient — ticker not resumable)', () => {
+    const dummyResolution = {
+      frontId: 'infrastructure' as const,
+      teamIds: [1, 2, 3, 4] as const,
+      coverage: { INT: 1.0, SPD: 0.9 },
+      bestContributors: { INT: 1, SPD: 2 },
+      successP: 0.95,
+      outcome: 'won' as const,
+      beats: [{ kind: 'verdict' as const, text: 'stub' }],
+    };
+    useColonyStore.setState({ activeIncursion: dummyResolution });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.activeIncursion).toBeUndefined();
+  });
+
+  it('M6a serum field persists across a rehydration cycle', () => {
+    useColonyStore.setState({ serum: 137 });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.serum).toBe(137);
+    expect(parsed.version).toBe(5);
+  });
+
+  it('migrate v4 → v5 adds serum: SERUM_STARTING_BALANCE', async () => {
+    const v4Shape = {
+      state: {
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: { loci: {} }, generation: 0, parentIds: null, wear: {} },
+        ],
+        nextId: 2,
+        harvestsToday: 0, harvestDayKey: '2026-08-04', droughtCount: 0,
+        breedsToday: 0, breedDayKey: '2026-08-04',
+        fronts: {
+          infrastructure: { captured: false, cooldownUntil: null },
+          military: { captured: false, cooldownUntil: null },
+          guerrilla: { captured: false, cooldownUntil: null },
+        },
+      },
+      version: 4,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v4Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    expect(s.serum).toBe(SERUM_STARTING_BALANCE);
+  });
+
+  it('migrate v1 → v5 chains through all branches', async () => {
+    const v1Shape = {
+      state: {
+        units: [{ id: 1, seed: 1, decantedAt: 1, genome: { loci: {} } }],
+        nextId: 2,
+      },
+      version: 1,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    // M3b fields
+    expect(s.harvestsToday).toBe(0);
+    expect(s.droughtCount).toBe(0);
+    // M4 store + unit fields
+    expect(s.breedsToday).toBe(0);
+    expect(s.units[0]!.generation).toBe(0);
+    expect(s.units[0]!.parentIds).toBeNull();
+    expect(s.units[0]!.wear).toEqual({});
+    // M5 fronts
+    expect(s.fronts.infrastructure.captured).toBe(false);
+    // M6a serum
+    expect(s.serum).toBe(SERUM_STARTING_BALANCE);
+  });
+
+  it('activeIncursion still NOT persisted after v5 bump', () => {
     const dummyResolution = {
       frontId: 'infrastructure' as const,
       teamIds: [1, 2, 3, 4] as const,

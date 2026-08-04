@@ -6,6 +6,7 @@ import { computeRarity } from '../../src/sim/rarity';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from '../../src/state/serum';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('colony store', () => {
       breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
       activeIncursion: null,
+      serum: SERUM_STARTING_BALANCE,
     });
   });
 
@@ -486,5 +488,124 @@ describe('colony store', () => {
     expect(useColonyStore.getState().fronts.infrastructure.captured).toBe(true);
     expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]))
       .toThrow(/already captured/);
+  });
+
+  it('starts with SERUM_STARTING_BALANCE serum', () => {
+    expect(useColonyStore.getState().serum).toBe(SERUM_STARTING_BALANCE);
+  });
+
+  it('decant() same day does NOT grant the daily faucet', () => {
+    // beforeEach set harvestDayKey to today — same-day decant should not trigger faucet
+    const before = useColonyStore.getState().serum;
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(before);
+  });
+
+  it('decant() on day-rollover grants +SERUM_DAILY_FAUCET exactly once', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({ harvestDayKey: '2026-08-03', serum: 200 });
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(200 + SERUM_DAILY_FAUCET);
+
+    // Second decant same day — no re-grant
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(200 + SERUM_DAILY_FAUCET);
+    vi.useRealTimers();
+  });
+
+  it('decant() after skipping multiple days grants faucet ONCE (not per skipped day)', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    useColonyStore.setState({ harvestDayKey: '2026-08-01', serum: 100 }); // 3 days ago
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(100 + SERUM_DAILY_FAUCET); // +25, not +75
+    vi.useRealTimers();
+  });
+
+  it('breed() throws /insufficient Serum/ when balance < BREED_COST_SERUM', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 3,
+      serum: BREED_COST_SERUM - 1,
+    });
+    expect(() => useColonyStore.getState().breed(1, 2)).toThrow(/insufficient Serum/);
+  });
+
+  it('breed() deducts BREED_COST_SERUM on success', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 3,
+      serum: 200,
+    });
+    useColonyStore.getState().breed(1, 2);
+    expect(useColonyStore.getState().serum).toBe(200 - BREED_COST_SERUM);
+  });
+
+  it('breed() guard order: daily cap error priority over Serum error', () => {
+    // breedsToday = 3 AND serum = 0 → should throw cap error (not Serum error)
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 3,
+      breedsToday: 3,
+      breedDayKey: todayLocalKey(),
+      serum: 0,
+    });
+    expect(() => useColonyStore.getState().breed(1, 2)).toThrow(/daily Breed limit/);
+  });
+
+  it('breed() does NOT deduct Serum when it throws', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 2,
+      serum: 200,
+    });
+    // Missing parent → throws, but Serum should be untouched
+    expect(() => useColonyStore.getState().breed(1, 999)).toThrow(/parent 999 not found/);
+    expect(useColonyStore.getState().serum).toBe(200);
+  });
+
+  it('launchIncursion does NOT change serum', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      serum: 200,
+    });
+    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    expect(useColonyStore.getState().serum).toBe(200);
+  });
+
+  it('dismissIncursion does NOT change serum', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+      })),
+      nextId: 5,
+      serum: 200,
+    });
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    useColonyStore.setState({ activeIncursion: { ...r, outcome: 'won' } });
+    useColonyStore.getState().dismissIncursion();
+    expect(useColonyStore.getState().serum).toBe(200);
   });
 });

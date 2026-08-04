@@ -5,6 +5,7 @@ import { Breed } from '../../src/ui/screens/Breed';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 
 function resetStore(): void {
   useColonyStore.setState({
@@ -18,6 +19,7 @@ function resetStore(): void {
     breedDayKey: todayLocalKey(),
     fronts: FRESH_FRONTS,
     activeIncursion: null,
+    serum: SERUM_STARTING_BALANCE,
   });
 }
 

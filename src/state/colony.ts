@@ -28,6 +28,7 @@ import { TEAM_SIZE, resolveIncursion } from '../sim/incursion';
 import type { IncursionResolution } from '../sim/incursion';
 import { FRESH_FRONTS, FRONT_COOLDOWN_MS } from './incursion';
 import type { FrontState } from './incursion';
+import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from './serum';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -40,6 +41,7 @@ interface ColonyStore {
   readonly breedDayKey: string;
   readonly fronts: Readonly<Record<FrontId, FrontState>>;
   readonly activeIncursion: IncursionResolution | null;
+  readonly serum: number;                          // NEW
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -61,24 +63,35 @@ export const useColonyStore = create<ColonyStore>()(
       breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
       activeIncursion: null,
+      serum: SERUM_STARTING_BALANCE,
 
       decant: () => {
         const state = get();
         const today = todayLocalKey();
-        const harvestsUsedToday = state.harvestDayKey === today ? state.harvestsToday : 0;
+        const dayRolledOver = state.harvestDayKey !== today;
+
+        const harvestsUsedToday = dayRolledOver ? 0 : state.harvestsToday;
         if (harvestsUsedToday >= DAILY_HARVEST_LIMIT) {
           throw new Error('daily Harvest limit reached');
         }
+
         const id = state.nextId;
         const genome = state.droughtCount >= DROUGHT_THRESHOLD
           ? rollGenomeAtLeast(id * FAILSAFE_SUBSTREAM_PRIME, FAILSAFE_MIN_TIER)
           : rollGenome(createRng(id));
         const { tier } = computeRarity(genome);
         const newDrought = tierAtLeast(tier, 'chimera') ? 0 : state.droughtCount + 1;
+
         const unit: Unit = {
-          id, seed: id, decantedAt: Date.now(), genome,
-          generation: 0, parentIds: null, wear: {},
+          id,
+          seed: id,
+          decantedAt: Date.now(),
+          genome,
+          generation: 0,
+          parentIds: null,
+          wear: {},
         };
+
         set({
           units: [...state.units, unit],
           nextId: id + 1,
@@ -86,6 +99,7 @@ export const useColonyStore = create<ColonyStore>()(
           harvestsToday: harvestsUsedToday + 1,
           harvestDayKey: today,
           droughtCount: newDrought,
+          ...(dayRolledOver ? { serum: state.serum + SERUM_DAILY_FAUCET } : {}),
         });
         return unit;
       },
@@ -104,21 +118,33 @@ export const useColonyStore = create<ColonyStore>()(
         if (breedsUsedToday >= DAILY_BREED_LIMIT) {
           throw new Error('daily Breed limit reached');
         }
+        if (state.serum < BREED_COST_SERUM) {
+          throw new Error('breed: insufficient Serum');
+        }
+
         const childId = state.nextId;
         const rng = createRng(childId * BREED_SUBSTREAM_PRIME);
         const { genome, mutatedLoci } = breedGenome(pA.genome, pB.genome, rng, MUTATION_RATE);
         const wear = nextWear(pA, pB, mutatedLoci);
         const generation = Math.max(pA.generation, pB.generation) + 1;
+
         const child: Unit = {
-          id: childId, seed: childId, decantedAt: Date.now(), genome,
-          generation, parentIds: [parentAId, parentBId] as const, wear,
+          id: childId,
+          seed: childId,
+          decantedAt: Date.now(),
+          genome,
+          generation,
+          parentIds: [parentAId, parentBId] as const,
+          wear,
         };
+
         set({
           units: [...state.units, child],
           nextId: childId + 1,
           lastDecantedId: childId,
           breedsToday: breedsUsedToday + 1,
           breedDayKey: today,
+          serum: state.serum - BREED_COST_SERUM,
         });
         return child;
       },
@@ -171,7 +197,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 5,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -206,11 +232,10 @@ export const useColonyStore = create<ColonyStore>()(
           };
         }
         if (from < 4) {
-          s = {
-            ...s,
-            fronts: FRESH_FRONTS,
-            // activeIncursion is transient — no need to backfill
-          };
+          s = { ...s, fronts: FRESH_FRONTS };
+        }
+        if (from < 5) {
+          s = { ...s, serum: SERUM_STARTING_BALANCE };
         }
         return s;
       },
@@ -223,6 +248,7 @@ export const useColonyStore = create<ColonyStore>()(
         breedsToday: state.breedsToday,
         breedDayKey: state.breedDayKey,
         fronts: state.fronts,
+        serum: state.serum,
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },

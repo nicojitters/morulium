@@ -5,6 +5,7 @@ import { Colony } from '../../src/ui/screens/Colony';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 
 describe('Colony screen', () => {
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('Colony screen', () => {
       breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
       activeIncursion: null,
+      serum: SERUM_STARTING_BALANCE,
     });
     vi.useRealTimers();
   });
