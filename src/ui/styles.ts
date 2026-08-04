@@ -356,4 +356,83 @@ export const styles = {
     fontSize: 13,
     marginBottom: 12,
   } as CSSProperties,
+
+  frontCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: 220,
+    height: 140,
+    borderRadius: 10,
+    border: '2px solid #cbd5e1',
+    background: '#ffffff',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    padding: 12,
+    transition: 'border-color 120ms ease',
+  } as CSSProperties,
+
+  frontCardSelected: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: 220,
+    height: 140,
+    borderRadius: 10,
+    border: '2px solid #8b5cf6',   // violet
+    background: '#faf5ff',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    padding: 12,
+    boxShadow: '0 0 0 3px rgba(139, 92, 246, 0.25)',
+  } as CSSProperties,
+
+  frontCardCaptured: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: 220,
+    height: 140,
+    borderRadius: 10,
+    border: '2px solid #22c55e',   // green
+    background: '#f0fdf4',
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+    padding: 12,
+  } as CSSProperties,
+
+  frontCardCooldown: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: 220,
+    height: 140,
+    borderRadius: 10,
+    border: '2px solid #cbd5e1',
+    background: '#f1f5f9',
+    color: '#94a3b8',
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+    padding: 12,
+  } as CSSProperties,
+
+  frontCardLabel: {
+    fontSize: 18,
+    fontWeight: 600,
+    color: '#0f172a',
+  } as CSSProperties,
+
+  frontCardStatus: {
+    fontSize: 13,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
 };
