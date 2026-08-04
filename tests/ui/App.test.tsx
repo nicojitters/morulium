@@ -43,4 +43,22 @@ describe('App', () => {
     fireEvent.click(getByTestId('nav-tab-colony'));
     expect(getByTestId('empty-colony')).toBeDefined();
   });
+
+  it('clicking the Incursion tab switches to the Incursion screen', () => {
+    const { getByTestId, queryByTestId } = render(<App />);
+    fireEvent.click(getByTestId('nav-tab-incursion'));
+    // Empty Incursion state renders when Colony has < 4 units
+    expect(getByTestId('incursion-empty-state')).toBeDefined();
+    expect(queryByTestId('empty-colony')).toBeNull();
+  });
+
+  it('nav round-trip: Colony → Breed → Incursion → Colony', () => {
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('nav-tab-breed'));
+    expect(getByTestId('breed-empty-state')).toBeDefined();
+    fireEvent.click(getByTestId('nav-tab-incursion'));
+    expect(getByTestId('incursion-empty-state')).toBeDefined();
+    fireEvent.click(getByTestId('nav-tab-colony'));
+    expect(getByTestId('empty-colony')).toBeDefined();
+  });
 });

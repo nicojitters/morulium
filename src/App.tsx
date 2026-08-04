@@ -1,19 +1,22 @@
 import { useState, type ReactElement } from 'react';
 import { Colony } from './ui/screens/Colony';
 import { Breed } from './ui/screens/Breed';
+import { Incursion } from './ui/screens/Incursion';
 import { styles } from './ui/styles';
 
-type Tab = 'colony' | 'breed';
+type Tab = 'colony' | 'breed' | 'incursion';
 
 export function App(): ReactElement {
   const [tab, setTab] = useState<Tab>('colony');
+
+  const active = (t: Tab) => (tab === t ? styles.navTabActive : styles.navTab);
 
   return (
     <>
       <nav style={styles.nav}>
         <button
           type="button"
-          style={tab === 'colony' ? styles.navTabActive : styles.navTab}
+          style={active('colony')}
           onClick={() => setTab('colony')}
           data-testid="nav-tab-colony"
         >
@@ -21,14 +24,24 @@ export function App(): ReactElement {
         </button>
         <button
           type="button"
-          style={tab === 'breed' ? styles.navTabActive : styles.navTab}
+          style={active('breed')}
           onClick={() => setTab('breed')}
           data-testid="nav-tab-breed"
         >
           Breed
         </button>
+        <button
+          type="button"
+          style={active('incursion')}
+          onClick={() => setTab('incursion')}
+          data-testid="nav-tab-incursion"
+        >
+          Incursion
+        </button>
       </nav>
-      {tab === 'colony' ? <Colony /> : <Breed />}
+      {tab === 'colony' && <Colony />}
+      {tab === 'breed' && <Breed />}
+      {tab === 'incursion' && <Incursion />}
     </>
   );
 }
