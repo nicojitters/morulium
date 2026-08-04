@@ -289,4 +289,71 @@ export const styles = {
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
     textAlign: 'center',
   } as CSSProperties,
+
+  nav: {
+    display: 'flex',
+    gap: 4,
+    padding: '12px 24px 0 24px',
+    maxWidth: 1400,
+    margin: '0 auto',
+    borderBottom: '1px solid #e2e8f0',
+  } as CSSProperties,
+
+  navTab: {
+    padding: '10px 16px',
+    borderRadius: '6px 6px 0 0',
+    border: 'none',
+    background: 'transparent',
+    color: '#64748b',
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    borderBottom: '2px solid transparent',
+  } as CSSProperties,
+
+  navTabActive: {
+    padding: '10px 16px',
+    borderRadius: '6px 6px 0 0',
+    border: 'none',
+    background: 'transparent',
+    color: '#0f172a',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    borderBottom: '2px solid #8b5cf6',
+  } as CSSProperties,
+
+  breedSection: {
+    marginBottom: 24,
+  } as CSSProperties,
+
+  breedParentsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+    padding: '16px 0',
+  } as CSSProperties,
+
+  breedTimesX: {
+    fontSize: 24,
+    fontWeight: 600,
+    color: '#94a3b8',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  breedConfirmRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '8px 0 24px 0',
+  } as CSSProperties,
+
+  breedHint: {
+    textAlign: 'center',
+    color: '#94a3b8',
+    fontSize: 13,
+    marginBottom: 12,
+  } as CSSProperties,
 };
