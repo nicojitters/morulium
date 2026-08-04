@@ -435,4 +435,44 @@ export const styles = {
     color: '#64748b',
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
+
+  incursionTicker: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    padding: 24,
+    background: '#0f172a',                 // slate-900 — dark theater
+    color: '#e2e8f0',                       // slate-200
+    borderRadius: 12,
+    minHeight: 220,
+  } as CSSProperties,
+
+  incursionBeat: {
+    fontSize: 15,
+    lineHeight: 1.5,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    transition: 'opacity 400ms ease',
+  } as CSSProperties,
+
+  incursionBeatVisible: {
+    opacity: 1,
+  } as CSSProperties,
+
+  incursionBeatHidden: {
+    opacity: 0,
+  } as CSSProperties,
+
+  incursionSkipButton: {
+    alignSelf: 'flex-end',
+    padding: '6px 14px',
+    borderRadius: 6,
+    border: '1px solid #475569',
+    background: 'transparent',
+    color: '#cbd5e1',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    marginTop: 8,
+  } as CSSProperties,
 };
