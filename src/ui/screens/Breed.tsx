@@ -7,11 +7,16 @@ import { ParentSlot } from '../components/ParentSlot';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { unitToRow } from './Colony';
 import { styles } from '../styles';
+import { BREED_COST_SERUM } from '../../state/serum';
+import { breedsRemaining } from '../../state/breed';
 
 export function Breed(): ReactElement {
   const units = useColonyStore((s) => s.units);
   const breed = useColonyStore((s) => s.breed);
   const lastDecantedId = useColonyStore((s) => s.lastDecantedId);
+  const serum = useColonyStore((s) => s.serum);
+  const breedsToday = useColonyStore((s) => s.breedsToday);
+  const breedDayKey = useColonyStore((s) => s.breedDayKey);
 
   const [parentAId, setParentAId] = useState<number | null>(null);
   const [parentBId, setParentBId] = useState<number | null>(null);
@@ -48,6 +53,7 @@ export function Breed(): ReactElement {
   const bothPicked = parentAId !== null && parentBId !== null;
   const distinct = parentAId !== parentBId;
   const canConfirm = bothPicked && distinct;
+  const limitHit = breedsRemaining({ breedsToday, breedDayKey }) === 0;
 
   const handleCardClick = (unit: Unit): void => {
     // Clicking a card already in a slot → clear that slot
@@ -86,6 +92,11 @@ export function Breed(): ReactElement {
         )}
         {bothPicked && !distinct && (
           <div style={styles.breedHint}>Pick two different specimens.</div>
+        )}
+        {bothPicked && distinct && !limitHit && serum < BREED_COST_SERUM && (
+          <div style={styles.breedHint}>
+            Not enough Serum — need {BREED_COST_SERUM} SR (have {serum})
+          </div>
         )}
       </div>
 

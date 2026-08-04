@@ -5,7 +5,7 @@ import { Breed } from '../../src/ui/screens/Breed';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
-import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
+import { SERUM_STARTING_BALANCE, BREED_COST_SERUM } from '../../src/state/serum';
 
 function resetStore(): void {
   useColonyStore.setState({
@@ -142,5 +142,28 @@ describe('Breed screen', () => {
     const btn = getByTestId('breed-button');
     expect(btn.getAttribute('data-disabled')).toBe('true');
     expect(btn.textContent).toBe('Next Breed in 7h 23m');
+  });
+
+  it('shows the insufficient-Serum hint when serum < BREED_COST_SERUM (both parents distinct)', () => {
+    const u1 = useColonyStore.getState().decant();
+    const u2 = useColonyStore.getState().decant();
+    useColonyStore.setState({ serum: 25 });
+    const { getByText, getAllByTestId } = render(<Breed />);
+    const cards = getAllByTestId('specimen-card');
+    fireEvent.click(cards[0]!);
+    fireEvent.click(cards[1]!);
+    expect(getByText(/Not enough Serum — need 50 SR \(have 25\)/)).toBeDefined();
+    void u1; void u2;
+  });
+
+  it('does NOT show the insufficient-Serum hint when serum >= BREED_COST_SERUM', () => {
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    useColonyStore.setState({ serum: BREED_COST_SERUM });
+    const { queryByText, getAllByTestId } = render(<Breed />);
+    const cards = getAllByTestId('specimen-card');
+    fireEvent.click(cards[0]!);
+    fireEvent.click(cards[1]!);
+    expect(queryByText(/Not enough Serum/)).toBeNull();
   });
 });
