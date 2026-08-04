@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { useColonyStore } from '../../state/colony';
 import { millisUntilLocalMidnight } from '../../state/harvest';
 import { DAILY_BREED_LIMIT, breedsRemaining } from '../../state/breed';
+import { BREED_COST_SERUM } from '../../state/serum';
 import { styles } from '../styles';
 
 interface Props {
@@ -18,9 +19,12 @@ function formatCountdown(ms: number): string {
   return `${hours}h ${minutes}m`;
 }
 
+type DisabledReason = 'limit' | 'serum' | 'external' | null;
+
 export function BreedButton({ onClick, disabled = false }: Props): ReactElement {
   const breedsToday = useColonyStore((s) => s.breedsToday);
   const breedDayKey = useColonyStore((s) => s.breedDayKey);
+  const serum = useColonyStore((s) => s.serum);
 
   const [, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -30,11 +34,22 @@ export function BreedButton({ onClick, disabled = false }: Props): ReactElement 
 
   const remaining = breedsRemaining({ breedsToday, breedDayKey });
   const limitHit = remaining === 0;
-  const isDisabled = disabled || limitHit;
+  const insufficientSerum = serum < BREED_COST_SERUM;
 
-  const label = limitHit
+  // Priority: limit → serum → external → enabled
+  let reason: DisabledReason;
+  if (limitHit) reason = 'limit';
+  else if (insufficientSerum) reason = 'serum';
+  else if (disabled) reason = 'external';
+  else reason = null;
+
+  const isDisabled = reason !== null;
+
+  const label = reason === 'limit'
     ? `Next Breed in ${formatCountdown(millisUntilLocalMidnight())}`
-    : `Confirm Breed (${remaining}/${DAILY_BREED_LIMIT})`;
+    : reason === 'serum'
+      ? `Breed costs ${BREED_COST_SERUM} SR (have ${serum})`
+      : `Confirm Breed (${remaining}/${DAILY_BREED_LIMIT})`;
 
   const style = isDisabled ? styles.breedButtonDisabled : styles.breedButton;
 
@@ -46,6 +61,7 @@ export function BreedButton({ onClick, disabled = false }: Props): ReactElement 
       disabled={isDisabled}
       data-testid="breed-button"
       data-disabled={isDisabled ? 'true' : undefined}
+      data-disabled-reason={reason ?? undefined}
     >
       {label}
     </button>
