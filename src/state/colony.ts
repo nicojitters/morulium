@@ -39,6 +39,13 @@ import {
   STIM_COST_SERUM,
 } from './rest';
 import { rollInjuries } from '../sim/injury';
+import {
+  GARRISON_INCOME_PER_UNIT_PER_HOUR,
+  GARRISON_GRACE_MS,
+  FLARE_COOLDOWN_MS,
+  computeGarrisonIncome,
+  computeHardeningFor,
+} from './occupation';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -52,7 +59,8 @@ interface ColonyStore {
   readonly fronts: Readonly<Record<FrontId, FrontState>>;
   readonly activeIncursion: IncursionResolution | null;
   readonly serum: number;
-  readonly stims: number;                          // NEW (Task 3; buyStim action lands in Task 4)
+  readonly stims: number;
+  readonly lastGarrisonTickAt: number;   // NEW
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -64,6 +72,51 @@ interface ColonyStore {
   dismissIncursion: () => void;
   buyStim: () => void;
   clearHighlight: () => void;
+  // assignToGarrison / removeFromGarrison land in Task 4
+}
+
+function applyGarrisonTick(state: ColonyStore, now: number): Partial<ColonyStore> {
+  const garrisonedCount = (Object.keys(state.fronts) as FrontId[])
+    .reduce((n, fid) => n + state.fronts[fid].garrison.length, 0);
+
+  if (garrisonedCount === 0) return { lastGarrisonTickAt: now };
+
+  const incomeEarned = computeGarrisonIncome(garrisonedCount, state.lastGarrisonTickAt, now);
+  if (incomeEarned === 0) return {};   // fractional interval — leave lastTickAt alone
+
+  const wholeHoursCredited = incomeEarned / (garrisonedCount * GARRISON_INCOME_PER_UNIT_PER_HOUR);
+  const msCredited = wholeHoursCredited * (60 * 60 * 1000);
+  return {
+    serum: state.serum + incomeEarned,
+    lastGarrisonTickAt: state.lastGarrisonTickAt + msCredited,
+  };
+}
+
+function checkFlareTimers(state: ColonyStore, now: number): Partial<ColonyStore> {
+  const nextFronts = { ...state.fronts } as Record<FrontId, FrontState>;
+  let anyUncaptured = false;
+  for (const fid of Object.keys(nextFronts) as FrontId[]) {
+    const front = nextFronts[fid];
+    if (!front.captured) continue;
+    if (front.flareStartedAt === null) continue;
+    if (front.flareStartedAt + GARRISON_GRACE_MS > now) continue;
+    // Front un-captures
+    nextFronts[fid] = {
+      ...front,
+      captured: false,
+      cooldownUntil: now + FLARE_COOLDOWN_MS,
+      garrison: [],
+      flareStartedAt: null,
+      // hardening will be recomputed below
+    };
+    anyUncaptured = true;
+  }
+  if (!anyUncaptured) return {};
+  // Recompute hardening on ALL fronts after cascading un-captures
+  for (const fid of Object.keys(nextFronts) as FrontId[]) {
+    nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
+  }
+  return { fronts: nextFronts };
 }
 
 export const useColonyStore = create<ColonyStore>()(
@@ -81,50 +134,52 @@ export const useColonyStore = create<ColonyStore>()(
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
+      lastGarrisonTickAt: Date.now(),
 
       decant: () => {
         const state = get();
-        const today = todayLocalKey();
-        const dayRolledOver = state.harvestDayKey !== today;
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
 
-        const harvestsUsedToday = dayRolledOver ? 0 : state.harvestsToday;
+        const today = todayLocalKey();
+        const dayRolledOver = s.harvestDayKey !== today;
+
+        const harvestsUsedToday = dayRolledOver ? 0 : s.harvestsToday;
         if (harvestsUsedToday >= DAILY_HARVEST_LIMIT) {
           throw new Error('daily Harvest limit reached');
         }
 
-        const id = state.nextId;
-        const genome = state.droughtCount >= DROUGHT_THRESHOLD
+        const id = s.nextId;
+        const genome = s.droughtCount >= DROUGHT_THRESHOLD
           ? rollGenomeAtLeast(id * FAILSAFE_SUBSTREAM_PRIME, FAILSAFE_MIN_TIER)
           : rollGenome(createRng(id));
         const { tier } = computeRarity(genome);
-        const newDrought = tierAtLeast(tier, 'chimera') ? 0 : state.droughtCount + 1;
+        const newDrought = tierAtLeast(tier, 'chimera') ? 0 : s.droughtCount + 1;
 
         const unit: Unit = {
-          id,
-          seed: id,
-          decantedAt: Date.now(),
-          genome,
-          generation: 0,
-          parentIds: null,
-          wear: {},
-          restCurrent: REST_MAX,
-          injuredUntil: null,
+          id, seed: id, decantedAt: now, genome,
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null,
         };
 
         // On day-rollover: refresh rest on all EXISTING units (injuredUntil is
         // NOT reset — injuries expire on their own timer).
         const refreshedUnits = dayRolledOver
-          ? state.units.map((u) => ({ ...u, restCurrent: REST_MAX }))
-          : state.units;
+          ? s.units.map((u) => ({ ...u, restCurrent: REST_MAX }))
+          : s.units;
 
         set({
+          ...tickDelta,
+          ...flareDelta,
           units: [...refreshedUnits, unit],
           nextId: id + 1,
           lastDecantedId: id,
           harvestsToday: harvestsUsedToday + 1,
           harvestDayKey: today,
           droughtCount: newDrought,
-          ...(dayRolledOver ? { serum: state.serum + SERUM_DAILY_FAUCET } : {}),
+          ...(dayRolledOver ? { serum: s.serum + SERUM_DAILY_FAUCET } : {}),
         });
         return unit;
       },
@@ -134,20 +189,25 @@ export const useColonyStore = create<ColonyStore>()(
           throw new Error('breed: cannot breed a specimen with itself');
         }
         const state = get();
-        const pA = state.units.find((u) => u.id === parentAId);
-        const pB = state.units.find((u) => u.id === parentBId);
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        const pA = s.units.find((u) => u.id === parentAId);
+        const pB = s.units.find((u) => u.id === parentBId);
         if (!pA) throw new Error(`breed: parent ${parentAId} not found`);
         if (!pB) throw new Error(`breed: parent ${parentBId} not found`);
         const today = todayLocalKey();
-        const breedsUsedToday = state.breedDayKey === today ? state.breedsToday : 0;
+        const breedsUsedToday = s.breedDayKey === today ? s.breedsToday : 0;
         if (breedsUsedToday >= DAILY_BREED_LIMIT) {
           throw new Error('daily Breed limit reached');
         }
-        if (state.serum < BREED_COST_SERUM) {
+        if (s.serum < BREED_COST_SERUM) {
           throw new Error('breed: insufficient Serum');
         }
 
-        const childId = state.nextId;
+        const childId = s.nextId;
         const rng = createRng(childId * BREED_SUBSTREAM_PRIME);
         const { genome, mutatedLoci } = breedGenome(pA.genome, pB.genome, rng, MUTATION_RATE);
         const wear = nextWear(pA, pB, mutatedLoci);
@@ -156,7 +216,7 @@ export const useColonyStore = create<ColonyStore>()(
         const child: Unit = {
           id: childId,
           seed: childId,
-          decantedAt: Date.now(),
+          decantedAt: now,
           genome,
           generation,
           parentIds: [parentAId, parentBId] as const,
@@ -166,22 +226,29 @@ export const useColonyStore = create<ColonyStore>()(
         };
 
         set({
-          units: [...state.units, child],
+          ...tickDelta,
+          ...flareDelta,
+          units: [...s.units, child],
           nextId: childId + 1,
           lastDecantedId: childId,
           breedsToday: breedsUsedToday + 1,
           breedDayKey: today,
-          serum: state.serum - BREED_COST_SERUM,
+          serum: s.serum - BREED_COST_SERUM,
         });
         return child;
       },
 
       launchIncursion: (frontId, teamIds, stimAppliedIds = []) => {
         const state = get();
-        const frontState = state.fronts[frontId];
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        const frontState = s.fronts[frontId];
         if (!frontState) throw new Error(`launchIncursion: unknown front ${frontId}`);
         if (frontState.captured) throw new Error(`launchIncursion: front ${frontId} already captured`);
-        if (frontState.cooldownUntil !== null && frontState.cooldownUntil > Date.now()) {
+        if (frontState.cooldownUntil !== null && frontState.cooldownUntil > now) {
           throw new Error(`launchIncursion: front ${frontId} on cooldown`);
         }
         if (teamIds.length !== TEAM_SIZE) {
@@ -193,12 +260,11 @@ export const useColonyStore = create<ColonyStore>()(
         }
         const team: Unit[] = [];
         for (const id of teamIds) {
-          const u = state.units.find((u) => u.id === id);
+          const u = s.units.find((u) => u.id === id);
           if (!u) throw new Error(`launchIncursion: unit ${id} not found`);
           team.push(u);
         }
 
-        const now = Date.now();
         const injuredMembers = team.filter((u) => u.injuredUntil !== null && u.injuredUntil > now);
         if (injuredMembers.length > 0) {
           throw new Error(`launchIncursion: units injured: ${injuredMembers.map((u) => u.id).join(', ')}`);
@@ -209,8 +275,8 @@ export const useColonyStore = create<ColonyStore>()(
             throw new Error(`launchIncursion: cannot apply Stim to non-team unit ${id}`);
           }
         }
-        if (state.stims < stimAppliedIds.length) {
-          throw new Error(`launchIncursion: need ${stimAppliedIds.length} Stim(s), have ${state.stims}`);
+        if (s.stims < stimAppliedIds.length) {
+          throw new Error(`launchIncursion: need ${stimAppliedIds.length} Stim(s), have ${s.stims}`);
         }
 
         // Compute restPenalties: under-rested (< threshold) AND not Stimmed
@@ -224,14 +290,14 @@ export const useColonyStore = create<ColonyStore>()(
         }
 
         // Roll injuries for at-risk units (deterministic given nextId + sorted team)
-        const childSeed = state.nextId;
+        const childSeed = s.nextId;
         const injuryRolls = rollInjuries(restPenalties, childSeed * INJURY_SUBSTREAM_PRIME);
 
         const resolution = resolveIncursion(team, FRONTS[frontId], restPenalties);
 
         // Deduct rest + apply injuries + deduct stims in ONE atomic set()
         const teamIdSet = new Set(teamIds);
-        const newUnits = state.units.map((u) => {
+        const newUnits = s.units.map((u) => {
           if (!teamIdSet.has(u.id)) return u;
           const gotInjured = injuryRolls[u.id] === true;
           return {
@@ -242,9 +308,11 @@ export const useColonyStore = create<ColonyStore>()(
         });
 
         set({
+          ...tickDelta,
+          ...flareDelta,
           activeIncursion: resolution,
           units: newUnits,
-          stims: state.stims - stimAppliedIds.length,
+          stims: s.stims - stimAppliedIds.length,
         });
 
         return resolution;
@@ -252,28 +320,44 @@ export const useColonyStore = create<ColonyStore>()(
 
       buyStim: () => {
         const state = get();
-        if (state.serum < STIM_COST_SERUM) {
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        if (s.serum < STIM_COST_SERUM) {
           throw new Error('buyStim: insufficient Serum');
         }
         set({
-          serum: state.serum - STIM_COST_SERUM,
-          stims: state.stims + 1,
+          ...tickDelta,
+          ...flareDelta,
+          serum: s.serum - STIM_COST_SERUM,
+          stims: s.stims + 1,
         });
       },
 
       dismissIncursion: () => {
         const state = get();
-        const r = state.activeIncursion;
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        const r = s.activeIncursion;
         if (r === null) return;
-        const target: FrontState = { ...state.fronts[r.frontId] };
+        const target: FrontState = { ...s.fronts[r.frontId] };
         if (r.outcome === 'won') {
           set({
-            fronts: { ...state.fronts, [r.frontId]: { captured: true, cooldownUntil: null } },
+            ...tickDelta,
+            ...flareDelta,
+            fronts: { ...s.fronts, [r.frontId]: { captured: true, cooldownUntil: null, garrison: target.garrison, flareStartedAt: null, hardening: target.hardening } },
             activeIncursion: null,
           });
         } else {
           set({
-            fronts: { ...state.fronts, [r.frontId]: { ...target, cooldownUntil: Date.now() + FRONT_COOLDOWN_MS } },
+            ...tickDelta,
+            ...flareDelta,
+            fronts: { ...s.fronts, [r.frontId]: { ...target, cooldownUntil: now + FRONT_COOLDOWN_MS } },
             activeIncursion: null,
           });
         }
@@ -283,7 +367,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 6,
+      version: 7,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -338,6 +422,20 @@ export const useColonyStore = create<ColonyStore>()(
             })),
           };
         }
+        if (from < 7) {
+          // NEW: backfill 3 FrontState fields + add lastGarrisonTickAt
+          const legacyFronts = s.fronts as Record<FrontId, Partial<FrontState> & { captured: boolean; cooldownUntil: number | null }>;
+          const nextFronts = { ...legacyFronts } as Record<FrontId, FrontState>;
+          for (const fid of Object.keys(nextFronts) as FrontId[]) {
+            nextFronts[fid] = {
+              ...nextFronts[fid],
+              garrison: nextFronts[fid].garrison ?? [],
+              flareStartedAt: nextFronts[fid].flareStartedAt ?? null,
+              hardening: nextFronts[fid].hardening ?? 0,
+            };
+          }
+          s = { ...s, fronts: nextFronts, lastGarrisonTickAt: Date.now() };
+        }
         return s;
       },
       partialize: (state) => ({
@@ -350,7 +448,8 @@ export const useColonyStore = create<ColonyStore>()(
         breedDayKey: state.breedDayKey,
         fronts: state.fronts,
         serum: state.serum,
-        stims: state.stims,   // NEW
+        stims: state.stims,
+        lastGarrisonTickAt: state.lastGarrisonTickAt,   // NEW
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },

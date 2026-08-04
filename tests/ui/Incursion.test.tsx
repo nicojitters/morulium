@@ -29,6 +29,7 @@ function reset(units: Unit[] = [], fronts = FRESH_FRONTS) {
     fronts, activeIncursion: null,
     serum: SERUM_STARTING_BALANCE,
     stims: 0,
+    lastGarrisonTickAt: Date.now(),   // NEW
   });
 }
 
@@ -153,9 +154,9 @@ describe('Incursion screen', () => {
     reset(
       [unit(1), unit(2), unit(3), unit(4)],
       {
-        infrastructure: { captured: true, cooldownUntil: null },
-        military:       { captured: true, cooldownUntil: null },
-        guerrilla:      { captured: true, cooldownUntil: null },
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military:       { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        guerrilla:      { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
       },
     );
     const { getByTestId, queryByTestId } = render(<Incursion />);

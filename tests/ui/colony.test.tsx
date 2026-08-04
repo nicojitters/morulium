@@ -23,6 +23,7 @@ describe('Colony screen', () => {
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
+      lastGarrisonTickAt: Date.now(),   // NEW
     });
     vi.useRealTimers();
   });

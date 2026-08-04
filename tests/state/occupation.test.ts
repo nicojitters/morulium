@@ -60,10 +60,10 @@ describe('computeGarrisonIncome', () => {
 
 describe('computeHardeningFor', () => {
   const uncapturedFront: FrontState = {
-    captured: false, cooldownUntil: null,
+    captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0,
   };
   const capturedFront: FrontState = {
-    captured: true, cooldownUntil: null,
+    captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0,
   };
 
   it('returns 0 when no other fronts are captured', () => {

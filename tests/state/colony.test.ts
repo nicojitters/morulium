@@ -24,6 +24,7 @@ describe('colony store', () => {
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
+      lastGarrisonTickAt: Date.now(),   // NEW
     });
   });
 
@@ -376,7 +377,7 @@ describe('colony store', () => {
         restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
-      fronts: { ...FRESH_FRONTS, infrastructure: { captured: true, cooldownUntil: null } },
+      fronts: { ...FRESH_FRONTS, infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 } },
     });
     expect(() => useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]))
       .toThrow(/already captured/);
@@ -393,7 +394,7 @@ describe('colony store', () => {
         restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
-      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now + 60_000 } },
+      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now + 60_000, garrison: [], flareStartedAt: null, hardening: 0 } },
     });
     expect(() => useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4]))
       .toThrow(/on cooldown/);
@@ -411,7 +412,7 @@ describe('colony store', () => {
         restCurrent: REST_MAX, injuredUntil: null,
       })),
       nextId: 5,
-      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now - 60_000 } },
+      fronts: { ...FRESH_FRONTS, military: { captured: false, cooldownUntil: now - 60_000, garrison: [], flareStartedAt: null, hardening: 0 } },
     });
     expect(() => useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4])).not.toThrow();
     vi.useRealTimers();
@@ -963,6 +964,140 @@ describe('colony store', () => {
     expect(s.droughtCount).toBe(5);
     expect(s.breedsToday).toBe(1);
     expect(s.units[0]!.restCurrent).toBe(50);   // unit untouched
+    vi.useRealTimers();
+  });
+
+  it('applyGarrisonTick: any store action with garrisoned units credits pending SR', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const startTime = Date.now();
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 3,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1, 2], flareStartedAt: null, hardening: 0 },
+      },
+      serum: 100,
+      lastGarrisonTickAt: startTime,   // set to 12:00
+    });
+    vi.setSystemTime(new Date(2026, 7, 4, 13, 0, 0));   // 1 hour later → 13:00
+    useColonyStore.getState().decant();
+    // 2 garrisoned × 5 SR/hr × 1 hr = 10 SR credited
+    expect(useColonyStore.getState().serum).toBe(100 + 10);
+    vi.useRealTimers();
+  });
+
+  it('applyGarrisonTick: zero garrison → no income, lastGarrisonTickAt still advances', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const startTime = Date.now();
+    useColonyStore.setState({
+      lastGarrisonTickAt: startTime - 60 * 60 * 1000,
+      serum: 200,
+    });
+    vi.setSystemTime(new Date(2026, 7, 4, 13, 0, 0));
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(200);   // faucet may credit +25 if day rolled, else unchanged
+    // lastGarrisonTickAt should be `now` (13:00) since no garrison
+    const nowMs = new Date(2026, 7, 4, 13, 0, 0).getTime();
+    expect(useColonyStore.getState().lastGarrisonTickAt).toBe(nowMs);
+    vi.useRealTimers();
+  });
+
+  it('applyGarrisonTick: fractional interval retains SR (does not lose it)', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const startTime = Date.now();
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 3,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1, 2], flareStartedAt: null, hardening: 0 },
+      },
+      serum: 100,
+      lastGarrisonTickAt: startTime,
+    });
+    // Advance 20 minutes — 2 units × 5 SR/hr × 0.333hr = 3.33 SR → floor to 3
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 20, 0));
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(100 + 3);
+    // Advance another 20 min. 2 × 5 × 0.333 = 3.33 more → floor to 3.
+    // Combined: 6.66 total → 6 credited. But we've already credited 3, so 3 more.
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 40, 0));
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(100 + 3 + 3);
+    // Advance another 20 min → hits 1 hour total. Should get another 3 (for 9 credited total)
+    // vs. straight-line 10 (2 × 5 × 1). We're LOSING 1 SR due to floor per-tick.
+    // Correction: the design keeps lastTickAt behind by fractional to avoid this loss.
+    // After tick 1: lastTickAt advanced by 18 min (3 whole SR credited / 10 SR-per-hr = 0.3 hr → 18 min)
+    // Actual elapsed remaining: 20 - 18 = 2 min at end of tick 1.
+    // Tick 2 sees 2 + 20 = 22 min → 2 × 5 × 0.366 = 3.66 → floor 3, advance lastTickAt by 18 min. Remaining 4.
+    // Tick 3 sees 4 + 20 = 24 min → 2 × 5 × 0.4 = 4 → floor 4, advance by 24 min. Remaining 0.
+    // Total credited: 3 + 3 + 4 = 10. Matches straight-line.
+    vi.setSystemTime(new Date(2026, 7, 4, 13, 0, 0));
+    useColonyStore.getState().decant();
+    expect(useColonyStore.getState().serum).toBe(100 + 10);
+    vi.useRealTimers();
+  });
+
+  it('checkFlareTimers: front un-captures after GARRISON_GRACE_MS with garrison below min', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const flareStart = Date.now();
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: flareStart, hardening: 0 },
+      },
+    });
+    // Advance past GARRISON_GRACE_MS
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 31, 0));   // 31 minutes later
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.captured).toBe(false);
+    expect(s.fronts.infrastructure.cooldownUntil).toBe(new Date(2026, 7, 4, 12, 31, 0).getTime() + 30 * 60 * 1000);
+    expect(s.fronts.infrastructure.garrison).toEqual([]);
+    expect(s.fronts.infrastructure.flareStartedAt).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('checkFlareTimers: front does NOT un-capture before grace period expires', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const flareStart = Date.now();
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: flareStart, hardening: 0 },
+      },
+    });
+    // Advance only 15 minutes — still within grace
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 15, 0));
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.captured).toBe(true);
+    expect(s.fronts.infrastructure.flareStartedAt).toBe(flareStart);
     vi.useRealTimers();
   });
 });

@@ -13,7 +13,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="infrastructure"
         label="Infrastructure"
-        state={{ captured: false, cooldownUntil: null }}
+        state={{ captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={false}
         now={NOW}
         onClick={() => {}}
@@ -29,7 +29,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="military"
         label="Military"
-        state={{ captured: true, cooldownUntil: null }}
+        state={{ captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={false}
         now={NOW}
         onClick={onClick}
@@ -49,7 +49,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="guerrilla"
         label="Guerrilla"
-        state={{ captured: false, cooldownUntil }}
+        state={{ captured: false, cooldownUntil, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={false}
         now={NOW}
         onClick={onClick}
@@ -66,7 +66,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="infrastructure"
         label="Infrastructure"
-        state={{ captured: false, cooldownUntil: NOW - 1000 }}
+        state={{ captured: false, cooldownUntil: NOW - 1000, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={false}
         now={NOW}
         onClick={() => {}}
@@ -81,7 +81,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="infrastructure"
         label="Infrastructure"
-        state={{ captured: false, cooldownUntil: null }}
+        state={{ captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={true}
         now={NOW}
         onClick={() => {}}
@@ -98,7 +98,7 @@ describe('FrontCard', () => {
       <FrontCard
         frontId="infrastructure"
         label="Infrastructure"
-        state={{ captured: false, cooldownUntil: null }}
+        state={{ captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 }}
         selected={false}
         now={NOW}
         onClick={onClick}

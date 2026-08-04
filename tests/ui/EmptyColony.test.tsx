@@ -22,6 +22,7 @@ describe('EmptyColony', () => {
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
+      lastGarrisonTickAt: Date.now(),   // NEW
     });
   });
 

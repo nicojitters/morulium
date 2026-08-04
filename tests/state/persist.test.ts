@@ -23,6 +23,7 @@ describe('colony persistence', () => {
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
+      lastGarrisonTickAt: Date.now(),   // NEW
     });
   });
 
@@ -84,7 +85,7 @@ describe('colony persistence', () => {
     expect(parsed.state.harvestDayKey).toBe('2026-08-04');
     expect(parsed.state.droughtCount).toBe(17);
     expect(parsed.state.lastDecantedId).toBeUndefined(); // still transient
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
   });
 
   it('migrate function upgrades a v1 shape by adding M3b fields', async () => {
@@ -130,7 +131,7 @@ describe('colony persistence', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed.state.breedsToday).toBe(2);
     expect(parsed.state.breedDayKey).toBe('2026-08-04');
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
   });
 
   it('migrate v2 → v3 backfills unit fields and store fields with defaults', async () => {
@@ -197,8 +198,8 @@ describe('colony persistence', () => {
   it('M5 fronts field persists across a rehydration cycle', () => {
     const modified = {
       ...FRESH_FRONTS,
-      infrastructure: { captured: true, cooldownUntil: null },
-      military: { captured: false, cooldownUntil: 1_700_000_000_000 },
+      infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      military: { captured: false, cooldownUntil: 1_700_000_000_000, garrison: [], flareStartedAt: null, hardening: 0 },
     };
     useColonyStore.setState({
       fronts: modified,
@@ -209,7 +210,7 @@ describe('colony persistence', () => {
     expect(parsed.state.fronts.infrastructure.captured).toBe(true);
     expect(parsed.state.fronts.military.cooldownUntil).toBe(1_700_000_000_000);
     expect(parsed.state.activeIncursion).toBeUndefined(); // transient
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
   });
 
   it('migrate v3 → v4 adds FRESH_FRONTS', async () => {
@@ -278,7 +279,7 @@ describe('colony persistence', () => {
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.serum).toBe(137);
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
   });
 
   it('migrate v4 → v5 adds serum: SERUM_STARTING_BALANCE', async () => {
@@ -350,7 +351,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.stims).toBe(5);
-    expect(parsed.version).toBe(6);
+    expect(parsed.version).toBe(7);
   });
 
   it('M6b restCurrent + injuredUntil persist per unit across rehydration', () => {
@@ -419,5 +420,92 @@ describe('colony persistence', () => {
     expect(s.units[0]!.restCurrent).toBe(REST_MAX);
     expect(s.units[0]!.injuredUntil).toBeNull();
     expect(s.stims).toBe(0);
+  });
+
+  it('M6c lastGarrisonTickAt persists across a rehydration cycle', () => {
+    useColonyStore.setState({ lastGarrisonTickAt: 1_700_000_000_000 });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.lastGarrisonTickAt).toBe(1_700_000_000_000);
+    expect(parsed.version).toBe(7);
+  });
+
+  it('M6c FrontState garrison/flareStartedAt/hardening persist per front', () => {
+    useColonyStore.setState({
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1, 2], flareStartedAt: 1_700_000_000_000, hardening: 4 },
+      },
+    });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.fronts.infrastructure.garrison).toEqual([1, 2]);
+    expect(parsed.state.fronts.infrastructure.flareStartedAt).toBe(1_700_000_000_000);
+    expect(parsed.state.fronts.infrastructure.hardening).toBe(4);
+  });
+
+  it('migrate v6 → v7 backfills FrontState fields + adds lastGarrisonTickAt', async () => {
+    const v6Shape = {
+      state: {
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: { loci: {} },
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 100, injuredUntil: null },
+        ],
+        nextId: 2,
+        harvestsToday: 0, harvestDayKey: '2026-08-04', droughtCount: 0,
+        breedsToday: 0, breedDayKey: '2026-08-04',
+        fronts: {
+          infrastructure: { captured: false, cooldownUntil: null },
+          military: { captured: false, cooldownUntil: null },
+          guerrilla: { captured: false, cooldownUntil: null },
+        },
+        serum: 200, stims: 0,
+      },
+      version: 6,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v6Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.garrison).toEqual([]);
+    expect(s.fronts.infrastructure.flareStartedAt).toBeNull();
+    expect(s.fronts.infrastructure.hardening).toBe(0);
+    expect(s.fronts.military.garrison).toEqual([]);
+    expect(s.fronts.guerrilla.garrison).toEqual([]);
+    expect(typeof s.lastGarrisonTickAt).toBe('number');
+  });
+
+  it('migrate v1 → v7 chains through all 6 branches', async () => {
+    const v1Shape = {
+      state: {
+        units: [{ id: 1, seed: 1, decantedAt: 1, genome: { loci: {} } }],
+        nextId: 2,
+      },
+      version: 1,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    // M3b fields
+    expect(s.harvestsToday).toBe(0);
+    expect(s.droughtCount).toBe(0);
+    // M4 store + unit fields
+    expect(s.breedsToday).toBe(0);
+    expect(s.units[0]!.generation).toBe(0);
+    expect(s.units[0]!.parentIds).toBeNull();
+    expect(s.units[0]!.wear).toEqual({});
+    // M5 fronts
+    expect(s.fronts.infrastructure.captured).toBe(false);
+    // M6a serum
+    expect(s.serum).toBe(SERUM_STARTING_BALANCE);
+    // M6b unit rest fields + stims
+    expect(s.units[0]!.restCurrent).toBe(REST_MAX);
+    expect(s.units[0]!.injuredUntil).toBeNull();
+    expect(s.stims).toBe(0);
+    // M6c front garrison + lastGarrisonTickAt
+    expect(s.fronts.infrastructure.garrison).toEqual([]);
+    expect(s.fronts.infrastructure.flareStartedAt).toBeNull();
+    expect(s.fronts.infrastructure.hardening).toBe(0);
+    expect(typeof s.lastGarrisonTickAt).toBe('number');
   });
 });
