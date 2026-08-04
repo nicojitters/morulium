@@ -8,6 +8,7 @@ import { createRng } from '../../src/sim/rng';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from '../../src/state/serum';
 import { REST_MAX, REST_DEPLOY_COST, STIM_COST_SERUM } from '../../src/state/rest';
+import { RADICALIZATION_BONUS } from '../../src/state/occupation';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -1098,6 +1099,307 @@ describe('colony store', () => {
     const s = useColonyStore.getState();
     expect(s.fronts.infrastructure.captured).toBe(true);
     expect(s.fronts.infrastructure.flareStartedAt).toBe(flareStart);
+    vi.useRealTimers();
+  });
+
+  it('assignToGarrison adds unit id to front.garrison', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    useColonyStore.getState().assignToGarrison('infrastructure', 1);
+    expect(useColonyStore.getState().fronts.infrastructure.garrison).toEqual([1]);
+  });
+
+  it('assignToGarrison throws when front is not captured', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      // FRESH_FRONTS: none captured
+    });
+    expect(() => useColonyStore.getState().assignToGarrison('infrastructure', 1))
+      .toThrow(/not captured/);
+  });
+
+  it('assignToGarrison throws when garrison already at GARRISON_TARGET', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 4,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1, 2], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().assignToGarrison('infrastructure', 3))
+      .toThrow(/at target size/);
+  });
+
+  it('assignToGarrison throws when unit already garrisoned on SAME front', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().assignToGarrison('infrastructure', 1))
+      .toThrow(/already garrisoned here/);
+  });
+
+  it('assignToGarrison throws when unit already garrisoned on ANOTHER front', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().assignToGarrison('infrastructure', 1))
+      .toThrow(/already garrisoned at military/);
+  });
+
+  it('assignToGarrison throws when unit id does not exist', () => {
+    useColonyStore.setState({
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().assignToGarrison('infrastructure', 999))
+      .toThrow(/unit 999 not found/);
+  });
+
+  it('assignToGarrison at threshold: adding a unit that brings garrison to GARRISON_MIN clears flareStartedAt', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const flareStart = Date.now();
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: flareStart, hardening: 0 },
+      },
+    });
+    useColonyStore.getState().assignToGarrison('infrastructure', 1);
+    expect(useColonyStore.getState().fronts.infrastructure.flareStartedAt).toBeNull();
+    expect(useColonyStore.getState().fronts.infrastructure.garrison).toEqual([1]);
+    vi.useRealTimers();
+  });
+
+  it('removeFromGarrison removes unit id from front.garrison', () => {
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 3,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1, 2], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    useColonyStore.getState().removeFromGarrison('infrastructure', 1);
+    expect(useColonyStore.getState().fronts.infrastructure.garrison).toEqual([2]);
+  });
+
+  it('removeFromGarrison throws when unit not in that front garrison', () => {
+    useColonyStore.setState({
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().removeFromGarrison('infrastructure', 999))
+      .toThrow(/unit 999 not in front infrastructure garrison/);
+  });
+
+  it('removeFromGarrison below threshold: sets flareStartedAt = now when garrison drops below GARRISON_MIN', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const now = Date.now();
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    useColonyStore.getState().removeFromGarrison('infrastructure', 1);
+    expect(useColonyStore.getState().fronts.infrastructure.flareStartedAt).toBe(now);
+    vi.useRealTimers();
+  });
+
+  it('removeFromGarrison when flare timer already active: does NOT reset flareStartedAt', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const originalFlare = Date.now();
+    useColonyStore.setState({
+      units: [1, 2].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 3,
+      fronts: {
+        // Start with garrison=[1] and flare already running. Add unit 2 first, then remove — flare should stay.
+        // Actually easier: garrison=[1, 2] with flare running (pathological — shouldn't happen normally, but tests the flag).
+        // Realistic path: garrison=[1] with flare running, remove 1 → garrison=[], flareStartedAt unchanged.
+        ...FRESH_FRONTS,
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: originalFlare, hardening: 0 },
+      },
+    });
+    // Advance time slightly
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 5, 0));
+    useColonyStore.getState().removeFromGarrison('infrastructure', 1);
+    // flareStartedAt preserved (not reset to new now)
+    expect(useColonyStore.getState().fronts.infrastructure.flareStartedAt).toBe(originalFlare);
+    vi.useRealTimers();
+  });
+
+  it('launchIncursion throws when a picked team unit is garrisoned', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        // Infrastructure captured with unit 2 garrisoned; Military available for launch
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [2], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    expect(() => useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4]))
+      .toThrow(/units garrisoned: 2/);
+  });
+
+  it('launchIncursion passes hardening to resolveIncursion when other fronts are captured', () => {
+    // Capture Infra to harden Military and Guerrilla by +4
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const rHard = useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4]);
+
+    // Reset & try without hardening (all uncaptured)
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
+    });
+    const rClean = useColonyStore.getState().launchIncursion('military', [1, 2, 3, 4]);
+    expect(rHard.successP).toBeLessThanOrEqual(rClean.successP);
+  });
+
+  it('dismissIncursion on win recomputes hardening on ALL fronts', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: FRESH_FRONTS,
+    });
+    const r = useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
+    // Force outcome=won for the test
+    useColonyStore.setState({ activeIncursion: { ...r, outcome: 'won' } });
+    useColonyStore.getState().dismissIncursion();
+    const s = useColonyStore.getState();
+    // Newly-captured Infra: no hardening from itself
+    expect(s.fronts.infrastructure.hardening).toBe(0);
+    // Other fronts: hardened by +RADICALIZATION_BONUS each (one other captured)
+    expect(s.fronts.military.hardening).toBe(RADICALIZATION_BONUS);
+    expect(s.fronts.guerrilla.hardening).toBe(RADICALIZATION_BONUS);
+  });
+
+  it('flare un-capture cascades hardening back to zero on other fronts', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const flareStart = Date.now() - 60 * 60 * 1000;   // 1 hour ago (past grace)
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: flareStart, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    // Trigger checkFlareTimers via any store action
+    useColonyStore.getState().decant();
+    const s = useColonyStore.getState();
+    expect(s.fronts.infrastructure.captured).toBe(false);   // un-captured
+    expect(s.fronts.military.hardening).toBe(0);            // unhardening cascaded
+    expect(s.fronts.guerrilla.hardening).toBe(0);
     vi.useRealTimers();
   });
 });

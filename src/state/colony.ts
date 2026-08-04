@@ -40,6 +40,8 @@ import {
 } from './rest';
 import { rollInjuries } from '../sim/injury';
 import {
+  GARRISON_TARGET,
+  GARRISON_MIN,
   GARRISON_INCOME_PER_UNIT_PER_HOUR,
   GARRISON_GRACE_MS,
   FLARE_COOLDOWN_MS,
@@ -71,8 +73,9 @@ interface ColonyStore {
   ) => IncursionResolution;
   dismissIncursion: () => void;
   buyStim: () => void;
+  assignToGarrison: (frontId: FrontId, unitId: number) => void;
+  removeFromGarrison: (frontId: FrontId, unitId: number) => void;
   clearHighlight: () => void;
-  // assignToGarrison / removeFromGarrison land in Task 4
 }
 
 function applyGarrisonTick(state: ColonyStore, now: number): Partial<ColonyStore> {
@@ -279,6 +282,15 @@ export const useColonyStore = create<ColonyStore>()(
           throw new Error(`launchIncursion: need ${stimAppliedIds.length} Stim(s), have ${s.stims}`);
         }
 
+        // NEW: reject garrisoned team members
+        const garrisonedIds = new Set(
+          (Object.keys(s.fronts) as FrontId[]).flatMap((fid) => s.fronts[fid].garrison),
+        );
+        const garrisonedPicks = teamIds.filter((id) => garrisonedIds.has(id));
+        if (garrisonedPicks.length > 0) {
+          throw new Error(`launchIncursion: units garrisoned: ${garrisonedPicks.join(', ')}`);
+        }
+
         // Compute restPenalties: under-rested (< threshold) AND not Stimmed
         const restPenalties: Record<number, number> = {};
         for (const u of team) {
@@ -293,7 +305,9 @@ export const useColonyStore = create<ColonyStore>()(
         const childSeed = s.nextId;
         const injuryRolls = rollInjuries(restPenalties, childSeed * INJURY_SUBSTREAM_PRIME);
 
-        const resolution = resolveIncursion(team, FRONTS[frontId], restPenalties);
+        // NEW: compute hardening for this front
+        const hardening = computeHardeningFor(frontId, s.fronts);
+        const resolution = resolveIncursion(team, FRONTS[frontId], restPenalties, hardening);
 
         // Deduct rest + apply injuries + deduct stims in ONE atomic set()
         const teamIdSet = new Set(teamIds);
@@ -336,31 +350,94 @@ export const useColonyStore = create<ColonyStore>()(
         });
       },
 
-      dismissIncursion: () => {
+      assignToGarrison: (frontId, unitId) => {
         const state = get();
         const now = Date.now();
         const tickDelta = applyGarrisonTick(state, now);
         const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
         const s = { ...state, ...tickDelta, ...flareDelta };
 
-        const r = s.activeIncursion;
-        if (r === null) return;
-        const target: FrontState = { ...s.fronts[r.frontId] };
-        if (r.outcome === 'won') {
-          set({
-            ...tickDelta,
-            ...flareDelta,
-            fronts: { ...s.fronts, [r.frontId]: { captured: true, cooldownUntil: null, garrison: target.garrison, flareStartedAt: null, hardening: target.hardening } },
-            activeIncursion: null,
-          });
-        } else {
-          set({
-            ...tickDelta,
-            ...flareDelta,
-            fronts: { ...s.fronts, [r.frontId]: { ...target, cooldownUntil: now + FRONT_COOLDOWN_MS } },
-            activeIncursion: null,
-          });
+        const front = s.fronts[frontId];
+        if (!front.captured) {
+          throw new Error(`assignToGarrison: front ${frontId} is not captured`);
         }
+        if (front.garrison.length >= GARRISON_TARGET) {
+          throw new Error(`assignToGarrison: front ${frontId} at target size`);
+        }
+        if (front.garrison.includes(unitId)) {
+          throw new Error(`assignToGarrison: unit ${unitId} already garrisoned here`);
+        }
+        for (const fid of Object.keys(s.fronts) as FrontId[]) {
+          if (s.fronts[fid].garrison.includes(unitId)) {
+            throw new Error(`assignToGarrison: unit ${unitId} already garrisoned at ${fid}`);
+          }
+        }
+        const unit = s.units.find((u) => u.id === unitId);
+        if (!unit) {
+          throw new Error(`assignToGarrison: unit ${unitId} not found`);
+        }
+
+        const newGarrison = [...front.garrison, unitId];
+        const newFrontState: FrontState = {
+          ...front,
+          garrison: newGarrison,
+          flareStartedAt: newGarrison.length >= GARRISON_MIN ? null : front.flareStartedAt,
+        };
+        set({
+          ...tickDelta,
+          ...flareDelta,
+          fronts: { ...s.fronts, [frontId]: newFrontState },
+        });
+      },
+
+      removeFromGarrison: (frontId, unitId) => {
+        const state = get();
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        const front = s.fronts[frontId];
+        if (!front.garrison.includes(unitId)) {
+          throw new Error(`removeFromGarrison: unit ${unitId} not in front ${frontId} garrison`);
+        }
+
+        const newGarrison = front.garrison.filter((id) => id !== unitId);
+        const newFrontState: FrontState = {
+          ...front,
+          garrison: newGarrison,
+          flareStartedAt: (newGarrison.length < GARRISON_MIN && front.flareStartedAt === null)
+            ? now
+            : front.flareStartedAt,
+        };
+        set({
+          ...tickDelta,
+          ...flareDelta,
+          fronts: { ...s.fronts, [frontId]: newFrontState },
+        });
+      },
+
+      dismissIncursion: () => {
+        const state = get();
+        const r = state.activeIncursion;
+        if (r === null) return;
+        const now = Date.now();
+        const tickDelta = applyGarrisonTick(state, now);
+        const flareDelta = checkFlareTimers({ ...state, ...tickDelta }, now);
+        const s = { ...state, ...tickDelta, ...flareDelta };
+
+        const target: FrontState = { ...s.fronts[r.frontId] };
+        const nextFronts = { ...s.fronts } as Record<FrontId, FrontState>;
+        if (r.outcome === 'won') {
+          nextFronts[r.frontId] = { ...target, captured: true, cooldownUntil: null };
+        } else {
+          nextFronts[r.frontId] = { ...target, cooldownUntil: now + FRONT_COOLDOWN_MS };
+        }
+        // NEW: recompute hardening on ALL fronts (captures/failures cascade)
+        for (const fid of Object.keys(nextFronts) as FrontId[]) {
+          nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
+        }
+        set({ ...tickDelta, ...flareDelta, fronts: nextFronts, activeIncursion: null });
       },
 
       clearHighlight: () => set({ lastDecantedId: null }),
