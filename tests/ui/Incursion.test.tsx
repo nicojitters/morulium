@@ -520,23 +520,39 @@ describe('Incursion screen', () => {
 
   it('handleContinue resets expandedFrontId and pickerOpenFor', () => {
     vi.useFakeTimers();
-    useColonyStore.setState({
-      units: [1, 2, 3, 4].map((i) => ({
-        id: i, seed: i, decantedAt: 100 * i,
-        genome: rollGenome(createRng(i * 101)),
-        generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
-      })),
-      nextId: 5,
-    });
+    reset(
+      [unit(1), unit(2), unit(3), unit(4)],
+      {
+        // Infrastructure captured (with empty garrison, no flare) → clicking it toggles expand
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        // Military uncaptured → can be selected as launch target
+        military:       { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        // Guerrilla uncaptured
+        guerrilla:      { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      },
+    );
     const { getByTestId, queryByTestId, getAllByTestId } = render(<Incursion />);
-    fireEvent.click(getByTestId('front-card-infrastructure'));   // select for launch
+
+    // Click infrastructure (captured) → toggles expandedFrontId
+    fireEvent.click(getByTestId('front-card-infrastructure'));
+    // Verify garrison sub-panel is now visible
+    expect(getByTestId('front-card-garrison-slot-infrastructure-0')).toBeDefined();
+
+    // Click military (uncaptured) → selects it for launch
+    fireEvent.click(getByTestId('front-card-military'));
+
+    // Fill team: select all 4 units
     const cards = getAllByTestId('specimen-card');
     [0, 1, 2, 3].forEach((i) => fireEvent.click(cards[i]!));
+
+    // Launch, skip, continue
     fireEvent.click(getByTestId('launch-incursion-button'));
     fireEvent.click(getByTestId('incursion-skip-button'));
     fireEvent.click(getByTestId('incursion-continue-button'));
-    // After Continue, no expanded front, no picker open, no lingering picker overlay
+
+    // After Continue, garrison sub-panel should NO LONGER be visible (expandedFrontId was reset to null)
+    expect(queryByTestId('front-card-garrison-slot-infrastructure-0')).toBeNull();
+    // Confirm no picker overlay lingering
     expect(queryByTestId('front-card-garrison-picker-infrastructure')).toBeNull();
     vi.useRealTimers();
   });
