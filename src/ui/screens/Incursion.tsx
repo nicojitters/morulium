@@ -235,7 +235,6 @@ export function Incursion(): ReactElement {
                   {u === null ? (
                     <div style={styles.incursionSlotEmpty}>
                       Slot {i + 1}
-                      {i === 0 && <span data-testid="parent-slot-a" style={{ display: 'none' }}>Parent A</span>}
                     </div>
                   ) : (
                     <div style={styles.incursionSlotFilled}>

@@ -194,7 +194,7 @@ describe('Incursion screen', () => {
     expect(injuredCard).toBeDefined();
     // Clicking the injured card is a no-op
     fireEvent.click(injuredCard!);
-    expect(getByTestId('parent-slot-a').textContent).toContain('Parent A');   // still empty
+    expect(getByTestId('incursion-team-slot-0').textContent).toContain('Slot 1');   // still empty
   });
 
   it('under-rested slots show Stim toggle; fully-rested slots do not', () => {
