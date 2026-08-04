@@ -281,4 +281,12 @@ export const styles = {
     color: '#64748b',
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
+
+  lineageLine: {
+    marginTop: 4,
+    fontSize: 11,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    textAlign: 'center',
+  } as CSSProperties,
 };

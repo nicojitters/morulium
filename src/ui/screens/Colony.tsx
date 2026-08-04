@@ -90,6 +90,7 @@ export function Colony(): ReactElement {
             key={unit.id}
             row={unitToRow(unit)}
             highlighted={unit.id === lastDecantedId}
+            lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
           />
         ))}
       </div>

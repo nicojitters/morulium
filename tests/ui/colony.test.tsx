@@ -143,6 +143,38 @@ describe('Colony screen', () => {
     const { getByTestId } = render(<Colony />);
     expect(getByTestId('harvest-indicator').textContent).toBe('Harvest 3/3');
   });
+
+  it('SpecimenCard shows "Gen 0 · Harvested" for pristine units', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(),
+          generation: 0, parentIds: null, wear: {} },
+      ],
+      nextId: 2, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
+    });
+    const { getByTestId } = render(<Colony />);
+    const lineage = getByTestId('lineage-line');
+    expect(lineage.textContent).toBe('Gen 0 · Harvested');
+  });
+
+  it('SpecimenCard shows "Gen N · from #A × #B" for bred units', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 3, seed: 3, decantedAt: 300, genome: makeMinimalGenome(),
+          generation: 2, parentIds: [1, 2], wear: {} },
+      ],
+      nextId: 4, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
+    });
+    const { getByTestId } = render(<Colony />);
+    const lineage = getByTestId('lineage-line');
+    expect(lineage.textContent).toBe('Gen 2 · from #1 × #2');
+  });
 });
 
 // Helper: a genome shape that resolves through the sim without errors. Uses the

@@ -5,18 +5,24 @@ import { resolvePalette } from '../../render/colors';
 import { TierBadge } from './TierBadge';
 import { styles } from '../styles';
 
+interface Lineage {
+  readonly generation: number;
+  readonly parentIds: readonly [number, number] | null;
+}
+
 interface Props {
   readonly row: DemoRow;
   readonly highlighted?: boolean;
+  readonly lineage?: Lineage;
 }
 
 /**
  * A single specimen card: palette-tinted panel with the sprite, tier badge,
- * and a monospace specimen ID footer.
+ * a monospace specimen ID footer, and (when lineage prop is provided) a
+ * small lineage line beneath the footer.
  */
-export function SpecimenCard({ row, highlighted = false }: Props): ReactElement {
+export function SpecimenCard({ row, highlighted = false, lineage }: Props): ReactElement {
   const colors = resolvePalette(row.palette);
-  // Very faint tint of the palette base for the card background
   const bgTint = tintForCard(colors.base);
   const specimenId = `M-${String(row.seed).padStart(5, '0')}`;
 
@@ -36,20 +42,21 @@ export function SpecimenCard({ row, highlighted = false }: Props): ReactElement 
         <Sprite phenotype={row.expressed} palette={row.palette} />
       </div>
       <div style={styles.cardFooter}>{specimenId}</div>
+      {lineage !== undefined && (
+        <div style={styles.lineageLine} data-testid="lineage-line">
+          {lineage.parentIds
+            ? `Gen ${lineage.generation} · from #${lineage.parentIds[0]} × #${lineage.parentIds[1]}`
+            : `Gen ${lineage.generation} · Harvested`}
+        </div>
+      )}
     </div>
   );
 }
 
-/**
- * Convert a palette base color to a very faint background tint by mixing
- * heavily with white. Keeps the biotech "sterile card" feel.
- */
 function tintForCard(hex: string): string {
-  // hex expected like "#rrggbb"
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  // mix 92% white + 8% palette color
   const mix = (c: number) => Math.round(255 * 0.92 + c * 0.08);
   const toHex = (n: number) => n.toString(16).padStart(2, '0');
   return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
