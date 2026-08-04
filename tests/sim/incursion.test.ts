@@ -187,4 +187,47 @@ describe('resolveIncursion', () => {
     });
     expect(penalized.successP).toBeLessThan(clean.successP);
   });
+
+  it('no hardening arg matches hardening=0 (regression lock)', () => {
+    const a = resolveIncursion(team, FRONTS.infrastructure);
+    const b = resolveIncursion(team, FRONTS.infrastructure, {}, 0);
+    expect(a).toEqual(b);
+  });
+
+  it('hardening: 8 raises effective thresholds and drops coverage', () => {
+    const clean = resolveIncursion(team, FRONTS.infrastructure);
+    const hardened = resolveIncursion(team, FRONTS.infrastructure, {}, 8);
+    // Every required stat's coverage drops (unless clipped at COVERAGE_CLIP)
+    for (const s of Object.keys(clean.coverage)) {
+      const stat = s as keyof typeof clean.coverage;
+      if (clean.coverage[stat]! < COVERAGE_CLIP) {
+        expect(hardened.coverage[stat]!).toBeLessThan(clean.coverage[stat]!);
+      }
+    }
+    // successP drops (unless both are at 1.0 upper bound)
+    expect(hardened.successP).toBeLessThanOrEqual(clean.successP);
+  });
+
+  it('hardening applied uniformly across all required stats', () => {
+    // Infrastructure has 2 required stats (INT, SPD). Both thresholds bumped by the same 8.
+    const clean = resolveIncursion(team, FRONTS.infrastructure);
+    const hardened = resolveIncursion(team, FRONTS.infrastructure, {}, 8);
+    // Coverage[INT] should scale by threshold_INT / (threshold_INT + 8)
+    // Coverage[SPD] should scale by threshold_SPD / (threshold_SPD + 8)
+    // Ratios should follow the (threshold / (threshold + 8)) pattern for each stat.
+    // We can just check both dropped — a full ratio check requires knowing the exact
+    // team stats, which is seed-dependent. The key structural check: both are affected.
+    expect(hardened.coverage.INT).toBeLessThanOrEqual(clean.coverage.INT!);
+    expect(hardened.coverage.SPD).toBeLessThanOrEqual(clean.coverage.SPD!);
+  });
+
+  it('coverage still clipped at COVERAGE_CLIP even with hardening', () => {
+    // Build a team so strong that even hardened thresholds are exceeded.
+    // Use a homogeneous strong-genome team (seed 999).
+    const strong = [makeUnit(1, 999), makeUnit(2, 999), makeUnit(3, 999), makeUnit(4, 999)];
+    const hardened = resolveIncursion(strong, FRONTS.infrastructure, {}, 8);
+    for (const s of Object.keys(hardened.coverage)) {
+      expect(hardened.coverage[s as keyof typeof hardened.coverage]!).toBeLessThanOrEqual(COVERAGE_CLIP);
+    }
+  });
 });

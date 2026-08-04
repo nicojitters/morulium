@@ -70,13 +70,12 @@ export function resolveIncursion(
   team: readonly Unit[],
   front: FrontProfile,
   restPenalties: Readonly<Record<number, number>> = {},
+  hardening: number = 0,
 ): IncursionResolution {
   if (team.length !== TEAM_SIZE) {
     throw new Error(`resolveIncursion: team size ${team.length} !== TEAM_SIZE ${TEAM_SIZE}`);
   }
 
-  // Extract required stats (keys of front.requirements where value !== undefined),
-  // preserving Object.keys order — this becomes the beat order.
   const requiredStatsOrdered: Stat[] = [];
   for (const s of Object.keys(front.requirements) as Stat[]) {
     if (front.requirements[s] !== undefined) requiredStatsOrdered.push(s);
@@ -89,11 +88,12 @@ export function resolveIncursion(
   for (const s of requiredStatsOrdered) {
     const req = front.requirements[s]!;
     const best = bests[s]!;
-    if (req.threshold === 0) {
-      // Defensive: threshold 0 means "any positive value clears it".
+    const effectiveThreshold = req.threshold + hardening;
+    if (effectiveThreshold <= 0) {
+      // Defensive: shouldn't happen with RADICALIZATION_BONUS > 0 and non-negative base thresholds
       coverage[s] = best.value > 0 ? COVERAGE_CLIP : 0;
     } else {
-      coverage[s] = Math.min(COVERAGE_CLIP, best.value / req.threshold);
+      coverage[s] = Math.min(COVERAGE_CLIP, best.value / effectiveThreshold);
     }
     bestContributors[s] = best.unitId;
   }
