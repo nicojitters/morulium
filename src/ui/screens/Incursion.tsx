@@ -6,9 +6,11 @@ import type { Unit } from '../../state/types';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { FrontCard } from '../components/FrontCard';
 import { IncursionTicker } from '../components/IncursionTicker';
-import { unitToRow, restStateFor } from './Colony';
+import { unitToRow, restStateFor, garrisonedAtFor } from './Colony';
+import { GarrisonPickerOverlay } from '../components/GarrisonPickerOverlay';
 import { styles } from '../styles';
 import { UNDER_RESTED_THRESHOLD, STIM_COST_SERUM } from '../../state/rest';
+import { GARRISON_TARGET } from '../../state/occupation';
 
 type Phase = 'idle' | 'resolving' | 'resolved';
 
@@ -33,6 +35,8 @@ export function Incursion(): ReactElement {
   const [visibleBeatCount, setVisibleBeatCount] = useState(0);
   const [now, setNow] = useState<number>(Date.now());
   const [stimApplied, setStimApplied] = useState<Set<number>>(new Set());
+  const [expandedFrontId, setExpandedFrontId] = useState<FrontId | null>(null);
+  const [pickerOpenFor, setPickerOpenFor] = useState<{ frontId: FrontId; slotIndex: number } | null>(null);
 
   // Cooldown clock (idle only). Ticks every second so all FrontCards show
   // the same "now" and countdowns update together.
@@ -67,8 +71,11 @@ export function Incursion(): ReactElement {
   );
 
   const allCaptured = fronts.infrastructure.captured && fronts.military.captured && fronts.guerrilla.captured;
+  const anyFlaring = fronts.infrastructure.flareStartedAt !== null
+    || fronts.military.flareStartedAt !== null
+    || fronts.guerrilla.flareStartedAt !== null;
 
-  if (allCaptured) {
+  if (allCaptured && !anyFlaring) {
     return (
       <main style={styles.page}>
         <h1 style={styles.headerTitle}>Morulium</h1>
@@ -83,7 +90,9 @@ export function Incursion(): ReactElement {
     );
   }
 
-  if (units.length < 4) {
+  const anyCaptured = fronts.infrastructure.captured || fronts.military.captured || fronts.guerrilla.captured;
+
+  if (units.length < 4 && !anyCaptured) {
     return (
       <main style={styles.page}>
         <h1 style={styles.headerTitle}>Morulium</h1>
@@ -120,10 +129,25 @@ export function Incursion(): ReactElement {
   const canLaunch = phase === 'idle' && bothPickedComplete && distinctTeam
     && !anyInjured && !stimsInsufficient;
 
+  function handleFrontCardClick(fid: FrontId): void {
+    const front = fronts[fid];
+    if (front.captured) {
+      // Toggle expand state
+      setExpandedFrontId(expandedFrontId === fid ? null : fid);
+      // Close picker if open on a different front
+      if (pickerOpenFor !== null && pickerOpenFor.frontId !== fid) setPickerOpenFor(null);
+    } else {
+      // Un-captured (available or cooling down) — select for launch (existing M5 behavior)
+      if (phase === 'idle') setSelectedFrontId(fid);
+    }
+  }
+
   function handleCardClick(u: Unit): void {
     if (phase !== 'idle') return;
     // Reject injured units
     if (u.injuredUntil !== null && u.injuredUntil > now) return;
+    // Reject garrisoned units
+    if (garrisonedAtFor(u.id, fronts) !== null) return;
     const idx = teamIds.findIndex((id) => id === u.id);
     if (idx !== -1) {
       const next = [...teamIds]; next[idx] = null; setTeamIds(next);
@@ -185,6 +209,8 @@ export function Incursion(): ReactElement {
     setSelectedFrontId(null);
     setTeamIds([null, null, null, null]);
     setStimApplied(new Set());
+    setExpandedFrontId(null);
+    setPickerOpenFor(null);
   }
 
   return (
@@ -194,17 +220,47 @@ export function Incursion(): ReactElement {
 
       {/* Front cards row */}
       <div style={styles.incursionFrontsRow}>
-        {(['infrastructure', 'military', 'guerrilla'] as FrontId[]).map((fid) => (
-          <FrontCard
-            key={fid}
-            frontId={fid}
-            label={FRONTS[fid].label}
-            state={fronts[fid]}
-            selected={selectedFrontId === fid}
-            now={now}
-            onClick={() => { if (phase === 'idle') setSelectedFrontId(fid); }}
-          />
-        ))}
+        {(['infrastructure', 'military', 'guerrilla'] as FrontId[]).map((fid) => {
+          const front = fronts[fid];
+          const garrisonUnits: (Unit | null)[] = Array.from({ length: GARRISON_TARGET }, (_, i) => {
+            const uid = front.garrison[i];
+            return uid !== undefined ? (units.find((u) => u.id === uid) ?? null) : null;
+          });
+          return (
+            <div key={fid} style={{ position: 'relative' }}>
+              <FrontCard
+                frontId={fid}
+                label={FRONTS[fid].label}
+                state={front}
+                selected={selectedFrontId === fid}
+                now={now}
+                onClick={() => handleFrontCardClick(fid)}
+                expanded={expandedFrontId === fid}
+                garrisonUnits={garrisonUnits}
+                onGarrisonSlotClick={(slotIndex) => setPickerOpenFor({ frontId: fid, slotIndex })}
+                onGarrisonSlotClear={(_slotIndex, unitId) => {
+                  useColonyStore.getState().removeFromGarrison(fid, unitId);
+                }}
+              />
+              {pickerOpenFor !== null && pickerOpenFor.frontId === fid && (
+                <GarrisonPickerOverlay
+                  frontId={fid}
+                  eligibleUnits={units.filter((u) => {
+                    if (u.injuredUntil !== null && u.injuredUntil > now) return false;
+                    if (garrisonedAtFor(u.id, fronts) !== null) return false;
+                    if (teamIds.includes(u.id)) return false;
+                    return true;
+                  })}
+                  onAssign={(unitId) => {
+                    useColonyStore.getState().assignToGarrison(fid, unitId);
+                    setPickerOpenFor(null);
+                  }}
+                  onDismiss={() => setPickerOpenFor(null)}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Team picker row (idle only) or Ticker (resolving/resolved) */}
@@ -308,6 +364,7 @@ export function Incursion(): ReactElement {
                   highlighted={unit.id === lastDecantedId}
                   lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
                   restState={restStateFor(unit, now)}
+                  garrisonedAt={garrisonedAtFor(unit.id, fronts)}
                 />
               </div>
             ))}

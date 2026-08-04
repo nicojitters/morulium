@@ -10,6 +10,7 @@ import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import type { Unit } from '../../src/state/types';
+import { RADICALIZATION_BONUS } from '../../src/state/occupation';
 
 function unit(id: number, seed = id): Unit {
   return {
@@ -359,5 +360,184 @@ describe('Incursion screen', () => {
     });
     const { getByTestId } = render(<Incursion />);
     expect(getByTestId('stim-inventory-label').textContent).toBe('Stims: 7');
+  });
+
+  it('garrisoned units in the team picker are unpickable', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const { getAllByTestId, getByTestId } = render(<Incursion />);
+    const cards = getAllByTestId('specimen-card');
+    const garrisonedCard = cards.find((c) => c.getAttribute('data-unit-id') === '1');
+    expect(garrisonedCard?.getAttribute('data-garrisoned')).toBe('true');
+    fireEvent.click(garrisonedCard!);
+    // Slot A stays empty
+    expect(getByTestId('incursion-team-slot-0').textContent).toContain('Slot 1');
+  });
+
+  it('captured front card click toggles garrison sub-panel', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const { getByTestId, queryByTestId } = render(<Incursion />);
+    // Panel not expanded initially
+    expect(queryByTestId('front-card-garrison-slot-infrastructure-0')).toBeNull();
+    // Click captured card
+    fireEvent.click(getByTestId('front-card-infrastructure'));
+    // Panel now expanded
+    expect(getByTestId('front-card-garrison-slot-infrastructure-0')).toBeDefined();
+  });
+
+  it('empty garrison slot click opens the picker overlay', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const { getByTestId } = render(<Incursion />);
+    fireEvent.click(getByTestId('front-card-infrastructure'));   // expand panel
+    fireEvent.click(getByTestId('front-card-garrison-slot-infrastructure-0'));
+    expect(getByTestId('front-card-garrison-picker-infrastructure')).toBeDefined();
+  });
+
+  it('picker overlay unit click calls assignToGarrison and closes overlay', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const { getByTestId, queryByTestId } = render(<Incursion />);
+    fireEvent.click(getByTestId('front-card-infrastructure'));
+    fireEvent.click(getByTestId('front-card-garrison-slot-infrastructure-0'));
+    // Overlay open
+    expect(getByTestId('front-card-garrison-picker-infrastructure')).toBeDefined();
+    // Assign unit 1
+    fireEvent.click(getByTestId('front-card-garrison-picker-unit-infrastructure-1'));
+    // Overlay closes
+    expect(queryByTestId('front-card-garrison-picker-infrastructure')).toBeNull();
+    // Store updated
+    expect(useColonyStore.getState().fronts.infrastructure.garrison).toEqual([1]);
+  });
+
+  it('filled garrison slot × click calls removeFromGarrison', () => {
+    useColonyStore.setState({
+      units: [1].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 2,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+        military: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+        guerrilla: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS },
+      },
+    });
+    const { getByTestId } = render(<Incursion />);
+    fireEvent.click(getByTestId('front-card-infrastructure'));   // expand
+    fireEvent.click(getByTestId('front-card-garrison-slot-clear-infrastructure-0'));
+    expect(useColonyStore.getState().fronts.infrastructure.garrison).toEqual([]);
+  });
+
+  it('region-conquered state shows when all 3 captured AND none flaring', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS * 2 },
+        military: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS * 2 },
+        guerrilla: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: RADICALIZATION_BONUS * 2 },
+      },
+    });
+    const { getByTestId } = render(<Incursion />);
+    expect(getByTestId('incursion-region-conquered')).toBeDefined();
+  });
+
+  it('region-conquered state HIDDEN when any front is flaring', () => {
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+      fronts: {
+        infrastructure: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: Date.now() - 1000, hardening: 0 },
+        military: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        guerrilla: { captured: true, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+      },
+    });
+    const { queryByTestId } = render(<Incursion />);
+    expect(queryByTestId('incursion-region-conquered')).toBeNull();
+  });
+
+  it('handleContinue resets expandedFrontId and pickerOpenFor', () => {
+    vi.useFakeTimers();
+    useColonyStore.setState({
+      units: [1, 2, 3, 4].map((i) => ({
+        id: i, seed: i, decantedAt: 100 * i,
+        genome: rollGenome(createRng(i * 101)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: 100, injuredUntil: null,
+      })),
+      nextId: 5,
+    });
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<Incursion />);
+    fireEvent.click(getByTestId('front-card-infrastructure'));   // select for launch
+    const cards = getAllByTestId('specimen-card');
+    [0, 1, 2, 3].forEach((i) => fireEvent.click(cards[i]!));
+    fireEvent.click(getByTestId('launch-incursion-button'));
+    fireEvent.click(getByTestId('incursion-skip-button'));
+    fireEvent.click(getByTestId('incursion-continue-button'));
+    // After Continue, no expanded front, no picker open, no lingering picker overlay
+    expect(queryByTestId('front-card-garrison-picker-infrastructure')).toBeNull();
+    vi.useRealTimers();
   });
 });
