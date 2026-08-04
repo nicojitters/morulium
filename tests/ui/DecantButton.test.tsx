@@ -11,6 +11,7 @@ describe('DecantButton', () => {
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
   });
 
@@ -42,6 +43,7 @@ describe('DecantButton', () => {
       units: [], nextId: 2, lastDecantedId: null,
       harvestsToday: 2, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<DecantButton />);
     expect(getByTestId('decant-button').textContent).toBe('Decant a Morula (1/3)');
@@ -54,6 +56,7 @@ describe('DecantButton', () => {
       units: [], nextId: 4, lastDecantedId: null,
       harvestsToday: 3, harvestDayKey: '2026-08-04',
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<DecantButton />);
     const btn = getByTestId('decant-button');
@@ -67,6 +70,7 @@ describe('DecantButton', () => {
       units: [], nextId: 4, lastDecantedId: null,
       harvestsToday: 3, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<DecantButton />);
     fireEvent.click(getByTestId('decant-button'));

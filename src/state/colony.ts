@@ -16,6 +16,12 @@ import {
   rollGenomeAtLeast,
   tierAtLeast,
 } from './failsafe';
+import {
+  DAILY_BREED_LIMIT,
+  BREED_SUBSTREAM_PRIME,
+} from './breed';
+import { breedGenome, MUTATION_RATE } from '../sim/breed';
+import { nextWear } from '../sim/wear';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -24,8 +30,11 @@ interface ColonyStore {
   readonly harvestsToday: number;
   readonly harvestDayKey: string;
   readonly droughtCount: number;
+  readonly breedsToday: number;
+  readonly breedDayKey: string;
 
   decant: () => Unit;
+  breed: (parentAId: number, parentBId: number) => Unit;
   clearHighlight: () => void;
 }
 
@@ -38,12 +47,13 @@ export const useColonyStore = create<ColonyStore>()(
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
 
       decant: () => {
         const state = get();
         const today = todayLocalKey();
 
-        // Day rollover: if the stored day is stale, treat harvestsToday as 0
         const harvestsUsedToday = state.harvestDayKey === today ? state.harvestsToday : 0;
         if (harvestsUsedToday >= DAILY_HARVEST_LIMIT) {
           throw new Error('daily Harvest limit reached');
@@ -51,8 +61,6 @@ export const useColonyStore = create<ColonyStore>()(
 
         const id = state.nextId;
 
-        // Failsafe: when drought has reached the threshold, roll from the substream
-        // until we get a Chimera+ genome. Otherwise, normal roll.
         const genome = state.droughtCount >= DROUGHT_THRESHOLD
           ? rollGenomeAtLeast(id * FAILSAFE_SUBSTREAM_PRIME, FAILSAFE_MIN_TIER)
           : rollGenome(createRng(id));
@@ -65,6 +73,9 @@ export const useColonyStore = create<ColonyStore>()(
           seed: id,
           decantedAt: Date.now(),
           genome,
+          generation: 0,
+          parentIds: null,
+          wear: {},
         };
 
         set({
@@ -78,24 +89,87 @@ export const useColonyStore = create<ColonyStore>()(
         return unit;
       },
 
+      breed: (parentAId, parentBId) => {
+        if (parentAId === parentBId) {
+          throw new Error('breed: cannot breed a specimen with itself');
+        }
+        const state = get();
+        const pA = state.units.find((u) => u.id === parentAId);
+        const pB = state.units.find((u) => u.id === parentBId);
+        if (!pA) throw new Error(`breed: parent ${parentAId} not found`);
+        if (!pB) throw new Error(`breed: parent ${parentBId} not found`);
+
+        const today = todayLocalKey();
+        const breedsUsedToday = state.breedDayKey === today ? state.breedsToday : 0;
+        if (breedsUsedToday >= DAILY_BREED_LIMIT) {
+          throw new Error('daily Breed limit reached');
+        }
+
+        const childId = state.nextId;
+        const rng = createRng(childId * BREED_SUBSTREAM_PRIME);
+        const { genome, mutatedLoci } = breedGenome(pA.genome, pB.genome, rng, MUTATION_RATE);
+        const wear = nextWear(pA, pB, mutatedLoci);
+        const generation = Math.max(pA.generation, pB.generation) + 1;
+
+        const child: Unit = {
+          id: childId,
+          seed: childId,
+          decantedAt: Date.now(),
+          genome,
+          generation,
+          parentIds: [parentAId, parentBId] as const,
+          wear,
+        };
+
+        set({
+          units: [...state.units, child],
+          nextId: childId + 1,
+          lastDecantedId: childId,
+          breedsToday: breedsUsedToday + 1,
+          breedDayKey: today,
+        });
+        return child;
+      },
+
       clearHighlight: () => set({ lastDecantedId: null }),
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       migrate: (state, from) => {
-        // Cast is safe here because Zustand's migrate types are open (unknown-ish);
-        // we know the v1 shape from M3a: { units, nextId }
+        let s = state as ColonyStore;
         if (from < 2) {
-          const v1 = state as Partial<ColonyStore> & { units: Unit[]; nextId: number };
-          return {
+          const v1 = s as Partial<ColonyStore> & { units: Unit[]; nextId: number };
+          s = {
             ...v1,
             harvestsToday: 0,
             harvestDayKey: todayLocalKey(),
             droughtCount: 0,
+          } as ColonyStore;
+        }
+        if (from < 3) {
+          type LegacyUnit = Omit<Unit, 'generation' | 'parentIds' | 'wear'> & {
+            generation?: number;
+            parentIds?: readonly [number, number] | null;
+            wear?: Readonly<Record<string, number>>;
+          };
+          const v2 = s as ColonyStore & { units: LegacyUnit[] };
+          s = {
+            ...v2,
+            breedsToday: 0,
+            breedDayKey: todayLocalKey(),
+            units: v2.units.map((u) => ({
+              id: u.id,
+              seed: u.seed,
+              decantedAt: u.decantedAt,
+              genome: u.genome,
+              generation: u.generation ?? 0,
+              parentIds: u.parentIds ?? null,
+              wear: u.wear ?? {},
+            })),
           };
         }
-        return state as ColonyStore;
+        return s;
       },
       partialize: (state) => ({
         units: state.units,
@@ -103,6 +177,8 @@ export const useColonyStore = create<ColonyStore>()(
         harvestsToday: state.harvestsToday,
         harvestDayKey: state.harvestDayKey,
         droughtCount: state.droughtCount,
+        breedsToday: state.breedsToday,
+        breedDayKey: state.breedDayKey,
       }),
     },
   ),

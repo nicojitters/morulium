@@ -11,6 +11,7 @@ describe('HarvestIndicator', () => {
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
   });
   afterEach(() => {
@@ -28,6 +29,7 @@ describe('HarvestIndicator', () => {
       units: [], nextId: 3, lastDecantedId: null,
       harvestsToday: 2, harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<HarvestIndicator />);
     expect(getByTestId('harvest-indicator').textContent).toBe('Harvest 1/3');
@@ -41,6 +43,7 @@ describe('HarvestIndicator', () => {
       units: [], nextId: 4, lastDecantedId: null,
       harvestsToday: 3, harvestDayKey: '2026-08-04',
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<HarvestIndicator />);
     expect(getByTestId('harvest-indicator').textContent).toBe('Next Harvest in 7h 23m');
@@ -53,6 +56,7 @@ describe('HarvestIndicator', () => {
       units: [], nextId: 4, lastDecantedId: null,
       harvestsToday: 3, harvestDayKey: '2026-08-04',
       droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<HarvestIndicator />);
     expect(getByTestId('harvest-indicator').textContent).toBe('Next Harvest in 7h 23m');

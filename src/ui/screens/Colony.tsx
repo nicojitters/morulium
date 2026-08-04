@@ -24,8 +24,8 @@ const HIGHLIGHT_MS = 2000;
 export function unitToRow(unit: Unit): DemoRow {
   const phen = expressPhenotype(unit.genome);
   const { score, tier } = computeRarity(unit.genome);
-  const base = computeBaseStats(unit.genome);
-  const current = computeCurrentStats(unit.genome, 20);
+  const base = computeBaseStats(unit.genome, unit.wear);
+  const current = computeCurrentStats(unit.genome, 20, unit.wear);
   return {
     seed: unit.seed,
     tier,

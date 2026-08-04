@@ -1,15 +1,22 @@
 import type { Genome } from '../sim/types';
 
 /**
- * A persisted Colony unit (M3a shape). Level, xp, tags, injury, and rest
- * state are deferred to M3b / M4+.
+ * A persisted Colony unit.
  *
- * `id` and `seed` are the same value in M3a — they diverge later (breeding /
- * Vat fusion may produce units whose seed is derived, not the id itself).
+ * Origin (pristine vs bred) is derived from `parentIds`:
+ *   - `null` ⇒ pristine (Decanted / future Incursion drop / future Vat output)
+ *   - `[a, b]` ⇒ bred; `wear` may carry per-locus degradation
+ *
+ * `wear` is a per-locus scalar map. Absent key ≡ 0 (never throws on lookup).
+ * A mutation at either allele of a locus clears that locus's wear (see
+ * sim/wear.ts nextWear).
  */
 export interface Unit {
   readonly id: number;
   readonly seed: number;
-  readonly decantedAt: number;   // Date.now() at Decant, for sorting
+  readonly decantedAt: number;
   readonly genome: Genome;
+  readonly generation: number;
+  readonly parentIds: readonly [number, number] | null;
+  readonly wear: Readonly<Record<string, number>>;
 }

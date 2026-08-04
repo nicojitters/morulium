@@ -13,6 +13,8 @@ describe('colony store', () => {
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
     });
   });
 
@@ -31,6 +33,10 @@ describe('colony store', () => {
     expect(unit.decantedAt).toBe(Date.parse('2026-01-01T00:00:00Z'));
     expect(unit.genome).toBeDefined();
     expect(unit.genome.loci).toBeDefined();
+    // M4 pristine defaults
+    expect(unit.generation).toBe(0);
+    expect(unit.parentIds).toBeNull();
+    expect(unit.wear).toEqual({});
 
     const s = useColonyStore.getState();
     expect(s.units).toHaveLength(1);
@@ -91,6 +97,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     // The current allele distribution gives Chimera+ ~5% of the time; over
     // three consecutive small-id rolls (id=1..3), it is overwhelmingly likely
@@ -119,6 +126,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 10,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const unit = useColonyStore.getState().decant();
     const { tier } = computeRarity(unit.genome);
@@ -133,6 +141,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 42, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const unit = useColonyStore.getState().decant();
     expect(tierAtLeast(computeRarity(unit.genome).tier, 'chimera')).toBe(true);
@@ -146,15 +155,122 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const first = useColonyStore.getState().decant();
 
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const second = useColonyStore.getState().decant();
 
     expect(first.genome).toEqual(second.genome);
+  });
+
+  it('breed() creates a child with parentIds, generation=max(pA,pB)+1, and wear', () => {
+    // Seed two pristine parents by decanting them
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    expect(pA.generation).toBe(0);
+    expect(pB.generation).toBe(0);
+
+    const child = useColonyStore.getState().breed(pA.id, pB.id);
+    expect(child.parentIds).toEqual([pA.id, pB.id]);
+    expect(child.generation).toBe(1);
+    // Wear map is populated for every locus that wasn't mutated (both parents pristine)
+    const wearEntries = Object.keys(child.wear).length;
+    expect(wearEntries).toBeGreaterThan(0);
+    // Store state updated
+    const s = useColonyStore.getState();
+    expect(s.units).toHaveLength(3);
+    expect(s.lastDecantedId).toBe(child.id);
+    expect(s.breedsToday).toBe(1);
+  });
+
+  it('breed() throws when parents are the same unit', () => {
+    const pA = useColonyStore.getState().decant();
+    expect(() => useColonyStore.getState().breed(pA.id, pA.id)).toThrow(/breed a specimen with itself/);
+  });
+
+  it('breed() throws when a parent id is missing', () => {
+    const pA = useColonyStore.getState().decant();
+    expect(() => useColonyStore.getState().breed(pA.id, 999)).toThrow(/parent 999 not found/);
+    expect(() => useColonyStore.getState().breed(999, pA.id)).toThrow(/parent 999 not found/);
+  });
+
+  it('breed() enforces DAILY_BREED_LIMIT and throws on the 4th same-day call', () => {
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    useColonyStore.getState().breed(pA.id, pB.id);
+    useColonyStore.getState().breed(pA.id, pB.id);
+    useColonyStore.getState().breed(pA.id, pB.id);
+    expect(useColonyStore.getState().breedsToday).toBe(3);
+    expect(() => useColonyStore.getState().breed(pA.id, pB.id)).toThrow(/daily Breed limit/);
+  });
+
+  it('day rollover resets the breed counter', () => {
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    useColonyStore.getState().breed(pA.id, pB.id);
+    useColonyStore.getState().breed(pA.id, pB.id);
+    useColonyStore.getState().breed(pA.id, pB.id);
+    expect(useColonyStore.getState().breedsToday).toBe(3);
+
+    vi.setSystemTime(new Date(2026, 7, 5, 12, 0, 0));
+    useColonyStore.getState().breed(pA.id, pB.id);
+    expect(useColonyStore.getState().breedsToday).toBe(1);
+    expect(useColonyStore.getState().breedDayKey).toBe('2026-08-05');
+    vi.useRealTimers();
+  });
+
+  it('breed() does NOT touch droughtCount', () => {
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    // Force droughtCount to a known value
+    useColonyStore.setState({ droughtCount: 42 });
+    useColonyStore.getState().breed(pA.id, pB.id);
+    expect(useColonyStore.getState().droughtCount).toBe(42);
+  });
+
+  it('breed() is deterministic: same (nextId, pA.genome, pB.genome) yields same offspring genome', () => {
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    const firstNextId = useColonyStore.getState().nextId;
+
+    const c1 = useColonyStore.getState().breed(pA.id, pB.id);
+
+    // Reset to the same state and breed again
+    useColonyStore.setState({
+      units: [pA, pB],
+      nextId: firstNextId,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
+    });
+    const c2 = useColonyStore.getState().breed(pA.id, pB.id);
+
+    expect(c1.genome).toEqual(c2.genome);
+    expect(c1.wear).toEqual(c2.wear);
+  });
+
+  it('a bred child inherits generation as max(pA, pB) + 1', () => {
+    const pA = useColonyStore.getState().decant();
+    const pB = useColonyStore.getState().decant();
+    const g1 = useColonyStore.getState().breed(pA.id, pB.id);
+    expect(g1.generation).toBe(1);
+
+    // Cross g1 with pA — child should be gen 2
+    const g2 = useColonyStore.getState().breed(g1.id, pA.id);
+    expect(g2.generation).toBe(2);
+
+    // Cross g2 with g1 (gen 2 × gen 1) → gen 3
+    const g3 = useColonyStore.getState().breed(g2.id, g1.id);
+    expect(g3.generation).toBe(3);
   });
 });

@@ -10,6 +10,7 @@ function resetStore(droughtCount: number): void {
     units: [], nextId: 1, lastDecantedId: null,
     harvestsToday: 0, harvestDayKey: todayLocalKey(),
     droughtCount,
+    breedsToday: 0, breedDayKey: todayLocalKey(),
   });
 }
 

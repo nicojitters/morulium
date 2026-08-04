@@ -14,6 +14,8 @@ describe('colony persistence', () => {
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
     });
   });
 
@@ -45,8 +47,8 @@ describe('colony persistence', () => {
     const savedShape = {
       state: {
         units: [
-          { id: 1, seed: 1, decantedAt: 1_700_000_000_000, genome: { loci: {} } },
-          { id: 2, seed: 2, decantedAt: 1_700_000_001_000, genome: { loci: {} } },
+          { id: 1, seed: 1, decantedAt: 1_700_000_000_000, genome: { loci: {} }, generation: 0, parentIds: null, wear: {} },
+          { id: 2, seed: 2, decantedAt: 1_700_000_001_000, genome: { loci: {} }, generation: 0, parentIds: null, wear: {} },
         ],
         nextId: 3,
       },
@@ -64,6 +66,7 @@ describe('colony persistence', () => {
     useColonyStore.setState({
       units: [], nextId: 5, lastDecantedId: null,
       harvestsToday: 2, harvestDayKey: '2026-08-04', droughtCount: 17,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     // Trigger persist middleware to flush by triggering a state update
     // (setState above already does this via the persist wrapper)
@@ -74,7 +77,7 @@ describe('colony persistence', () => {
     expect(parsed.state.harvestDayKey).toBe('2026-08-04');
     expect(parsed.state.droughtCount).toBe(17);
     expect(parsed.state.lastDecantedId).toBeUndefined(); // still transient
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
   });
 
   it('migrate function upgrades a v1 shape by adding M3b fields', async () => {
@@ -102,5 +105,85 @@ describe('colony persistence', () => {
     expect(s.droughtCount).toBe(0);
     // Transient field is still null after rehydrate
     expect(s.lastDecantedId).toBeNull();
+  });
+
+  it('M4 fields persist across a rehydration cycle', () => {
+    useColonyStore.setState({
+      units: [],
+      nextId: 5,
+      lastDecantedId: null,
+      harvestsToday: 2,
+      harvestDayKey: '2026-08-04',
+      droughtCount: 17,
+      breedsToday: 2,
+      breedDayKey: '2026-08-04',
+    });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.state.breedsToday).toBe(2);
+    expect(parsed.state.breedDayKey).toBe('2026-08-04');
+    expect(parsed.version).toBe(3);
+  });
+
+  it('migrate v2 → v3 backfills unit fields and store fields with defaults', async () => {
+    // Seed localStorage with a v2 shape (M3b, no M4 fields)
+    const v2Shape = {
+      state: {
+        units: [
+          { id: 1, seed: 1, decantedAt: 1_700_000_000_000, genome: { loci: {} } },
+          { id: 2, seed: 2, decantedAt: 1_700_000_001_000, genome: { loci: {} } },
+        ],
+        nextId: 3,
+        harvestsToday: 1,
+        harvestDayKey: '2026-08-04',
+        droughtCount: 5,
+      },
+      version: 2,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v2Shape));
+
+    await useColonyStore.persist.rehydrate();
+
+    const s = useColonyStore.getState();
+    expect(s.units).toHaveLength(2);
+    expect(s.nextId).toBe(3);
+    expect(s.harvestsToday).toBe(1); // preserved
+    expect(s.droughtCount).toBe(5); // preserved
+    expect(s.breedsToday).toBe(0); // new default
+    expect(s.breedDayKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Every unit gets pristine M4 defaults
+    for (const u of s.units) {
+      expect(u.generation).toBe(0);
+      expect(u.parentIds).toBeNull();
+      expect(u.wear).toEqual({});
+    }
+  });
+
+  it('migrate v1 → v3 chains through both branches', async () => {
+    const v1Shape = {
+      state: {
+        units: [
+          { id: 1, seed: 1, decantedAt: 1_700_000_000_000, genome: { loci: {} } },
+        ],
+        nextId: 2,
+      },
+      version: 1,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Shape));
+
+    await useColonyStore.persist.rehydrate();
+
+    const s = useColonyStore.getState();
+    expect(s.units).toHaveLength(1);
+    // M3b fields backfilled
+    expect(s.harvestsToday).toBe(0);
+    expect(s.droughtCount).toBe(0);
+    // M4 store fields backfilled
+    expect(s.breedsToday).toBe(0);
+    // Unit's M4 fields backfilled
+    expect(s.units[0]!.generation).toBe(0);
+    expect(s.units[0]!.parentIds).toBeNull();
+    expect(s.units[0]!.wear).toEqual({});
   });
 });

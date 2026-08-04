@@ -14,6 +14,8 @@ describe('EmptyColony', () => {
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
     });
   });
 
@@ -42,6 +44,8 @@ describe('EmptyColony', () => {
       harvestsToday: 3,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
     });
     const { getByTestId } = render(<EmptyColony />);
     const btn = getByTestId('decant-button');
