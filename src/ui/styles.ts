@@ -659,4 +659,72 @@ export const styles = {
     color: '#334155',   // slate-700
     alignSelf: 'center',
   } as CSSProperties,
+
+  stimShopRow: {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '8px 0',
+    marginBottom: 8,
+  } as CSSProperties,
+
+  stimInventoryLabel: {
+    fontSize: 13,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: '#475569',
+  } as CSSProperties,
+
+  buyStimButton: {
+    padding: '6px 14px',
+    borderRadius: 6,
+    border: '1px solid #7c3aed',
+    background: '#8b5cf6',
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  buyStimButtonDisabled: {
+    padding: '6px 14px',
+    borderRadius: 6,
+    border: '1px solid #cbd5e1',
+    background: '#e2e8f0',
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  slotStimToggle: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    padding: '2px 6px',
+    borderRadius: 4,
+    border: '1px solid #cbd5e1',
+    background: '#ffffff',
+    color: '#475569',
+    fontSize: 10,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  slotStimToggleActive: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    padding: '2px 6px',
+    borderRadius: 4,
+    border: '1px solid #7c3aed',
+    background: '#8b5cf6',
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
 };
