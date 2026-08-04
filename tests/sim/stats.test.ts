@@ -9,6 +9,7 @@ import type { Genome } from '../../src/sim/types';
 import { STATS } from '../../src/sim/types';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
+import { ALLELES, LOCI } from '../../src/sim/data/loci';
 
 function g(pairs: Record<string, [string, string]>): Genome {
   return { loci: pairs };
@@ -197,5 +198,40 @@ describe('wear integration', () => {
     const legacy = computeCurrentStats(g, 20);
     const explicit = computeCurrentStats(g, 20, {});
     expect(explicit).toEqual(legacy);
+  });
+});
+
+describe('rest penalty in computeCurrentStats', () => {
+  it('no restPenalty arg matches restPenalty=1.0 (regression lock)', () => {
+    const g = rollGenome(createRng(42));
+    expect(computeCurrentStats(g, 20)).toEqual(computeCurrentStats(g, 20, {}, 1.0));
+  });
+
+  it('restPenalty=0.7 multiplies every stat by 0.7 vs no arg', () => {
+    const g = rollGenome(createRng(101));
+    const full = computeCurrentStats(g, 20);
+    const penalized = computeCurrentStats(g, 20, {}, 0.7);
+    for (const s of STATS) {
+      expect(penalized[s]).toBeCloseTo(full[s] * 0.7, 10);
+    }
+  });
+
+  it('restPenalty composes with wear multiplicatively', () => {
+    const g = rollGenome(createRng(202));
+    // Use a locus with a definite non-zero contribution
+    const firstStatLocus = Object.values(LOCI).find((l) =>
+      l.alleles.some((aid) => {
+        const a = ALLELES[aid];
+        return a && Object.values(a.statDeltas).some((d) => d !== 0 && d !== undefined);
+      }),
+    );
+    if (!firstStatLocus) throw new Error('no stat-bearing locus found');
+
+    const noPenaltyWithWear = computeCurrentStats(g, 20, { [firstStatLocus.id]: 20 }, 1.0);
+    const bothPenaltyAndWear = computeCurrentStats(g, 20, { [firstStatLocus.id]: 20 }, 0.7);
+    // Every stat should be exactly 0.7 of the wear-only version
+    for (const s of STATS) {
+      expect(bothPenaltyAndWear[s]).toBeCloseTo(noPenaltyWithWear[s] * 0.7, 10);
+    }
   });
 });

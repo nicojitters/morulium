@@ -19,7 +19,8 @@ function makeUnit(id: number, seed: number): Unit {
     id, seed, decantedAt: 100 * id,
     genome: rollGenome(createRng(seed)),
     generation: 0, parentIds: null, wear: {},
-  };
+    restCurrent: 100, injuredUntil: null,  // M6b — forward-compatible; type gains these in Task 3
+  } as Unit;
 }
 
 describe('incursion constants', () => {
@@ -74,6 +75,25 @@ describe('bestContributorPerStat', () => {
     expect(bests.VIT).toBeUndefined();
     expect(bests.SPD).toBeUndefined();
     expect(bests.GUI).toBeUndefined();
+  });
+
+  it('applies restPenalty when choosing the best contributor', () => {
+    // Unit 1 with penalty=0.7 may lose to unit 2 without penalty
+    const team = [makeUnit(1, 555), makeUnit(2, 100), makeUnit(3, 200), makeUnit(4, 300)];
+    const noPenalty = bestContributorPerStat(team, ['PWR']);
+    const withPenalty = bestContributorPerStat(team, ['PWR'], { [noPenalty.PWR!.unitId]: 0.7 });
+    // The penalized unit's contribution is now 0.7 of what it was;
+    // if its lead was less than 30%, another unit takes over.
+    const originalLeader = noPenalty.PWR!.unitId;
+    const newLeader = withPenalty.PWR!.unitId;
+    // Sanity: either the leader is the same (their lead was > 30%) or it changed.
+    // In either case, if the leader stayed the same, their value should drop by 0.7.
+    if (newLeader === originalLeader) {
+      expect(withPenalty.PWR!.value).toBeCloseTo(noPenalty.PWR!.value * 0.7, 5);
+    } else {
+      // A new unit won — their value is at full strength (no penalty)
+      expect(withPenalty.PWR!.value).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -148,5 +168,23 @@ describe('resolveIncursion', () => {
   it('throws when team size is not TEAM_SIZE', () => {
     const shortTeam = [makeUnit(1, 1), makeUnit(2, 2), makeUnit(3, 3)];
     expect(() => resolveIncursion(shortTeam, FRONTS.infrastructure)).toThrow(/TEAM_SIZE|team size/);
+  });
+
+  it('no restPenalties arg matches restPenalties={} (regression lock)', () => {
+    const a = resolveIncursion(team, FRONTS.infrastructure);
+    const b = resolveIncursion(team, FRONTS.infrastructure, {});
+    expect(a).toEqual(b);
+  });
+
+  it('restPenalties on the dominant unit can flip the outcome', () => {
+    // Pick a well-rested strong team
+    const strongTeam = [makeUnit(1, 999), makeUnit(2, 999), makeUnit(3, 999), makeUnit(4, 999)];
+    const clean = resolveIncursion(strongTeam, FRONTS.infrastructure);
+
+    // Apply 0.7 penalty to every unit — successP drops
+    const penalized = resolveIncursion(strongTeam, FRONTS.infrastructure, {
+      1: 0.7, 2: 0.7, 3: 0.7, 4: 0.7,
+    });
+    expect(penalized.successP).toBeLessThan(clean.successP);
   });
 });

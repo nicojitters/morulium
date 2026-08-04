@@ -81,20 +81,22 @@ export function computeGrowthAffinity(genome: Genome, wear: Wear = NO_WEAR): Rec
 }
 
 /**
- * Current stats = base * (1 + 0.02 * level * affinity).
- * At level 20 with affinity=1.0 → base * 1.4 (the +40% cap from game-spec §5).
+ * Current stats = base * (1 + 0.02 * level * affinity) * restPenalty.
+ * At level 20 with affinity=1.0 and restPenalty=1.0 → base * 1.4 (+40% cap).
+ * restPenalty defaults to 1.0 — under-rested units pass 0.7 (M6b).
  * Caller enforces the level cap.
  */
 export function computeCurrentStats(
   genome: Genome,
   level: number,
   wear: Wear = NO_WEAR,
+  restPenalty: number = 1.0,
 ): Record<Stat, number> {
   const base = computeBaseStats(genome, wear);
   const affinity = computeGrowthAffinity(genome, wear);
   const out = {} as Record<Stat, number>;
   for (const s of STATS) {
-    out[s] = base[s] * (1 + 0.02 * level * affinity[s]);
+    out[s] = base[s] * (1 + 0.02 * level * affinity[s]) * restPenalty;
   }
   return out;
 }

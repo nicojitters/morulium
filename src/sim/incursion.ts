@@ -41,12 +41,13 @@ export interface IncursionResolution {
 export function bestContributorPerStat(
   team: readonly Unit[],
   requiredStats: readonly Stat[],
+  restPenalties: Readonly<Record<number, number>> = {},
 ): Readonly<Partial<Record<Stat, BestContributor>>> {
   const out: Partial<Record<Stat, BestContributor>> = {};
   // Precompute per-unit stats once
   const perUnitStats: { unit: Unit; stats: Record<Stat, number> }[] = team.map((u) => ({
     unit: u,
-    stats: computeCurrentStats(u.genome, INCURSION_LEVEL, u.wear),
+    stats: computeCurrentStats(u.genome, INCURSION_LEVEL, u.wear, restPenalties[u.id] ?? 1.0),
   }));
   for (const s of requiredStats) {
     let best: BestContributor | undefined;
@@ -65,7 +66,11 @@ export function bestContributorPerStat(
  * Deterministic Incursion resolution. Same team + front → identical output.
  * No RNG in M5.
  */
-export function resolveIncursion(team: readonly Unit[], front: FrontProfile): IncursionResolution {
+export function resolveIncursion(
+  team: readonly Unit[],
+  front: FrontProfile,
+  restPenalties: Readonly<Record<number, number>> = {},
+): IncursionResolution {
   if (team.length !== TEAM_SIZE) {
     throw new Error(`resolveIncursion: team size ${team.length} !== TEAM_SIZE ${TEAM_SIZE}`);
   }
@@ -77,7 +82,7 @@ export function resolveIncursion(team: readonly Unit[], front: FrontProfile): In
     if (front.requirements[s] !== undefined) requiredStatsOrdered.push(s);
   }
 
-  const bests = bestContributorPerStat(team, requiredStatsOrdered);
+  const bests = bestContributorPerStat(team, requiredStatsOrdered, restPenalties);
 
   const coverage: Partial<Record<Stat, number>> = {};
   const bestContributors: Partial<Record<Stat, number>> = {};
