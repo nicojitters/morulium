@@ -475,4 +475,157 @@ export const styles = {
     fontFamily: 'inherit',
     marginTop: 8,
   } as CSSProperties,
+
+  incursionSection: {
+    marginBottom: 24,
+  } as CSSProperties,
+
+  incursionFrontsRow: {
+    display: 'flex',
+    gap: 16,
+    justifyContent: 'center',
+    padding: '16px 0',
+    flexWrap: 'wrap',
+  } as CSSProperties,
+
+  incursionTeamRow: {
+    display: 'flex',
+    gap: 12,
+    justifyContent: 'center',
+    padding: '16px 0',
+    flexWrap: 'wrap',
+  } as CSSProperties,
+
+  incursionHint: {
+    textAlign: 'center',
+    color: '#94a3b8',
+    fontSize: 13,
+    marginBottom: 12,
+  } as CSSProperties,
+
+  incursionSlotEmpty: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 120,
+    height: 150,
+    borderRadius: 8,
+    border: '2px dashed #cbd5e1',
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  incursionSlotFilled: {
+    position: 'relative',
+    width: 120,
+    padding: 8,
+    borderRadius: 8,
+    border: '2px solid #8b5cf6',
+    background: '#faf5ff',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+  } as CSSProperties,
+
+  incursionSlotClear: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    border: 'none',
+    background: '#f1f5f9',
+    color: '#475569',
+    fontSize: 12,
+    lineHeight: 1,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as CSSProperties,
+
+  incursionSlotIdLine: {
+    fontSize: 12,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: '#475569',
+  } as CSSProperties,
+
+  incursionSlotGenLine: {
+    fontSize: 10,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  incursionLaunchRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '8px 0 24px 0',
+  } as CSSProperties,
+
+  incursionLaunchButton: {
+    padding: '12px 28px',
+    borderRadius: 6,
+    border: '1px solid #dc2626',   // red-600
+    background: '#ef4444',          // red-500
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  incursionLaunchButtonDisabled: {
+    padding: '12px 28px',
+    borderRadius: 6,
+    border: '1px solid #cbd5e1',
+    background: '#e2e8f0',
+    color: '#64748b',
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  incursionContinueButton: {
+    padding: '10px 24px',
+    borderRadius: 6,
+    border: '1px solid #0f172a',
+    background: '#1e293b',
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    marginTop: 12,
+  } as CSSProperties,
+
+  regionConquered: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 48,
+    background: '#f0fdf4',
+    border: '2px solid #22c55e',
+    borderRadius: 12,
+    marginTop: 24,
+  } as CSSProperties,
+
+  regionConqueredTitle: {
+    fontSize: 20,
+    fontWeight: 600,
+    color: '#166534',
+  } as CSSProperties,
+
+  regionConqueredBody: {
+    fontSize: 14,
+    color: '#166534',
+    textAlign: 'center',
+  } as CSSProperties,
 };
