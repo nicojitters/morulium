@@ -6,7 +6,6 @@ import {
   computeCurrentStats,
 } from '../../src/sim/stats';
 import type { Genome } from '../../src/sim/types';
-import { LOCI, ALLELES } from '../../src/sim/data/loci';
 import { STATS } from '../../src/sim/types';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
@@ -167,27 +166,23 @@ describe('wear integration', () => {
   });
 
   it('computeBaseStats shaves per-locus contribution by wearMultiplier(wear[locus])', () => {
-    // Choose a quantitative locus with a non-zero statDelta to observe the shave.
-    // Homozygous musculature "mus_power" (a common quantitative allele) has a
-    // known statDelta; the fixture below uses the first quantitative locus present.
-    const g = rollGenome(createRng(101));
-    const base = computeBaseStats(g);
-    // Apply wear=20 to a single locus with a known non-zero contribution.
-    // Find first locus whose alleles carry any statDeltas.
-    const firstStatLocus = Object.values(LOCI).find((l) =>
-      l.alleles.some((aid) => {
-        const a = ALLELES[aid];
-        return a && Object.values(a.statDeltas).some((d) => d !== 0 && d !== undefined);
-      }),
-    );
-    if (!firstStatLocus) throw new Error('no stat-bearing locus found — fixture broken');
-    const shaved = computeBaseStats(g, { [firstStatLocus.id]: 20 });
-    // At least one stat must differ (locus was chosen for non-zero contribution)
+    // Build a deterministic genome with a known non-neutral allele.
+    // mus_strong at musculature has PWR: +4, INT: -3 — definitive non-zero deltas.
+    // Use the existing NEUTRAL_QUANT/QUAL fixtures for other loci to ensure valid full genome.
+    const genome = g({
+      ...NEUTRAL_QUANT,
+      musculature: ['mus_strong', 'mus_strong'],  // Known non-zero statDelta
+      ...NEUTRAL_QUAL,
+    });
+    const base = computeBaseStats(genome);
+    // Apply wear=20 to musculature, the locus with the known non-zero contribution.
+    const shaved = computeBaseStats(genome, { musculature: 20 });
+    // At least one stat must differ (musculature has PWR: +4, so PWR must change)
     const anyDiffers = STATS.some((s) => shaved[s] !== base[s]);
     expect(anyDiffers).toBe(true);
     // Wear reduces delta magnitude: wear=20 (mult=0.60) should shave more
     // than wear=10 (mult=0.80), measured by total absolute delta from base
-    const lessWorn = computeBaseStats(g, { [firstStatLocus.id]: 10 });
+    const lessWorn = computeBaseStats(genome, { musculature: 10 });
     let totalShavage20 = 0;
     let totalShavage10 = 0;
     for (const s of STATS) {
