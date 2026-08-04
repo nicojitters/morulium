@@ -457,6 +457,74 @@ export const styles = {
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
 
+  frontCardGarrisonRow: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  frontCardGarrisonSlotEmpty: {
+    padding: '4px 8px',
+    margin: '2px 4px',
+    border: '1px dashed #cbd5e1',
+    borderRadius: 4,
+    fontSize: 11,
+    color: '#94a3b8',
+    cursor: 'pointer',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    display: 'inline-block',
+  } as CSSProperties,
+
+  frontCardGarrisonSlotFilled: {
+    position: 'relative',
+    padding: '4px 14px 4px 8px',
+    margin: '2px 4px',
+    border: '1px solid #7c3aed',
+    background: '#f5f3ff',
+    borderRadius: 4,
+    fontSize: 11,
+    color: '#475569',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    display: 'inline-block',
+  } as CSSProperties,
+
+  frontCardGarrisonSlotClear: {
+    position: 'absolute',
+    top: 1,
+    right: 2,
+    border: 'none',
+    background: 'transparent',
+    color: '#94a3b8',
+    fontSize: 12,
+    lineHeight: 1,
+    cursor: 'pointer',
+    padding: '0 2px',
+    fontFamily: 'inherit',
+  } as CSSProperties,
+
+  frontCardFlareLine: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#b45309',    // amber-700
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  frontCardHardeningLine: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#b45309',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  frontCardRadicalizationNote: {
+    marginTop: 2,
+    fontSize: 10,
+    color: '#94a3b8',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    fontStyle: 'italic',
+  } as CSSProperties,
+
   incursionTicker: {
     display: 'flex',
     flexDirection: 'column',
