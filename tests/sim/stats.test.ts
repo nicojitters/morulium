@@ -6,6 +6,10 @@ import {
   computeCurrentStats,
 } from '../../src/sim/stats';
 import type { Genome } from '../../src/sim/types';
+import { LOCI, ALLELES } from '../../src/sim/data/loci';
+import { STATS } from '../../src/sim/types';
+import { rollGenome } from '../../src/sim/genome';
+import { createRng } from '../../src/sim/rng';
 
 function g(pairs: Record<string, [string, string]>): Genome {
   return { loci: pairs };
@@ -150,5 +154,53 @@ describe('computeCurrentStats', () => {
     for (const s of Object.keys(base) as Array<keyof typeof base>) {
       expect(cur[s]).toBeGreaterThanOrEqual(base[s]);
     }
+  });
+});
+
+describe('wear integration', () => {
+  it('computeBaseStats defaults to no wear (identical to legacy call)', () => {
+    // Pick a small genome and compare with-vs-without the wear arg
+    const g = rollGenome(createRng(42));
+    const legacy = computeBaseStats(g);
+    const explicit = computeBaseStats(g, {});
+    expect(explicit).toEqual(legacy);
+  });
+
+  it('computeBaseStats shaves per-locus contribution by wearMultiplier(wear[locus])', () => {
+    // Choose a quantitative locus with a non-zero statDelta to observe the shave.
+    // Homozygous musculature "mus_power" (a common quantitative allele) has a
+    // known statDelta; the fixture below uses the first quantitative locus present.
+    const g = rollGenome(createRng(101));
+    const base = computeBaseStats(g);
+    // Apply wear=20 to a single locus with a known non-zero contribution.
+    // Find first locus whose alleles carry any statDeltas.
+    const firstStatLocus = Object.values(LOCI).find((l) =>
+      l.alleles.some((aid) => {
+        const a = ALLELES[aid];
+        return a && Object.values(a.statDeltas).some((d) => d !== 0 && d !== undefined);
+      }),
+    );
+    if (!firstStatLocus) throw new Error('no stat-bearing locus found — fixture broken');
+    const shaved = computeBaseStats(g, { [firstStatLocus.id]: 20 });
+    // At least one stat must differ (locus was chosen for non-zero contribution)
+    const anyDiffers = STATS.some((s) => shaved[s] !== base[s]);
+    expect(anyDiffers).toBe(true);
+    // Wear reduces delta magnitude: wear=20 (mult=0.60) should shave more
+    // than wear=10 (mult=0.80), measured by total absolute delta from base
+    const lessWorn = computeBaseStats(g, { [firstStatLocus.id]: 10 });
+    let totalShavage20 = 0;
+    let totalShavage10 = 0;
+    for (const s of STATS) {
+      totalShavage20 += Math.abs(base[s] - shaved[s]);
+      totalShavage10 += Math.abs(base[s] - lessWorn[s]);
+    }
+    expect(totalShavage20).toBeGreaterThan(totalShavage10);
+  });
+
+  it('computeCurrentStats accepts the wear arg (defaults to no-wear)', () => {
+    const g = rollGenome(createRng(7));
+    const legacy = computeCurrentStats(g, 20);
+    const explicit = computeCurrentStats(g, 20, {});
+    expect(explicit).toEqual(legacy);
   });
 });

@@ -2,6 +2,7 @@ import type { Genome, Stat } from './types';
 import { STATS } from './types';
 import { ALLELES, LOCI } from './data/loci';
 import { resolveExpressed } from './genome';
+import { wearMultiplier } from './wear';
 
 export const BASE_STATS: Readonly<Record<Stat, number>> = Object.freeze({
   PWR: 10,
@@ -11,26 +12,32 @@ export const BASE_STATS: Readonly<Record<Stat, number>> = Object.freeze({
   GUI: 10,
 });
 
+type Wear = Readonly<Record<string, number>>;
+const NO_WEAR: Wear = {};
+
 /**
- * Base stats = BASE + Σ statDeltas over every contributing allele.
+ * Base stats = BASE + Σ (statDelta * wearMultiplier(wear[locusId] ?? 0))
+ * over every contributing allele.
  *
- * For quantitative loci: BOTH alleles contribute (no dominance — that's the
- * "smooth intermediate offspring" property from game-spec §2).
- * For qualitative loci: ONLY the expressed allele contributes (dominance
- * resolved by resolveExpressed).
+ * For quantitative loci: BOTH alleles contribute (no dominance).
+ * For qualitative loci: ONLY the expressed allele contributes.
+ * Every locus's contribution is scaled by wearMultiplier at that locus.
+ * Legacy callers pass no `wear` — default is {} → multiplier 1.0 everywhere.
  * Floored at 0.
  */
-export function computeBaseStats(genome: Genome): Record<Stat, number> {
+export function computeBaseStats(genome: Genome, wear: Wear = NO_WEAR): Record<Stat, number> {
   const result: Record<Stat, number> = { ...BASE_STATS };
 
   for (const [locusId, pair] of Object.entries(genome.loci)) {
     const locus = LOCI[locusId];
     if (!locus) throw new Error(`unknown locus in genome: ${locusId}`);
 
+    const mult = wearMultiplier(wear[locusId] ?? 0);
+
     if (locus.type === 'quantitative') {
-      for (const alleleId of pair) addDeltas(result, alleleOrThrow(alleleId));
+      for (const alleleId of pair) addDeltas(result, alleleOrThrow(alleleId), mult);
     } else {
-      addDeltas(result, resolveExpressed(locus, pair));
+      addDeltas(result, resolveExpressed(locus, pair), mult);
     }
   }
 
@@ -46,19 +53,24 @@ function alleleOrThrow(id: string) {
   return a;
 }
 
-function addDeltas(target: Record<Stat, number>, allele: { statDeltas: Partial<Record<Stat, number>> }): void {
+function addDeltas(
+  target: Record<Stat, number>,
+  allele: { statDeltas: Partial<Record<Stat, number>> },
+  mult: number,
+): void {
   for (const s of STATS) {
     const d = allele.statDeltas[s];
-    if (d !== undefined) target[s] += d;
+    if (d !== undefined) target[s] += d * mult;
   }
 }
 
 /**
  * Growth affinity per stat: base[stat] / maxBase, floored at 0.1.
- * Strongest stat = 1.0. Weakest stat still grows (0.1) so no stat is dead.
+ * Derived from the (wear-shaved) base stats — a heavily-degraded unit's
+ * growth ratios reflect its degraded output.
  */
-export function computeGrowthAffinity(genome: Genome): Record<Stat, number> {
-  const base = computeBaseStats(genome);
+export function computeGrowthAffinity(genome: Genome, wear: Wear = NO_WEAR): Record<Stat, number> {
+  const base = computeBaseStats(genome, wear);
   const maxBase = Math.max(...STATS.map((s) => base[s]));
   const out = {} as Record<Stat, number>;
   for (const s of STATS) {
@@ -73,9 +85,13 @@ export function computeGrowthAffinity(genome: Genome): Record<Stat, number> {
  * At level 20 with affinity=1.0 → base * 1.4 (the +40% cap from game-spec §5).
  * Caller enforces the level cap.
  */
-export function computeCurrentStats(genome: Genome, level: number): Record<Stat, number> {
-  const base = computeBaseStats(genome);
-  const affinity = computeGrowthAffinity(genome);
+export function computeCurrentStats(
+  genome: Genome,
+  level: number,
+  wear: Wear = NO_WEAR,
+): Record<Stat, number> {
+  const base = computeBaseStats(genome, wear);
+  const affinity = computeGrowthAffinity(genome, wear);
   const out = {} as Record<Stat, number>;
   for (const s of STATS) {
     out[s] = base[s] * (1 + 0.02 * level * affinity[s]);
