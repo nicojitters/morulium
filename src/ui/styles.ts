@@ -223,4 +223,62 @@ export const styles = {
     cursor: 'not-allowed',
     fontFamily: 'inherit',
   } as CSSProperties,
+
+  parentSlotEmpty: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 160,
+    height: 200,
+    borderRadius: 8,
+    border: '2px dashed #cbd5e1',
+    color: '#94a3b8',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
+
+  parentSlotFilled: {
+    position: 'relative',
+    width: 160,
+    padding: 8,
+    borderRadius: 8,
+    border: '2px solid #8b5cf6',
+    background: '#faf5ff',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 6,
+  } as CSSProperties,
+
+  parentSlotClear: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: '50%',
+    border: 'none',
+    background: '#f1f5f9',
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 1,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as CSSProperties,
+
+  parentSlotIdLine: {
+    fontSize: 13,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: '#475569',
+  } as CSSProperties,
+
+  parentSlotGenLine: {
+    fontSize: 11,
+    color: '#64748b',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
 };
