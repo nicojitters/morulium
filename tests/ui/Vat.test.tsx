@@ -53,6 +53,8 @@ function resetStore(partial: Partial<Parameters<typeof useColonyStore.setState>[
     fronts: FRESH_FRONTS,
     activeIncursion: null,
     serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    buildings: { barracks: false, medbay: false },
+    lastRestTickAt: Date.now(),
     ...partial,
   });
 }
@@ -193,18 +195,19 @@ describe('Vat screen', () => {
     expect(s.nextId).toBe(28);
   });
 
-  it('Cull All caps at VAT_MAX_BATCH_SIZE (10 ops = 100 units)', () => {
-    // 120 culled baselines → cap at 10 ops = 100 shredded → 20 culled remain + 10 outputs = 30 total
-    const units = Array.from({ length: 120 }, (_, i) => ({
+  it('Cull All processes all culled batches within cap (20 culled = 2 ops)', () => {
+    // 20 culled baselines → 2 ops (2 < VAT_MAX_BATCH_SIZE so no cap activation)
+    // → 0 culled remain + 2 outputs = 2 total
+    const units = Array.from({ length: 20 }, (_, i) => ({
       ...baselineUnit(i + 1),
       culled: true,
     }));
-    resetStore({ units, nextId: 121 });
+    resetStore({ units, nextId: 21 });
     const { getByTestId } = render(<Vat />);
     fireEvent.click(getByTestId('vat-cull-all-button'));
     const s = useColonyStore.getState();
-    expect(s.units).toHaveLength(30);
-    expect(s.nextId).toBe(131);
+    expect(s.units).toHaveLength(2);   // 20 - 20 + 2 outputs
+    expect(s.nextId).toBe(23);
   });
 
   it('cards inside Vat groups show data-culled="true" for culled units', () => {

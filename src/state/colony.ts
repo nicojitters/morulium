@@ -53,7 +53,10 @@ import { resolveVatOperation } from '../sim/vat';
 import {
   COLONY_CAP_BASE,
   COLONY_CAP_BARRACKS,
+  BARRACKS_COST_SERUM,
+  MEDBAY_COST_SERUM,
   REST_REGEN_PER_HOUR,
+  INJURY_DURATION_MEDBAY_MS,
 } from './vivarium';
 
 interface ColonyStore {
@@ -90,6 +93,8 @@ interface ColonyStore {
   clearHighlight: () => void;
   runVatOperation: (donorIds: readonly number[]) => Unit;
   toggleCulled: (unitId: number) => void;
+  buildBarracks: () => void;
+  buildMedbay: () => void;
 }
 
 function applyGarrisonTick(state: ColonyStore, now: number): Partial<ColonyStore> {
@@ -190,6 +195,10 @@ export const useColonyStore = create<ColonyStore>()(
         const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
         const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
+        if (s.units.length >= capOf(s)) {
+          throw new Error('Colony full — Cull or Vat first');
+        }
+
         const today = todayLocalKey();
         const dayRolledOver = s.harvestDayKey !== today;
 
@@ -243,6 +252,10 @@ export const useColonyStore = create<ColonyStore>()(
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
         const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
         const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
+
+        if (s.units.length >= capOf(s)) {
+          throw new Error('Colony full — Cull or Vat first');
+        }
 
         const pA = s.units.find((u) => u.id === parentAId);
         const pB = s.units.find((u) => u.id === parentBId);
@@ -360,6 +373,7 @@ export const useColonyStore = create<ColonyStore>()(
         const resolution = resolveIncursion(team, FRONTS[frontId], restPenalties, hardening);
 
         // Deduct rest + apply injuries + deduct stims in ONE atomic set()
+        const injuryDuration = s.buildings.medbay ? INJURY_DURATION_MEDBAY_MS : INJURY_DURATION_MS;
         const teamIdSet = new Set(teamIds);
         const newUnits = s.units.map((u) => {
           if (!teamIdSet.has(u.id)) return u;
@@ -367,7 +381,7 @@ export const useColonyStore = create<ColonyStore>()(
           return {
             ...u,
             restCurrent: Math.max(0, u.restCurrent - REST_DEPLOY_COST),
-            injuredUntil: gotInjured ? now + INJURY_DURATION_MS : u.injuredUntil,
+            injuredUntil: gotInjured ? now + injuryDuration : u.injuredUntil,
           };
         });
 
@@ -545,6 +559,10 @@ export const useColonyStore = create<ColonyStore>()(
         const newUnits = s.units.filter((u) => !donorIdSet.has(u.id));
         newUnits.push(output);
 
+        if (newUnits.length > capOf(s)) {
+          throw new Error(`runVatOperation: cap exceeded (${newUnits.length} > ${capOf(s)})`);
+        }
+
         set({
           ...flareDelta,
           ...tickDelta,
@@ -573,6 +591,52 @@ export const useColonyStore = create<ColonyStore>()(
           ...tickDelta,
           ...restDelta,
           units: s.units.map((u) => (u.id === unitId ? { ...u, culled: !u.culled } : u)),
+        });
+      },
+
+      buildBarracks: () => {
+        const state = get();
+        const now = Date.now();
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
+
+        if (s.buildings.barracks) {
+          throw new Error('buildBarracks: already built');
+        }
+        if (s.serum < BARRACKS_COST_SERUM) {
+          throw new Error('buildBarracks: insufficient Serum');
+        }
+        set({
+          ...flareDelta,
+          ...tickDelta,
+          ...restDelta,
+          serum: s.serum - BARRACKS_COST_SERUM,
+          buildings: { ...s.buildings, barracks: true },
+        });
+      },
+
+      buildMedbay: () => {
+        const state = get();
+        const now = Date.now();
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
+
+        if (s.buildings.medbay) {
+          throw new Error('buildMedbay: already built');
+        }
+        if (s.serum < MEDBAY_COST_SERUM) {
+          throw new Error('buildMedbay: insufficient Serum');
+        }
+        set({
+          ...flareDelta,
+          ...tickDelta,
+          ...restDelta,
+          serum: s.serum - MEDBAY_COST_SERUM,
+          buildings: { ...s.buildings, medbay: true },
         });
       },
 
