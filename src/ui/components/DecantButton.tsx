@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { useColonyStore } from '../../state/colony';
+import { useColonyStore, capOf } from '../../state/colony';
 import {
   DAILY_HARVEST_LIMIT,
   harvestsRemaining,
@@ -25,6 +25,8 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
   const decant = useColonyStore((s) => s.decant);
   const harvestsToday = useColonyStore((s) => s.harvestsToday);
   const harvestDayKey = useColonyStore((s) => s.harvestDayKey);
+  const units = useColonyStore((s) => s.units);
+  const buildings = useColonyStore((s) => s.buildings);
 
   const [, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -33,16 +35,23 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
   }, []);
 
   const remaining = harvestsRemaining({ harvestsToday, harvestDayKey });
-  const disabled = remaining === 0;
+  const atCap = units.length >= capOf({ buildings });
+  const disabled = remaining === 0 || atCap;
+
+  const disabledReason: 'limit' | 'cap' | null = remaining === 0
+    ? 'limit'
+    : atCap ? 'cap' : null;
 
   const defaultLabel = variant === 'empty-cta'
     ? `Decant your first Morula (${remaining}/${DAILY_HARVEST_LIMIT})`
     : `Decant a Morula (${remaining}/${DAILY_HARVEST_LIMIT})`;
 
   const enabledLabel = label ?? defaultLabel;
-  const displayLabel = disabled
+  const displayLabel = disabledReason === 'limit'
     ? `Next Harvest in ${formatCountdown(millisUntilLocalMidnight())}`
-    : enabledLabel;
+    : disabledReason === 'cap'
+      ? 'Colony full — Cull or Vat first'
+      : enabledLabel;
 
   const style = disabled
     ? (variant === 'empty-cta' ? styles.emptyStateCtaDisabled : styles.decantButtonDisabled)
@@ -56,6 +65,7 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
       disabled={disabled}
       data-testid="decant-button"
       data-disabled={disabled ? 'true' : undefined}
+      data-disabled-reason={disabledReason ?? undefined}
     >
       {displayLabel}
     </button>

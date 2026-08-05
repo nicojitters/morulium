@@ -7,6 +7,7 @@ import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { REST_MAX } from '../../src/state/rest';
+import type { Unit } from '../../src/state/types';
 
 describe('Colony screen', () => {
   beforeEach(() => {
@@ -67,8 +68,8 @@ describe('Colony screen', () => {
       nextId: 3,
       lastDecantedId: null,
     });
-    const { getByText } = render(<Colony />);
-    expect(getByText(/2 specimens/i)).toBeDefined();
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('colony-cap-header').textContent).toContain('2/');
   });
 
   it('clicking the header DecantButton adds a unit and highlights it', () => {
@@ -234,6 +235,42 @@ describe('Colony cull toggle (M7a)', () => {
     expect(useColonyStore.getState().units[0]!.culled).toBe(true);
     expect(getByTestId('specimen-card').getAttribute('data-culled')).toBe('true');
     expect(getByTestId('cull-toggle-1').textContent).toBe('Uncull');
+  });
+});
+
+describe('Colony header cap counter (M7b)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+      ] as Unit[],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('shows N/20 in header when Barracks not built', () => {
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('colony-cap-header').textContent).toBe('1/20');
+  });
+
+  it('shows N/40 in header when Barracks built', () => {
+    useColonyStore.setState({ buildings: { barracks: true, medbay: false } });
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('colony-cap-header').textContent).toBe('1/40');
   });
 });
 

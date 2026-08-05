@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { useColonyStore } from '../../state/colony';
+import { useColonyStore, capOf } from '../../state/colony';
 import { millisUntilLocalMidnight } from '../../state/harvest';
 import { DAILY_BREED_LIMIT, breedsRemaining } from '../../state/breed';
 import { BREED_COST_SERUM } from '../../state/serum';
@@ -19,12 +19,14 @@ function formatCountdown(ms: number): string {
   return `${hours}h ${minutes}m`;
 }
 
-type DisabledReason = 'limit' | 'serum' | 'external' | null;
+type DisabledReason = 'cap' | 'limit' | 'serum' | 'external' | null;
 
 export function BreedButton({ onClick, disabled = false }: Props): ReactElement {
   const breedsToday = useColonyStore((s) => s.breedsToday);
   const breedDayKey = useColonyStore((s) => s.breedDayKey);
   const serum = useColonyStore((s) => s.serum);
+  const units = useColonyStore((s) => s.units);
+  const buildings = useColonyStore((s) => s.buildings);
 
   const [, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -33,23 +35,27 @@ export function BreedButton({ onClick, disabled = false }: Props): ReactElement 
   }, []);
 
   const remaining = breedsRemaining({ breedsToday, breedDayKey });
+  const atCap = units.length >= capOf({ buildings });
   const limitHit = remaining === 0;
   const insufficientSerum = serum < BREED_COST_SERUM;
 
-  // Priority: limit → serum → external → enabled
+  // Priority: cap → limit → serum → external → enabled
   let reason: DisabledReason;
-  if (limitHit) reason = 'limit';
+  if (atCap) reason = 'cap';
+  else if (limitHit) reason = 'limit';
   else if (insufficientSerum) reason = 'serum';
   else if (disabled) reason = 'external';
   else reason = null;
 
   const isDisabled = reason !== null;
 
-  const label = reason === 'limit'
-    ? `Next Breed in ${formatCountdown(millisUntilLocalMidnight())}`
-    : reason === 'serum'
-      ? `Breed costs ${BREED_COST_SERUM} SR (have ${serum})`
-      : `Confirm Breed (${remaining}/${DAILY_BREED_LIMIT})`;
+  const label = reason === 'cap'
+    ? 'Colony full'
+    : reason === 'limit'
+      ? `Next Breed in ${formatCountdown(millisUntilLocalMidnight())}`
+      : reason === 'serum'
+        ? `Breed costs ${BREED_COST_SERUM} SR (have ${serum})`
+        : `Confirm Breed (${remaining}/${DAILY_BREED_LIMIT})`;
 
   const style = isDisabled ? styles.breedButtonDisabled : styles.breedButton;
 

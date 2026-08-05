@@ -3,9 +3,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import { DecantButton } from '../../src/ui/components/DecantButton';
 import { useColonyStore } from '../../src/state/colony';
-import { todayLocalKey } from '../../src/state/harvest';
+import { todayLocalKey, DAILY_HARVEST_LIMIT } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
+import { REST_MAX } from '../../src/state/rest';
+import type { Unit } from '../../src/state/types';
 
 describe('DecantButton', () => {
   beforeEach(() => {
@@ -83,5 +85,49 @@ describe('DecantButton', () => {
     fireEvent.click(getByTestId('decant-button'));
     expect(useColonyStore.getState().units).toHaveLength(0);
     expect(useColonyStore.getState().harvestsToday).toBe(3);
+  });
+});
+
+describe('DecantButton cap-aware state (M7b)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    // Seed a full Colony (20 units) with Barracks not built
+    const units: Unit[] = [];
+    for (let i = 1; i <= 20; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} },
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({
+      units, nextId: 21,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('disabled with data-disabled-reason="cap" at cap 20', () => {
+    const { getByTestId } = render(<DecantButton />);
+    const btn = getByTestId('decant-button') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect(btn.getAttribute('data-disabled-reason')).toBe('cap');
+    expect(btn.textContent).toContain('Colony full');
+  });
+
+  it('harvest-limit label wins over cap label when both apply', () => {
+    // Set harvestsToday = DAILY_HARVEST_LIMIT to hit that limit too
+    useColonyStore.setState({ harvestsToday: DAILY_HARVEST_LIMIT });
+    const { getByTestId } = render(<DecantButton />);
+    const btn = getByTestId('decant-button') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    // Label should reflect harvest-limit (existing precedence)
+    expect(btn.textContent).toContain('Next Harvest in');
   });
 });

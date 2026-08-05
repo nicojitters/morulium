@@ -6,6 +6,8 @@ import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { BREED_COST_SERUM, SERUM_STARTING_BALANCE } from '../../src/state/serum';
+import { REST_MAX } from '../../src/state/rest';
+import type { Unit } from '../../src/state/types';
 
 describe('BreedButton', () => {
   beforeEach(() => {
@@ -133,5 +135,44 @@ describe('BreedButton', () => {
     expect(btn.getAttribute('data-disabled-reason')).toBeNull();
     fireEvent.click(btn);
     expect(onClick).toHaveBeenCalledOnce();
+  });
+});
+
+describe('BreedButton cap-aware state (M7b)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    const units: Unit[] = [];
+    for (let i = 1; i <= 20; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} },
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({
+      units, nextId: 21,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('disabled with data-disabled-reason="cap" at cap', () => {
+    const { getByTestId } = render(<BreedButton onClick={() => {}} />);
+    const btn = getByTestId('breed-button') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    expect(btn.getAttribute('data-disabled-reason')).toBe('cap');
+    expect(btn.textContent).toContain('Colony full');
+  });
+
+  it('cap wins over insufficient-SR', () => {
+    useColonyStore.setState({ serum: 0 });   // also insufficient
+    const { getByTestId } = render(<BreedButton onClick={() => {}} />);
+    expect(getByTestId('breed-button').getAttribute('data-disabled-reason')).toBe('cap');
   });
 });

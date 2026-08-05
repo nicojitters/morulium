@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Unit } from '../../state/types';
-import { useColonyStore } from '../../state/colony';
+import { useColonyStore, capOf } from '../../state/colony';
 import { expressPhenotype } from '../../sim/genome';
 import { computeRarity } from '../../sim/rarity';
 import { computeBaseStats, computeCurrentStats } from '../../sim/stats';
@@ -59,6 +59,8 @@ export function Colony(): ReactElement {
   const lastDecantedId = useColonyStore((s) => s.lastDecantedId);
   const clearHighlight = useColonyStore((s) => s.clearHighlight);
   const fronts = useColonyStore((s) => s.fronts);
+  const buildings = useColonyStore((s) => s.buildings);
+  const cap = capOf({ buildings });
 
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -95,7 +97,7 @@ export function Colony(): ReactElement {
         <div>
           <h1 style={styles.headerTitle}>Morulium</h1>
           <p style={styles.headerSub}>
-            Your Colony — {units.length} specimens
+            Your Colony — <span data-testid="colony-cap-header">{units.length}/{cap}</span> specimens
             {' · '}<HarvestIndicator />
             {' '}<FailsafeIndicator />
           </p>
