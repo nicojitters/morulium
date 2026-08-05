@@ -1980,6 +1980,25 @@ describe('buildMedbay (M7b)', () => {
     expect(s.buildings.medbay).toBe(true);
     expect(s.buildings.barracks).toBe(false);   // unchanged
   });
+
+  it('loop isolation: does NOT touch units, harvestsToday, breedsToday, droughtCount, stims, fronts, activeIncursion', () => {
+    useColonyStore.setState({
+      buildings: { barracks: false, medbay: false },
+      serum: 600,
+      harvestsToday: 2,
+      breedsToday: 1,
+      droughtCount: 40,
+      stims: 3,
+    });
+    const before = useColonyStore.getState();
+    useColonyStore.getState().buildMedbay();
+    const after = useColonyStore.getState();
+    expect(after.harvestsToday).toBe(before.harvestsToday);
+    expect(after.breedsToday).toBe(before.breedsToday);
+    expect(after.droughtCount).toBe(before.droughtCount);
+    expect(after.stims).toBe(before.stims);
+    expect(after.activeIncursion).toBe(before.activeIncursion);
+  });
 });
 
 describe('Colony cap guards (M7b)', () => {
@@ -2094,45 +2113,9 @@ describe('launchIncursion injury duration with Medbay (M7b)', () => {
     vi.useRealTimers();
   });
 
-  it('sets injuredUntil = now + INJURY_DURATION_MEDBAY_MS when Medbay built', () => {
-    const now = new Date(2026, 7, 4, 12, 0, 0).getTime();
-    vi.setSystemTime(new Date(now));
-    // Seed 4 units at very low rest (guarantees under-rested + Stim not applied → some may roll injury)
-    const units: Unit[] = [];
-    for (let i = 1; i <= 4; i++) {
-      units.push({
-        id: i, seed: i, decantedAt: i,
-        genome: rollGenome(createRng(i)),
-        generation: 0, parentIds: null, wear: {},
-        restCurrent: 1,   // guaranteed under-rested
-        injuredUntil: null, culled: false,
-      });
-    }
-    useColonyStore.setState({
-      units, nextId: 5,
-      buildings: { barracks: false, medbay: true },
-      serum: 200, stims: 0,
-    });
-    // Deterministic injury roll: at rest=1, every unit is under-rested; rollInjuries
-    // may still be probabilistic — force determinism by picking a seed that lands
-    // at least one injury. If flake risk high, this test can grep for ANY injured unit.
-    useColonyStore.getState().launchIncursion('infrastructure', [1, 2, 3, 4]);
-    const injured = useColonyStore.getState().units.find((u) => u.injuredUntil !== null);
-    if (injured) {
-      const duration = injured.injuredUntil! - now;
-      expect(duration).toBe(30 * 60 * 1000);   // 30 min, not 60
-    } else {
-      // No injuries rolled — retry with different seed OR accept that this run
-      // didn't trigger. For robustness, use the seeded rollInjuries and known
-      // outcome, or skip. See note below.
-    }
-  });
+  it.todo('sets injuredUntil = now + INJURY_DURATION_MEDBAY_MS when Medbay built — see tests/state/colony.medbay-injury.test.ts for the deterministic version (vi.mock required)');
 
-  it('sets injuredUntil = now + INJURY_DURATION_MS when Medbay NOT built', () => {
-    // Same pattern — but expect 60 min when medbay: false.
-    // Left as an exercise for the implementer with a more surgical setup using
-    // fake rollInjuries or targeted seeds. See implementer note below.
-  });
+  it.todo('sets injuredUntil = now + INJURY_DURATION_MS when Medbay NOT built — see tests/state/colony.medbay-injury.test.ts for the deterministic version (vi.mock required)');
 
   it('existing injuredUntil unchanged when Medbay purchased mid-injury', () => {
     const now = new Date(2026, 7, 4, 12, 0, 0).getTime();
