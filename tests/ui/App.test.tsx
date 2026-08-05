@@ -109,3 +109,36 @@ describe('nav — Vat tab (M7a)', () => {
     expect(getByTestId('vat-empty-state')).not.toBeNull();
   });
 });
+
+describe('nav — Vivarium tab (M7b)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [],
+      nextId: 1,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('renders 5 nav tabs including Vivarium', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('nav-tab-colony')).not.toBeNull();
+    expect(getByTestId('nav-tab-breed')).not.toBeNull();
+    expect(getByTestId('nav-tab-incursion')).not.toBeNull();
+    expect(getByTestId('nav-tab-vat')).not.toBeNull();
+    expect(getByTestId('nav-tab-vivarium')).not.toBeNull();
+  });
+
+  it('clicking Vivarium tab switches to the Vivarium screen', () => {
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('nav-tab-vivarium'));
+    expect(getByTestId('barracks-panel')).not.toBeNull();
+  });
+});

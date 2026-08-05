@@ -3,10 +3,11 @@ import { Colony } from './ui/screens/Colony';
 import { Breed } from './ui/screens/Breed';
 import { Incursion } from './ui/screens/Incursion';
 import { Vat } from './ui/screens/Vat';
+import { Vivarium } from './ui/screens/Vivarium';
 import { SerumBadge } from './ui/components/SerumBadge';
 import { styles } from './ui/styles';
 
-type Tab = 'colony' | 'breed' | 'incursion' | 'vat';
+type Tab = 'colony' | 'breed' | 'incursion' | 'vat' | 'vivarium';
 
 export function App(): ReactElement {
   const [tab, setTab] = useState<Tab>('colony');
@@ -28,12 +29,16 @@ export function App(): ReactElement {
         <button type="button" style={active('vat')} onClick={() => setTab('vat')} data-testid="nav-tab-vat">
           Vat
         </button>
+        <button type="button" style={active('vivarium')} onClick={() => setTab('vivarium')} data-testid="nav-tab-vivarium">
+          Vivarium
+        </button>
         <SerumBadge />
       </nav>
       {tab === 'colony' && <Colony />}
       {tab === 'breed' && <Breed />}
       {tab === 'incursion' && <Incursion />}
       {tab === 'vat' && <Vat />}
+      {tab === 'vivarium' && <Vivarium />}
     </>
   );
 }
