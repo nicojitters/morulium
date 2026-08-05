@@ -32,6 +32,8 @@ describe('colony store', () => {
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
       lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
     });
   });
   afterEach(() => {
@@ -1430,6 +1432,8 @@ describe('runVatOperation (M7a)', () => {
       serum: 200,
       stims: 0,
       lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
     });
   });
 
@@ -1658,6 +1662,8 @@ describe('toggleCulled (M7a)', () => {
       droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS, activeIncursion: null,
       serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
     });
   });
 
@@ -1702,6 +1708,8 @@ describe('decant + breed mint units with culled: false (M7a)', () => {
       droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS, activeIncursion: null,
       serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
     });
   });
 

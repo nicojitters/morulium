@@ -50,6 +50,10 @@ import {
 } from './occupation';
 import { VAT_INPUT_SIZE } from './vat';
 import { resolveVatOperation } from '../sim/vat';
+import {
+  COLONY_CAP_BASE,
+  COLONY_CAP_BARRACKS,
+} from './vivarium';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -65,6 +69,11 @@ interface ColonyStore {
   readonly serum: number;
   readonly stims: number;
   readonly lastGarrisonTickAt: number;   // NEW
+  readonly buildings: {
+    readonly barracks: boolean;
+    readonly medbay: boolean;
+  };
+  readonly lastRestTickAt: number;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -142,6 +151,8 @@ export const useColonyStore = create<ColonyStore>()(
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
       lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
 
       decant: () => {
         const state = get();
@@ -548,7 +559,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 8,
+      version: 9,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -627,6 +638,13 @@ export const useColonyStore = create<ColonyStore>()(
             })),
           };
         }
+        if (from < 9) {
+          s = {
+            ...s,
+            buildings: (s as Partial<ColonyStore>).buildings ?? { barracks: false, medbay: false },
+            lastRestTickAt: (s as Partial<ColonyStore>).lastRestTickAt ?? Date.now(),
+          };
+        }
         return s;
       },
       partialize: (state) => ({
@@ -641,6 +659,8 @@ export const useColonyStore = create<ColonyStore>()(
         serum: state.serum,
         stims: state.stims,
         lastGarrisonTickAt: state.lastGarrisonTickAt,   // NEW
+        buildings: state.buildings,
+        lastRestTickAt: state.lastRestTickAt,
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },
@@ -650,4 +670,9 @@ export const useColonyStore = create<ColonyStore>()(
 /** Pure selector: find a unit by id. */
 export function unitById(state: { units: readonly Unit[] }, id: number): Unit | undefined {
   return state.units.find((u) => u.id === id);
+}
+
+/** Pure selector: current Colony cap. Base 20; Barracks raises to 40. */
+export function capOf(state: { buildings: { barracks: boolean } }): number {
+  return state.buildings.barracks ? COLONY_CAP_BARRACKS : COLONY_CAP_BASE;
 }
