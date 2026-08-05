@@ -119,6 +119,8 @@ export function Colony(): ReactElement {
             lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
             restState={restStateFor(unit, now)}
             garrisonedAt={garrisonedAtFor(unit.id, fronts)}
+            culled={unit.culled}
+            onToggleCull={() => useColonyStore.getState().toggleCulled(unit.id)}
           />
         ))}
       </div>

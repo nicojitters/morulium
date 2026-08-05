@@ -87,3 +87,49 @@ describe('SpecimenCard rest / injury line', () => {
     expect(getByTestId('specimen-card').getAttribute('data-garrisoned')).toBeNull();
   });
 });
+
+describe('SpecimenCard culled visual (M7a)', () => {
+  afterEach(() => cleanup());
+
+  it('does NOT render culled visual when culled prop absent', () => {
+    const { getByTestId } = render(<SpecimenCard row={stubRow} />);
+    expect(getByTestId('specimen-card').getAttribute('data-culled')).toBeNull();
+    expect(getByTestId('specimen-card').querySelector('[data-testid^="culled-badge"]')).toBeNull();
+  });
+
+  it('does NOT render culled visual when culled=false', () => {
+    const { getByTestId } = render(<SpecimenCard row={stubRow} culled={false} />);
+    expect(getByTestId('specimen-card').getAttribute('data-culled')).toBeNull();
+  });
+
+  it('renders red badge + data-culled="true" when culled=true', () => {
+    const { getByTestId } = render(<SpecimenCard row={stubRow} culled={true} />);
+    expect(getByTestId('specimen-card').getAttribute('data-culled')).toBe('true');
+    expect(getByTestId('culled-badge-42')).not.toBeNull();
+  });
+
+  it('does NOT render toggle button when onToggleCull absent', () => {
+    const { queryByTestId } = render(<SpecimenCard row={stubRow} culled={true} />);
+    expect(queryByTestId('cull-toggle-42')).toBeNull();
+  });
+
+  it('renders "Cull" button when onToggleCull provided and culled=false', () => {
+    const handler = () => {};
+    const { getByTestId } = render(<SpecimenCard row={stubRow} culled={false} onToggleCull={handler} />);
+    expect(getByTestId('cull-toggle-42').textContent).toBe('Cull');
+  });
+
+  it('renders "Uncull" button when onToggleCull provided and culled=true', () => {
+    const handler = () => {};
+    const { getByTestId } = render(<SpecimenCard row={stubRow} culled={true} onToggleCull={handler} />);
+    expect(getByTestId('cull-toggle-42').textContent).toBe('Uncull');
+  });
+
+  it('clicking the toggle button calls onToggleCull', () => {
+    let calls = 0;
+    const handler = () => { calls++; };
+    const { getByTestId } = render(<SpecimenCard row={stubRow} onToggleCull={handler} />);
+    getByTestId('cull-toggle-42').click();
+    expect(calls).toBe(1);
+  });
+});

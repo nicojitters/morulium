@@ -201,6 +201,42 @@ describe('Colony screen', () => {
   });
 });
 
+describe('Colony cull toggle (M7a)', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null,
+          wear: {}, restCurrent: REST_MAX, injuredUntil: null, culled: false },
+      ],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    });
+  });
+
+  it('renders a Cull toggle button on Colony cards', () => {
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('cull-toggle-1').textContent).toBe('Cull');
+  });
+
+  it('clicking Cull flips the store flag and updates the visual', () => {
+    const { getByTestId, rerender } = render(<Colony />);
+    getByTestId('cull-toggle-1').click();
+    rerender(<Colony />);
+    expect(useColonyStore.getState().units[0]!.culled).toBe(true);
+    expect(getByTestId('specimen-card').getAttribute('data-culled')).toBe('true');
+    expect(getByTestId('cull-toggle-1').textContent).toBe('Uncull');
+  });
+});
+
 // Helper: a genome shape that resolves through the sim without errors. Uses the
 // baseline allele for every locus, giving a deterministic score-0 "Baseline"
 // specimen. Enough for Colony rendering assertions.

@@ -844,4 +844,30 @@ export const styles = {
     color: '#7c3aed',
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
+
+  culledCardOverlay: {
+    boxShadow: 'inset 0 0 0 2px rgba(220, 38, 38, 0.35)',
+  } as CSSProperties,
+
+  culledBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    fontSize: 10,
+    color: '#dc2626',
+    fontWeight: 700,
+    pointerEvents: 'none',
+  } as CSSProperties,
+
+  cullToggleButton: {
+    marginTop: 4,
+    padding: '2px 6px',
+    fontSize: 10,
+    border: '1px solid #cbd5e1',
+    borderRadius: 3,
+    background: 'transparent',
+    color: '#64748b',
+    cursor: 'pointer',
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+  } as CSSProperties,
 };

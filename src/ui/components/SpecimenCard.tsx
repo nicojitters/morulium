@@ -23,6 +23,8 @@ interface Props {
   readonly lineage?: Lineage;
   readonly restState?: RestState;
   readonly garrisonedAt?: FrontId | null;
+  readonly culled?: boolean;
+  readonly onToggleCull?: () => void;
 }
 
 const GARRISON_LABELS: Readonly<Record<FrontId, string>> = {
@@ -38,7 +40,15 @@ function formatInjuryCountdown(msRemaining: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
-export function SpecimenCard({ row, highlighted = false, lineage, restState, garrisonedAt }: Props): ReactElement {
+export function SpecimenCard({
+  row,
+  highlighted = false,
+  lineage,
+  restState,
+  garrisonedAt,
+  culled = false,
+  onToggleCull,
+}: Props): ReactElement {
   const colors = resolvePalette(row.palette);
   const bgTint = tintForCard(colors.base);
   const specimenId = `M-${String(row.seed).padStart(5, '0')}`;
@@ -54,6 +64,9 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState, gar
   if (isInjured) {
     cardStyle = { ...cardStyle, ...styles.injuredCardOverlay };
   }
+  if (culled) {
+    cardStyle = { ...cardStyle, ...styles.culledCardOverlay, position: 'relative' as const };
+  }
 
   return (
     <div
@@ -63,7 +76,13 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState, gar
       data-unit-id={row.seed}
       data-injured={isInjured ? 'true' : undefined}
       data-garrisoned={isGarrisoned ? 'true' : undefined}
+      data-culled={culled ? 'true' : undefined}
     >
+      {culled && (
+        <div style={styles.culledBadge} data-testid={`culled-badge-${row.seed}`}>
+          ✗
+        </div>
+      )}
       <TierBadge tier={row.tier} />
       <div style={styles.cardSprite}>
         <Sprite phenotype={row.expressed} palette={row.palette} />
@@ -90,6 +109,19 @@ export function SpecimenCard({ row, highlighted = false, lineage, restState, gar
         <div style={styles.garrisonBadge} data-testid={`garrison-badge-${row.seed}`}>
           Garrison: {GARRISON_LABELS[garrisonedAt!]}
         </div>
+      )}
+      {onToggleCull !== undefined && (
+        <button
+          type="button"
+          style={styles.cullToggleButton}
+          data-testid={`cull-toggle-${row.seed}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleCull();
+          }}
+        >
+          {culled ? 'Uncull' : 'Cull'}
+        </button>
       )}
     </div>
   );
