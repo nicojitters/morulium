@@ -53,6 +53,7 @@ import { resolveVatOperation } from '../sim/vat';
 import {
   COLONY_CAP_BASE,
   COLONY_CAP_BARRACKS,
+  REST_REGEN_PER_HOUR,
 } from './vivarium';
 
 interface ColonyStore {
@@ -135,6 +136,33 @@ function checkFlareTimers(state: ColonyStore, now: number): Partial<ColonyStore>
   return { fronts: nextFronts };
 }
 
+function applyRestTick(state: ColonyStore, now: number): Partial<ColonyStore> {
+  if (!state.buildings.barracks) return { lastRestTickAt: now };
+
+  const elapsedMs = now - state.lastRestTickAt;
+  const hourMs = 60 * 60 * 1000;
+  const wholeHours = Math.floor(elapsedMs / hourMs);
+  if (wholeHours <= 0) return {};   // fractional interval — retain remainder
+
+  const garrisonedIds = new Set(
+    (Object.keys(state.fronts) as FrontId[]).flatMap((fid) => state.fronts[fid].garrison),
+  );
+  const restGain = wholeHours * REST_REGEN_PER_HOUR;
+
+  const newUnits = state.units.map((u) => {
+    const injured = u.injuredUntil !== null && u.injuredUntil > now;
+    const garrisoned = garrisonedIds.has(u.id);
+    if (injured || garrisoned) return u;
+    if (u.restCurrent >= REST_MAX) return u;
+    return { ...u, restCurrent: Math.min(REST_MAX, u.restCurrent + restGain) };
+  });
+
+  return {
+    units: newUnits,
+    lastRestTickAt: state.lastRestTickAt + wholeHours * hourMs,
+  };
+}
+
 export const useColonyStore = create<ColonyStore>()(
   persist(
     (set, get) => ({
@@ -159,7 +187,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const today = todayLocalKey();
         const dayRolledOver = s.harvestDayKey !== today;
@@ -192,6 +221,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           units: [...refreshedUnits, unit],
           nextId: id + 1,
           lastDecantedId: id,
@@ -211,7 +241,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const pA = s.units.find((u) => u.id === parentAId);
         const pB = s.units.find((u) => u.id === parentBId);
@@ -248,6 +279,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           units: [...s.units, child],
           nextId: childId + 1,
           lastDecantedId: childId,
@@ -263,7 +295,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const frontState = s.fronts[frontId];
         if (!frontState) throw new Error(`launchIncursion: unknown front ${frontId}`);
@@ -341,6 +374,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           activeIncursion: resolution,
           units: newUnits,
           stims: s.stims - stimAppliedIds.length,
@@ -354,7 +388,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         if (s.serum < STIM_COST_SERUM) {
           throw new Error('buyStim: insufficient Serum');
@@ -362,6 +397,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           serum: s.serum - STIM_COST_SERUM,
           stims: s.stims + 1,
         });
@@ -372,7 +408,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const front = s.fronts[frontId];
         if (!front.captured) {
@@ -403,6 +440,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
       },
@@ -412,7 +450,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const front = s.fronts[frontId];
         if (!front.garrison.includes(unitId)) {
@@ -430,6 +469,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
       },
@@ -439,7 +479,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         // Guard: batch size
         if (donorIds.length !== VAT_INPUT_SIZE) {
@@ -507,6 +548,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           units: newUnits,
           nextId: outputId + 1,
           lastDecantedId: outputId,
@@ -520,7 +562,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const unit = s.units.find((u) => u.id === unitId);
         if (!unit) throw new Error(`toggleCulled: unit ${unitId} not found`);
@@ -528,6 +571,7 @@ export const useColonyStore = create<ColonyStore>()(
         set({
           ...flareDelta,
           ...tickDelta,
+          ...restDelta,
           units: s.units.map((u) => (u.id === unitId ? { ...u, culled: !u.culled } : u)),
         });
       },
@@ -539,7 +583,8 @@ export const useColonyStore = create<ColonyStore>()(
         const now = Date.now();
         const flareDelta = checkFlareTimers(state, now);
         const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
-        const s = { ...state, ...flareDelta, ...tickDelta };
+        const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
         const target: FrontState = { ...s.fronts[r.frontId] };
         const nextFronts = { ...s.fronts } as Record<FrontId, FrontState>;
@@ -552,7 +597,7 @@ export const useColonyStore = create<ColonyStore>()(
         for (const fid of Object.keys(nextFronts) as FrontId[]) {
           nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
         }
-        set({ ...flareDelta, ...tickDelta, fronts: nextFronts, activeIncursion: null });
+        set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null });
       },
 
       clearHighlight: () => set({ lastDecantedId: null }),

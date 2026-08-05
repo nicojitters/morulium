@@ -1413,6 +1413,151 @@ describe('colony store', () => {
     expect(s.fronts.guerrilla.hardening).toBe(0);
     vi.useRealTimers();
   });
+
+  describe('applyRestTick (M7b)', () => {
+    it('no-op when Barracks not built: advances lastRestTickAt only', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: null, culled: false },
+        ],
+        nextId: 2,
+        buildings: { barracks: false, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 15, 0, 0));   // 3 hours later
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      // Rest unchanged (find unit 1)
+      const u1 = s.units.find((u) => u.id === 1);
+      expect(u1?.restCurrent).toBe(50);
+      // lastRestTickAt advances to now
+      expect(s.lastRestTickAt).toBe(new Date(2026, 7, 4, 15, 0, 0).getTime());
+    });
+
+    it('Barracks built + fractional interval: retains fraction, no rest change', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: null, culled: false },
+        ],
+        nextId: 2,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 12, 30, 0));   // 30 min — fractional
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      const u1 = s.units.find((u) => u.id === 1);
+      expect(u1?.restCurrent).toBe(50);   // unchanged
+      expect(s.lastRestTickAt).toBe(startTime);   // fraction retained
+    });
+
+    it('Barracks built + 2 whole hours: credits +20 rest to eligible unit', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: null, culled: false },
+        ],
+        nextId: 2,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 14, 0, 0));   // 2 hours later
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      const u1 = s.units.find((u) => u.id === 1);
+      expect(u1?.restCurrent).toBe(70);
+      // lastRestTickAt advances by 2 whole hours
+      expect(s.lastRestTickAt).toBe(startTime + 2 * 60 * 60 * 1000);
+    });
+
+    it('Barracks built + garrisoned unit: garrisoned unit does NOT recover rest', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: null, culled: false },
+          { id: 2, seed: 2, decantedAt: 2, genome: rollGenome(createRng(2)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: null, culled: false },
+        ],
+        nextId: 3,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+        fronts: {
+          ...FRESH_FRONTS,
+          infrastructure: { captured: true, cooldownUntil: null, garrison: [1], flareStartedAt: null, hardening: 0 },
+        },
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 14, 0, 0));   // 2 hours later
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      expect(s.units.find((u) => u.id === 1)?.restCurrent).toBe(50);   // garrisoned — no regen
+      expect(s.units.find((u) => u.id === 2)?.restCurrent).toBe(70);   // free — +20
+    });
+
+    it('Barracks built + injured unit: injured unit does NOT recover rest', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 50, injuredUntil: startTime + 10 * 60 * 60 * 1000, culled: false },   // injured 10h out
+        ],
+        nextId: 2,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 14, 0, 0));   // 2 hours later
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      expect(s.units.find((u) => u.id === 1)?.restCurrent).toBe(50);   // injured — no regen
+    });
+
+    it('Barracks built + unit at 95 rest + 2h regen: clamps at REST_MAX (100)', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 95, injuredUntil: null, culled: false },
+        ],
+        nextId: 2,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 14, 0, 0));   // 2 hours later — would add 20
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      expect(s.units.find((u) => u.id === 1)?.restCurrent).toBe(100);
+    });
+
+    it('Barracks built + unit already at REST_MAX + 2h: no-op', () => {
+      const startTime = new Date(2026, 7, 4, 12, 0, 0).getTime();
+      useColonyStore.setState({
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: rollGenome(createRng(1)),
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: REST_MAX, injuredUntil: null, culled: false },
+        ],
+        nextId: 2,
+        buildings: { barracks: true, medbay: false },
+        lastRestTickAt: startTime,
+      });
+      vi.setSystemTime(new Date(2026, 7, 4, 14, 0, 0));
+      useColonyStore.getState().decant();
+      const s = useColonyStore.getState();
+      expect(s.units.find((u) => u.id === 1)?.restCurrent).toBe(REST_MAX);
+    });
+  });
 });
 
 describe('runVatOperation (M7a)', () => {
