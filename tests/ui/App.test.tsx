@@ -73,3 +73,39 @@ describe('App', () => {
     expect(badge.textContent).toBe('SR 200');
   });
 });
+
+describe('nav — Vat tab (M7a)', () => {
+  beforeEach(() => {
+    useColonyStore.setState({
+      units: [],
+      nextId: 1,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
+      serum: 200,
+      stims: 0,
+      lastGarrisonTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('renders 4 nav tabs including Vat', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('nav-tab-colony')).not.toBeNull();
+    expect(getByTestId('nav-tab-breed')).not.toBeNull();
+    expect(getByTestId('nav-tab-incursion')).not.toBeNull();
+    expect(getByTestId('nav-tab-vat')).not.toBeNull();
+  });
+
+  it('clicking Vat tab switches to the Vat screen', () => {
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('nav-tab-vat'));
+    // Empty colony → Vat empty-state visible
+    expect(getByTestId('vat-empty-state')).not.toBeNull();
+  });
+});

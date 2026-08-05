@@ -6,6 +6,7 @@ import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE, BREED_COST_SERUM } from '../../src/state/serum';
+import { REST_MAX } from '../../src/state/rest';
 
 function resetStore(): void {
   useColonyStore.setState({
@@ -226,6 +227,51 @@ describe('Breed screen', () => {
     const cards = getAllByTestId('specimen-card');
     fireEvent.click(cards[0]!);
     // Slot A filled — click was accepted despite injury
+    expect(getByTestId('parent-slot-a').textContent).not.toContain('Parent A');
+  });
+});
+
+describe('Breed picker culled visual (M7a)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: true },
+        { id: 2, seed: 2, decantedAt: 200, genome: makeMinimalGenome(),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+      ],
+      nextId: 3,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('shows culled visual on Breed picker cards', () => {
+    const { getAllByTestId } = render(<Breed />);
+    const cards = getAllByTestId('specimen-card');
+    const culledCards = cards.filter((c) => c.getAttribute('data-culled') === 'true');
+    expect(culledCards).toHaveLength(1);
+  });
+
+  it('does NOT render Cull toggle buttons in Breed picker', () => {
+    const { queryAllByTestId } = render(<Breed />);
+    expect(queryAllByTestId(/^cull-toggle-/)).toHaveLength(0);
+  });
+
+  it('culled units are still pickable as breed parents', () => {
+    const { getAllByTestId, getByTestId } = render(<Breed />);
+    // Click the first card (culled id=1 newest-first: id 2 then id 1).
+    // Newest-first sort: id 2 (decantedAt 200) first, id 1 (decantedAt 100) second.
+    const cards = getAllByTestId('specimen-card');
+    fireEvent.click(cards[1]!);
+    // Slot A filled with culled unit — click was accepted despite culled flag
     expect(getByTestId('parent-slot-a').textContent).not.toContain('Parent A');
   });
 });

@@ -5,7 +5,7 @@ import { Incursion } from '../../src/ui/screens/Incursion';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
-import { STIM_COST_SERUM } from '../../src/state/rest';
+import { STIM_COST_SERUM, REST_MAX } from '../../src/state/rest';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
@@ -555,5 +555,46 @@ describe('Incursion screen', () => {
     // Confirm no picker overlay lingering
     expect(queryByTestId('front-card-garrison-picker-infrastructure')).toBeNull();
     vi.useRealTimers();
+  });
+});
+
+describe('Incursion picker culled visual (M7a)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 100, genome: rollGenome(createRng(101)),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: true },
+        { id: 2, seed: 2, decantedAt: 200, genome: rollGenome(createRng(202)),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+        { id: 3, seed: 3, decantedAt: 300, genome: rollGenome(createRng(303)),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+        { id: 4, seed: 4, decantedAt: 400, genome: rollGenome(createRng(404)),
+          generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+      ],
+      nextId: 5,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('shows culled visual on Incursion picker cards', () => {
+    const { getAllByTestId } = render(<Incursion />);
+    const cards = getAllByTestId('specimen-card');
+    const culledCards = cards.filter((c) => c.getAttribute('data-culled') === 'true');
+    expect(culledCards.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT render Cull toggle buttons in Incursion picker', () => {
+    const { queryAllByTestId } = render(<Incursion />);
+    expect(queryAllByTestId(/^cull-toggle-/)).toHaveLength(0);
   });
 });

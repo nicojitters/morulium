@@ -365,6 +365,7 @@ export function Incursion(): ReactElement {
                   lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
                   restState={restStateFor(unit, now)}
                   garrisonedAt={garrisonedAtFor(unit.id, fronts)}
+                  culled={unit.culled}
                 />
               </div>
             ))}

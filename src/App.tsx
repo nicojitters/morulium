@@ -2,10 +2,11 @@ import { useState, type ReactElement } from 'react';
 import { Colony } from './ui/screens/Colony';
 import { Breed } from './ui/screens/Breed';
 import { Incursion } from './ui/screens/Incursion';
+import { Vat } from './ui/screens/Vat';
 import { SerumBadge } from './ui/components/SerumBadge';
 import { styles } from './ui/styles';
 
-type Tab = 'colony' | 'breed' | 'incursion';
+type Tab = 'colony' | 'breed' | 'incursion' | 'vat';
 
 export function App(): ReactElement {
   const [tab, setTab] = useState<Tab>('colony');
@@ -15,35 +16,24 @@ export function App(): ReactElement {
   return (
     <>
       <nav style={styles.nav}>
-        <button
-          type="button"
-          style={active('colony')}
-          onClick={() => setTab('colony')}
-          data-testid="nav-tab-colony"
-        >
+        <button type="button" style={active('colony')} onClick={() => setTab('colony')} data-testid="nav-tab-colony">
           Colony
         </button>
-        <button
-          type="button"
-          style={active('breed')}
-          onClick={() => setTab('breed')}
-          data-testid="nav-tab-breed"
-        >
+        <button type="button" style={active('breed')} onClick={() => setTab('breed')} data-testid="nav-tab-breed">
           Breed
         </button>
-        <button
-          type="button"
-          style={active('incursion')}
-          onClick={() => setTab('incursion')}
-          data-testid="nav-tab-incursion"
-        >
+        <button type="button" style={active('incursion')} onClick={() => setTab('incursion')} data-testid="nav-tab-incursion">
           Incursion
+        </button>
+        <button type="button" style={active('vat')} onClick={() => setTab('vat')} data-testid="nav-tab-vat">
+          Vat
         </button>
         <SerumBadge />
       </nav>
       {tab === 'colony' && <Colony />}
       {tab === 'breed' && <Breed />}
       {tab === 'incursion' && <Incursion />}
+      {tab === 'vat' && <Vat />}
     </>
   );
 }
