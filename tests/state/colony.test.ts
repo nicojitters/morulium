@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { tierAtLeast } from '../../src/state/failsafe';
@@ -14,6 +14,10 @@ import type { Unit } from '../../src/state/types';
 
 describe('colony store', () => {
   beforeEach(() => {
+    // Pin fake time so todayLocalKey() is stable across real-date rollovers.
+    // Individual tests that need a different fake time override with vi.setSystemTime.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 4, 12, 0, 0));
     useColonyStore.setState({
       units: [],
       nextId: 1,
@@ -27,8 +31,11 @@ describe('colony store', () => {
       activeIncursion: null,
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
-      lastGarrisonTickAt: Date.now(),   // NEW
+      lastGarrisonTickAt: Date.now(),
     });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('starts empty with nextId=1 and no highlight', () => {

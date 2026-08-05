@@ -19,8 +19,9 @@ function makeUnit(id: number, seed: number): Unit {
     id, seed, decantedAt: 100 * id,
     genome: rollGenome(createRng(seed)),
     generation: 0, parentIds: null, wear: {},
-    restCurrent: 100, injuredUntil: null,  // M6b — forward-compatible; type gains these in Task 3
-  } as Unit;
+    restCurrent: 100, injuredUntil: null,
+    culled: false,
+  };
 }
 
 describe('incursion constants', () => {
