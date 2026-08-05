@@ -163,9 +163,10 @@ This is the part that was missing from disk. These are the rules.
   `0` must read identically — a missing locus never throws.
 - A specimen's origin is derived from **`parentIds != null`**, not a separate `isPristine` flag —
   one source of truth. Bred ⇒ can carry wear; pristine ⇒ all-zero (`wear: {}`).
-- Unit also carries `generation: number` and `parentIds: readonly [number, number] | null`. v2→v3
-  migration: existing units default to `gen: 0`, `parentIds: null`, `wear: {}` — true of them, since
-  every legacy unit was Harvested (a pristine Gen 0 founder), not bred.
+- Unit also carries `generation: number` and `parentIds: readonly [number, number] | null`. The
+  migration that adds these fields defaults existing units to `gen: 0`, `parentIds: null`,
+  `wear: {}` — true of them, since every legacy unit was Harvested (a pristine Gen 0 founder), not
+  bred. Let the code own the persist version number; don't pin a version string in this doc.
 
 **Breeding gate [LOCKED ruling]:**
 - Breeding is a Serum sink (§13), but Serum arrives in M6. Until then, gate breeding with a real
