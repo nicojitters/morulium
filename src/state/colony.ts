@@ -48,6 +48,8 @@ import {
   computeGarrisonIncome,
   computeHardeningFor,
 } from './occupation';
+import { VAT_INPUT_SIZE } from './vat';
+import { resolveVatOperation } from '../sim/vat';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -76,6 +78,8 @@ interface ColonyStore {
   assignToGarrison: (frontId: FrontId, unitId: number) => void;
   removeFromGarrison: (frontId: FrontId, unitId: number) => void;
   clearHighlight: () => void;
+  runVatOperation: (donorIds: readonly number[]) => Unit;
+  toggleCulled: (unitId: number) => void;
 }
 
 function applyGarrisonTick(state: ColonyStore, now: number): Partial<ColonyStore> {
@@ -416,6 +420,104 @@ export const useColonyStore = create<ColonyStore>()(
           ...flareDelta,
           ...tickDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
+        });
+      },
+
+      runVatOperation: (donorIds) => {
+        const state = get();
+        const now = Date.now();
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
+
+        // Guard: batch size
+        if (donorIds.length !== VAT_INPUT_SIZE) {
+          throw new Error(`runVatOperation: exactly ${VAT_INPUT_SIZE} donors required, got ${donorIds.length}`);
+        }
+        // Guard: distinct ids
+        const uniqueDonors = new Set(donorIds);
+        if (uniqueDonors.size !== VAT_INPUT_SIZE) {
+          throw new Error('runVatOperation: donor ids must be distinct');
+        }
+        // Look up donors + validate existence
+        const donors: Unit[] = [];
+        for (const id of donorIds) {
+          const u = s.units.find((u) => u.id === id);
+          if (!u) throw new Error(`runVatOperation: donor ${id} not found`);
+          donors.push(u);
+        }
+        // Guard: injured
+        for (const u of donors) {
+          if (u.injuredUntil !== null && u.injuredUntil > now) {
+            throw new Error(`runVatOperation: donor ${u.id} is injured`);
+          }
+        }
+        // Guard: garrisoned
+        const garrisonedIds = new Set(
+          (Object.keys(s.fronts) as FrontId[]).flatMap((fid) => s.fronts[fid].garrison),
+        );
+        for (const u of donors) {
+          if (garrisonedIds.has(u.id)) {
+            throw new Error(`runVatOperation: donor ${u.id} is garrisoned`);
+          }
+        }
+        // Guard: same tier
+        const tiers = donors.map((u) => computeRarity(u.genome).tier);
+        const inputTier = tiers[0]!;
+        if (!tiers.every((t) => t === inputTier)) {
+          const uniq = [...new Set(tiers)].join(', ');
+          throw new Error(`runVatOperation: donors must share the same tier (got ${uniq})`);
+        }
+
+        // Compute resolution
+        const outputId = s.nextId;
+        const donorTuple = donorIds as readonly [number, number, number, number, number, number, number, number, number, number];
+        const resolution = resolveVatOperation(donorTuple, outputId, inputTier);
+
+        // Assemble pristine output
+        const output: Unit = {
+          id: outputId,
+          seed: outputId,
+          decantedAt: now,
+          genome: resolution.outputGenome,
+          generation: 0,
+          parentIds: null,
+          wear: {},
+          restCurrent: REST_MAX,
+          injuredUntil: null,
+          culled: false,
+        };
+
+        // Remove donors + append output atomically
+        const donorIdSet = new Set(donorIds);
+        const newUnits = s.units.filter((u) => !donorIdSet.has(u.id));
+        newUnits.push(output);
+
+        set({
+          ...flareDelta,
+          ...tickDelta,
+          units: newUnits,
+          nextId: outputId + 1,
+          lastDecantedId: outputId,
+        });
+
+        return output;
+      },
+
+      toggleCulled: (unitId) => {
+        const state = get();
+        const now = Date.now();
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const s = { ...state, ...flareDelta, ...tickDelta };
+
+        const unit = s.units.find((u) => u.id === unitId);
+        if (!unit) throw new Error(`toggleCulled: unit ${unitId} not found`);
+
+        set({
+          ...flareDelta,
+          ...tickDelta,
+          units: s.units.map((u) => (u.id === unitId ? { ...u, culled: !u.culled } : u)),
         });
       },
 

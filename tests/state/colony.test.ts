@@ -6,9 +6,11 @@ import { computeRarity } from '../../src/sim/rarity';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
 import { FRESH_FRONTS } from '../../src/state/incursion';
+import type { FrontState } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE, SERUM_DAILY_FAUCET, BREED_COST_SERUM } from '../../src/state/serum';
 import { REST_MAX, REST_DEPLOY_COST, STIM_COST_SERUM } from '../../src/state/rest';
 import { RADICALIZATION_BONUS } from '../../src/state/occupation';
+import type { Unit } from '../../src/state/types';
 
 describe('colony store', () => {
   beforeEach(() => {
@@ -1401,5 +1403,310 @@ describe('colony store', () => {
     expect(s.fronts.military.hardening).toBe(0);            // unhardening cascaded
     expect(s.fronts.guerrilla.hardening).toBe(0);
     vi.useRealTimers();
+  });
+});
+
+describe('runVatOperation (M7a)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [],
+      nextId: 1,
+      lastDecantedId: null,
+      harvestsToday: 0,
+      harvestDayKey: todayLocalKey(),
+      droughtCount: 0,
+      breedsToday: 0,
+      breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS,
+      activeIncursion: null,
+      serum: 200,
+      stims: 0,
+      lastGarrisonTickAt: Date.now(),
+    });
+  });
+
+  it('throws when donor count != 10', () => {
+    expect(() => useColonyStore.getState().runVatOperation([1, 2, 3])).toThrow(/exactly 10 donors/);
+    expect(() => useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])).toThrow(/exactly 10 donors/);
+  });
+
+  it('throws on duplicate donor ids', () => {
+    // Seed 10 units directly to have real ids to reference
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 11 });
+    const dup = [1, 1, 3, 4, 5, 6, 7, 8, 9, 10];
+    expect(() => useColonyStore.getState().runVatOperation(dup)).toThrow(/distinct/);
+  });
+
+  it('throws on missing unit id', () => {
+    // Seed 9 units directly; ids 1..9 exist, but 999 does not
+    const units: Unit[] = [];
+    for (let i = 1; i <= 9; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 10 });
+    const bad = [1, 2, 3, 4, 5, 6, 7, 8, 9, 999];
+    expect(() => useColonyStore.getState().runVatOperation(bad)).toThrow(/999 not found/);
+  });
+
+  it('throws on injured donor', () => {
+    // Seed 10 units, mark id=3 injured
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: i === 3 ? Date.now() + 60_000 : null, culled: false,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 11 });
+    expect(() => useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toThrow(/3 is injured/);
+  });
+
+  it('throws on garrisoned donor', () => {
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    const captured: FrontState = {
+      captured: true, cooldownUntil: null,
+      garrison: [5], flareStartedAt: null, hardening: 0,
+    };
+    useColonyStore.setState({
+      units,
+      nextId: 11,
+      fronts: { ...FRESH_FRONTS, infrastructure: captured },
+    });
+    expect(() => useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toThrow(/5 is garrisoned/);
+  });
+
+  it('throws on mixed tiers (all donors must share same tier)', () => {
+    // Seed 20 units directly (bypassing daily harvest limit) with rolled genomes
+    // to get a realistic distribution of tiers across seeds 1..20.
+    const units: Unit[] = [];
+    for (let i = 1; i <= 20; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i,
+        genome: rollGenome(createRng(i)),
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 21 });
+    const byTier = new Map<string, number[]>();
+    for (const u of units) {
+      const t = computeRarity(u.genome).tier;
+      const list = byTier.get(t) ?? [];
+      list.push(u.id);
+      byTier.set(t, list);
+    }
+    // Find any tier with < 10 units — mix its ids with another tier
+    const twoTiers = [...byTier.entries()].filter(([, ids]) => ids.length > 0);
+    if (twoTiers.length < 2) throw new Error('test setup: could not build a mixed-tier set — retune seed range');
+    // Take one from tier A and pad with 9 from tier B
+    const [tA, aIds] = twoTiers[0]!;
+    const [tB, bIds] = twoTiers[1]!;
+    expect(tA).not.toBe(tB);
+    const mixed = [aIds[0]!, ...bIds.slice(0, 9)];
+    expect(() => useColonyStore.getState().runVatOperation(mixed)).toThrow(/same tier/);
+  });
+
+  it('success: removes exactly 10 donors, appends 1 output, advances nextId by 1', () => {
+    // Force all-baseline by minting units with empty-loci genomes (tier = baseline)
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 11 });
+    const output = useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const s = useColonyStore.getState();
+    expect(s.units).toHaveLength(1);
+    expect(s.units[0]!.id).toBe(11);
+    expect(s.nextId).toBe(12);
+    expect(s.lastDecantedId).toBe(11);
+    expect(output.id).toBe(11);
+  });
+
+  it('output Unit is pristine (gen 0, no parents, empty wear, full rest, healthy, not culled)', () => {
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 5, parentIds: [1, 2],
+        wear: { PWR: 0.3 }, restCurrent: 40, injuredUntil: null, culled: true,
+      });
+    }
+    useColonyStore.setState({ units, nextId: 11 });
+    const out = useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(out.generation).toBe(0);
+    expect(out.parentIds).toBeNull();
+    expect(out.wear).toEqual({});
+    expect(out.restCurrent).toBe(REST_MAX);
+    expect(out.injuredUntil).toBeNull();
+    expect(out.culled).toBe(false);
+  });
+
+  it('determinism: same (nextId, donor tier) → same output genome + tier', () => {
+    // Two identical setups produce identical Vat outputs (nextId is what seeds vat rolls)
+    const buildSetup = () => {
+      const units: Unit[] = [];
+      for (let i = 1; i <= 10; i++) {
+        units.push({
+          id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false,
+        });
+      }
+      useColonyStore.setState({
+        units,
+        nextId: 11,
+        lastDecantedId: null,
+        harvestsToday: 0, harvestDayKey: todayLocalKey(),
+        droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+        fronts: FRESH_FRONTS, activeIncursion: null,
+        serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+      });
+    };
+    buildSetup();
+    const a = useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    buildSetup();
+    const b = useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(a.genome).toEqual(b.genome);
+    expect(computeRarity(a.genome).tier).toBe(computeRarity(b.genome).tier);
+  });
+
+  it('loop isolation: does NOT touch serum, stims, droughtCount, harvestsToday, breedsToday', () => {
+    const units: Unit[] = [];
+    for (let i = 1; i <= 10; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    useColonyStore.setState({
+      units, nextId: 11,
+      serum: 175, stims: 3, droughtCount: 40, harvestsToday: 2, breedsToday: 1,
+    });
+    useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const s = useColonyStore.getState();
+    expect(s.serum).toBe(175);
+    expect(s.stims).toBe(3);
+    expect(s.droughtCount).toBe(40);
+    expect(s.harvestsToday).toBe(2);
+    expect(s.breedsToday).toBe(1);
+  });
+
+  it('cross-cutting garrison tick fires (garrisoned units earn SR at Vat op time)', () => {
+    // Seed: 10 non-garrisoned units for Vat + 1 separately garrisoned unit earning SR
+    const units: Unit[] = [];
+    for (let i = 1; i <= 11; i++) {
+      units.push({
+        id: i, seed: i, decantedAt: i, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      });
+    }
+    const capturedFront: FrontState = {
+      captured: true, cooldownUntil: null,
+      garrison: [11], flareStartedAt: null, hardening: 0,
+    };
+    const startTime = Date.now();
+    useColonyStore.setState({
+      units, nextId: 12,
+      fronts: { ...FRESH_FRONTS, infrastructure: capturedFront },
+      serum: 100,
+      lastGarrisonTickAt: startTime - 60 * 60 * 1000,  // 1 hour ago
+    });
+    // Fake now: 1 hour after startTime → 2 hours since lastTickAt; earns 2h * GARRISON_INCOME_PER_UNIT_PER_HOUR
+    // The Vat op itself doesn't touch serum, but the tick prologue does.
+    useColonyStore.getState().runVatOperation([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const s = useColonyStore.getState();
+    expect(s.serum).toBeGreaterThan(100);
+  });
+});
+
+describe('toggleCulled (M7a)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 1, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+      ],
+      nextId: 2,
+      lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    });
+  });
+
+  it('flips culled from false to true', () => {
+    useColonyStore.getState().toggleCulled(1);
+    expect(useColonyStore.getState().units[0]!.culled).toBe(true);
+  });
+
+  it('flips back to false on second call', () => {
+    useColonyStore.getState().toggleCulled(1);
+    useColonyStore.getState().toggleCulled(1);
+    expect(useColonyStore.getState().units[0]!.culled).toBe(false);
+  });
+
+  it('throws on missing unit', () => {
+    expect(() => useColonyStore.getState().toggleCulled(999)).toThrow(/unit 999 not found/);
+  });
+
+  it('does not touch other units', () => {
+    useColonyStore.setState({
+      units: [
+        { id: 1, seed: 1, decantedAt: 1, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: false },
+        { id: 2, seed: 2, decantedAt: 2, genome: { loci: {} }, generation: 0, parentIds: null, wear: {},
+          restCurrent: REST_MAX, injuredUntil: null, culled: true },
+      ],
+      nextId: 3,
+    });
+    useColonyStore.getState().toggleCulled(1);
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.culled).toBe(true);
+    expect(s.units[1]!.culled).toBe(true);   // unchanged
+  });
+});
+
+describe('decant + breed mint units with culled: false (M7a)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useColonyStore.setState({
+      units: [], nextId: 1, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(),
+      droughtCount: 0, breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
+    });
+  });
+
+  it('decant mints unit with culled: false', () => {
+    const u = useColonyStore.getState().decant();
+    expect(u.culled).toBe(false);
+  });
+
+  it('breed mints child with culled: false', () => {
+    useColonyStore.getState().decant();
+    useColonyStore.getState().decant();
+    const child = useColonyStore.getState().breed(1, 2);
+    expect(child.culled).toBe(false);
   });
 });
