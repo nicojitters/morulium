@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import { Vat } from '../../src/ui/screens/Vat';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
@@ -9,9 +9,35 @@ import { REST_MAX } from '../../src/state/rest';
 import type { Unit } from '../../src/state/types';
 import type { FrontState } from '../../src/state/incursion';
 
+// Genome that satisfies unitToRow/expressPhenotype without errors.
+// Uses the neutral/baseline allele for every locus — matches the same
+// pattern used in tests/ui/colony.test.tsx.
+function makeMinimalGenome() {
+  return {
+    loci: {
+      musculature:      ['mus_neutral', 'mus_neutral'],
+      neural_tissue:    ['neu_neutral', 'neu_neutral'],
+      predator_drive:   ['prd_neutral', 'prd_neutral'],
+      carapace_density: ['car_neutral', 'car_neutral'],
+      metabolism:       ['met_neutral', 'met_neutral'],
+      sinew:            ['sin_neutral', 'sin_neutral'],
+      vigor:            ['vig_neutral', 'vig_neutral'],
+      acuity:           ['acu_neutral', 'acu_neutral'],
+      head:             ['head_plain', 'head_plain'],
+      carapace:         ['cara_bare', 'cara_bare'],
+      locomotion:       ['loco_plain', 'loco_plain'],
+      appendage:        ['app_none', 'app_none'],
+      eyes:             ['eyes_plain', 'eyes_plain'],
+      hide_pattern:     ['hide_plain', 'hide_plain'],
+      aberration:       ['ab_none', 'ab_none'],
+      palette:          ['pal_ash', 'pal_ash'],
+    } as const,
+  };
+}
+
 function baselineUnit(id: number): Unit {
   return {
-    id, seed: id, decantedAt: id, genome: { loci: {} },
+    id, seed: id, decantedAt: id, genome: makeMinimalGenome(),
     generation: 0, parentIds: null, wear: {},
     restCurrent: REST_MAX, injuredUntil: null, culled: false,
   };
@@ -70,10 +96,22 @@ describe('Vat screen', () => {
     });
     const { getByTestId, getAllByTestId } = render(<Vat />);
     const cards = getAllByTestId('specimen-card');
-    for (const c of cards) c.click();
+
+    // Click first 5 cards — button stays disabled, label shows partial count.
+    for (const c of cards.slice(0, 5)) fireEvent.click(c);
+    expect(getByTestId('vat-tier-run-button-baseline').textContent).toContain('(5/10)');
+
+    // First card should now have the selection outline.
+    const firstWrapper = cards[0]?.parentElement;
+    expect(firstWrapper?.getAttribute('style')).toContain('outline: 2px solid #2563eb');
+
+    // Click remaining 5 — button should now be enabled.
+    for (const c of cards.slice(5)) fireEvent.click(c);
     const btn = getByTestId('vat-tier-run-button-baseline') as HTMLButtonElement;
     expect(btn.disabled).toBe(false);
-    btn.click();
+    expect(btn.textContent).toContain('(10/10)');
+
+    fireEvent.click(btn);
     const s = useColonyStore.getState();
     // 10 donors gone → 1 output remains
     expect(s.units).toHaveLength(1);
@@ -148,7 +186,7 @@ describe('Vat screen', () => {
     }));
     resetStore({ units, nextId: 26 });
     const { getByTestId } = render(<Vat />);
-    getByTestId('vat-cull-all-button').click();
+    fireEvent.click(getByTestId('vat-cull-all-button'));
     const s = useColonyStore.getState();
     // 25 units → 20 shredded → 5 culled remain + 2 pristine outputs = 7 total
     expect(s.units).toHaveLength(7);
@@ -163,7 +201,7 @@ describe('Vat screen', () => {
     }));
     resetStore({ units, nextId: 121 });
     const { getByTestId } = render(<Vat />);
-    getByTestId('vat-cull-all-button').click();
+    fireEvent.click(getByTestId('vat-cull-all-button'));
     const s = useColonyStore.getState();
     expect(s.units).toHaveLength(30);
     expect(s.nextId).toBe(131);

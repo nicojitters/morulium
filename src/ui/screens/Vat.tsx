@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import type { Unit } from '../../state/types';
 import { useColonyStore } from '../../state/colony';
 import { computeRarity } from '../../sim/rarity';
@@ -6,30 +6,11 @@ import { unitToRow } from './Colony';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { VAT_INPUT_SIZE, VAT_MAX_BATCH_SIZE } from '../../state/vat';
 import type { Tier } from '../../sim/types';
-import type { DemoRow } from '../../sim/__demo__';
 import type { FrontId } from '../../sim/data/fronts';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
-import { computeBaseStats, computeCurrentStats } from '../../sim/stats';
 
 const TIERS: readonly Tier[] = ['baseline', 'strain', 'mutant', 'chimera', 'progenitor'];
-
-// Fallback DemoRow for units whose genome lacks phenotype loci (e.g. bare test fixtures).
-// Production genomes always have a palette locus; this fallback fires only in tests.
-const BARE_EXPRESSED: Record<string, string> = {
-  head: 'head_plain', carapace: 'cara_bare', locomotion: 'loco_plain',
-  appendage: 'app_none', eyes: 'eyes_plain', hide_pattern: 'hide_plain', aberration: 'ab_none',
-};
-function safeUnitToRow(unit: Unit): DemoRow {
-  try {
-    return unitToRow(unit);
-  } catch {
-    const { score, tier } = computeRarity(unit.genome);
-    const base = computeBaseStats(unit.genome, unit.wear);
-    const current = computeCurrentStats(unit.genome, 20, unit.wear);
-    return { seed: unit.seed, tier, score, base, current, expressed: BARE_EXPRESSED, palette: 'pal_ash' };
-  }
-}
 
 interface EligibleBuckets {
   readonly byTier: Readonly<Record<Tier, readonly Unit[]>>;
@@ -55,31 +36,14 @@ function bucketEligibleUnits(
   return { byTier, ineligibleCount: ineligible };
 }
 
-type TierRunBtnMap = Partial<Record<Tier, HTMLButtonElement | null>>;
-
 export function Vat(): ReactElement {
   const units = useColonyStore((s) => s.units);
   const fronts = useColonyStore((s) => s.fronts);
   const runVatOperation = useColonyStore((s) => s.runVatOperation);
 
-  // Selection tracked in a ref — not React state — so imperative DOM updates
-  // in toggleSelection are synchronous and visible immediately to native .click() in tests.
-  const selectionRef = useRef<Record<Tier, Set<number>>>({
+  const [selectionByTier, setSelectionByTier] = useState<Record<Tier, ReadonlySet<number>>>({
     baseline: new Set(), strain: new Set(), mutant: new Set(),
     chimera: new Set(), progenitor: new Set(),
-  });
-  const runBtnRefs = useRef<TierRunBtnMap>({});
-
-  const now = Date.now();
-
-  // Initialise all run buttons to disabled=true on mount and after re-renders.
-  // We manage disabled imperatively (not via React prop) so native .click() in tests
-  // can observe the updated disabled attribute synchronously.
-  useEffect(() => {
-    for (const tier of TIERS) {
-      const btn = runBtnRefs.current[tier];
-      if (btn) btn.disabled = selectionRef.current[tier].size !== VAT_INPUT_SIZE;
-    }
   });
 
   const garrisonedIds = useMemo(() => {
@@ -90,11 +54,12 @@ export function Vat(): ReactElement {
     return s;
   }, [fronts]);
 
+  // Snapshot injury eligibility at render time; no live countdown needed here.
+  const now = useMemo(() => Date.now(), [units]);
+
   const buckets = useMemo(
     () => bucketEligibleUnits(units, garrisonedIds, now),
-    // now excluded intentionally — snapshot-at-render suffices; no live injury countdown needed here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [units, garrisonedIds],
+    [units, garrisonedIds, now],
   );
 
   const totalEligible = TIERS.reduce((n, t) => n + buckets.byTier[t].length, 0);
@@ -112,7 +77,6 @@ export function Vat(): ReactElement {
     if (rawOps <= VAT_MAX_BATCH_SIZE) {
       return { batches: perTier, totalOps: rawOps };
     }
-    // Cap total ops at VAT_MAX_BATCH_SIZE, distributing in tier order (baseline first).
     let opsRemaining = VAT_MAX_BATCH_SIZE;
     const capped: { tier: Tier; ids: number[] }[] = [];
     for (const { tier, ids } of perTier) {
@@ -124,22 +88,19 @@ export function Vat(): ReactElement {
     return { batches: capped, totalOps: VAT_MAX_BATCH_SIZE };
   }, [buckets]);
 
-  // Imperative toggle: updates the Set in-place and pushes the new disabled state
-  // directly to the button DOM node so native .click()-in-loop tests see it synchronously.
   const toggleSelection = (tier: Tier, id: number) => {
-    const set = selectionRef.current[tier];
-    if (set.has(id)) set.delete(id); else set.add(id);
-    const btn = runBtnRefs.current[tier];
-    if (btn) btn.disabled = set.size !== VAT_INPUT_SIZE;
+    setSelectionByTier((prev) => {
+      const next = new Set(prev[tier]);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return { ...prev, [tier]: next };
+    });
   };
 
   const runTier = (tier: Tier) => {
-    const ids = [...selectionRef.current[tier]];
+    const ids = [...selectionByTier[tier]];
     if (ids.length !== VAT_INPUT_SIZE) return;
     runVatOperation(ids);
-    selectionRef.current[tier].clear();
-    const btn = runBtnRefs.current[tier];
-    if (btn) btn.disabled = true;
+    setSelectionByTier((prev) => ({ ...prev, [tier]: new Set() }));
   };
 
   const onCullAll = () => {
@@ -189,6 +150,7 @@ export function Vat(): ReactElement {
 
       {TIERS.filter((t) => buckets.byTier[t].length > 0).map((tier) => {
         const groupUnits = buckets.byTier[tier];
+        const selection = selectionByTier[tier];
         const culledCount = groupUnits.filter((u) => u.culled).length;
         return (
           <section
@@ -206,10 +168,10 @@ export function Vat(): ReactElement {
               <button
                 type="button"
                 data-testid={`vat-tier-run-button-${tier}`}
-                ref={(el) => { runBtnRefs.current[tier] = el; }}
+                disabled={selection.size !== VAT_INPUT_SIZE}
                 onClick={() => runTier(tier)}
               >
-                Vat these 10 (0/{VAT_INPUT_SIZE})
+                Vat these 10 ({selection.size}/{VAT_INPUT_SIZE})
               </button>
             </div>
             <div style={styles.grid}>
@@ -217,10 +179,14 @@ export function Vat(): ReactElement {
                 <div
                   key={unit.id}
                   onClick={() => toggleSelection(tier, unit.id)}
-                  style={{ cursor: 'pointer', outlineOffset: 2 }}
+                  style={{
+                    cursor: 'pointer',
+                    outline: selection.has(unit.id) ? '2px solid #2563eb' : 'none',
+                    outlineOffset: 2,
+                  }}
                 >
                   <SpecimenCard
-                    row={safeUnitToRow(unit)}
+                    row={unitToRow(unit)}
                     culled={unit.culled}
                   />
                 </div>
