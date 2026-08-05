@@ -247,7 +247,7 @@ describe('FrontCard', () => {
       id: 42, seed: 42, decantedAt: 100,
       genome: { loci: {} },
       generation: 0, parentIds: null, wear: {},
-      restCurrent: 100, injuredUntil: null,
+      restCurrent: 100, injuredUntil: null, culled: false,
     };
     const { getByTestId } = render(
       <FrontCard

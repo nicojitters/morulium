@@ -85,7 +85,7 @@ describe('colony persistence', () => {
     expect(parsed.state.harvestDayKey).toBe('2026-08-04');
     expect(parsed.state.droughtCount).toBe(17);
     expect(parsed.state.lastDecantedId).toBeUndefined(); // still transient
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('migrate function upgrades a v1 shape by adding M3b fields', async () => {
@@ -131,7 +131,7 @@ describe('colony persistence', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed.state.breedsToday).toBe(2);
     expect(parsed.state.breedDayKey).toBe('2026-08-04');
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('migrate v2 → v3 backfills unit fields and store fields with defaults', async () => {
@@ -210,7 +210,7 @@ describe('colony persistence', () => {
     expect(parsed.state.fronts.infrastructure.captured).toBe(true);
     expect(parsed.state.fronts.military.cooldownUntil).toBe(1_700_000_000_000);
     expect(parsed.state.activeIncursion).toBeUndefined(); // transient
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('migrate v3 → v4 adds FRESH_FRONTS', async () => {
@@ -279,7 +279,7 @@ describe('colony persistence', () => {
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.serum).toBe(137);
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('migrate v4 → v5 adds serum: SERUM_STARTING_BALANCE', async () => {
@@ -351,7 +351,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.stims).toBe(5);
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('M6b restCurrent + injuredUntil persist per unit across rehydration', () => {
@@ -361,7 +361,7 @@ describe('colony persistence', () => {
         id: 1, seed: 1, decantedAt: 100,
         genome: { loci: {} },
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 42, injuredUntil: injuryTime,
+        restCurrent: 42, injuredUntil: injuryTime, culled: false,
       }],
       nextId: 2,
     });
@@ -427,7 +427,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.lastGarrisonTickAt).toBe(1_700_000_000_000);
-    expect(parsed.version).toBe(7);
+    expect(parsed.version).toBe(8);
   });
 
   it('M6c FrontState garrison/flareStartedAt/hardening persist per front', () => {
@@ -507,5 +507,56 @@ describe('colony persistence', () => {
     expect(s.fronts.infrastructure.flareStartedAt).toBeNull();
     expect(s.fronts.infrastructure.hardening).toBe(0);
     expect(typeof s.lastGarrisonTickAt).toBe('number');
+  });
+
+  it('migrate v7 → v8 backfills culled: false on every unit', async () => {
+    const v7Shape = {
+      state: {
+        units: [
+          { id: 1, seed: 1, decantedAt: 1, genome: { loci: {} },
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 100, injuredUntil: null },
+          { id: 2, seed: 2, decantedAt: 2, genome: { loci: {} },
+            generation: 0, parentIds: null, wear: {},
+            restCurrent: 100, injuredUntil: null },
+        ],
+        nextId: 3,
+        harvestsToday: 0, harvestDayKey: '2026-08-04', droughtCount: 0,
+        breedsToday: 0, breedDayKey: '2026-08-04',
+        fronts: {
+          infrastructure: { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+          military:       { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+          guerrilla:      { captured: false, cooldownUntil: null, garrison: [], flareStartedAt: null, hardening: 0 },
+        },
+        serum: 200, stims: 0, lastGarrisonTickAt: 1_700_000_000_000,
+      },
+      version: 7,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v7Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.culled).toBe(false);
+    expect(s.units[1]!.culled).toBe(false);
+  });
+
+  it('migrate v1 → v8 chains through all 7 branches (culled: false present)', async () => {
+    const v1Shape = {
+      state: {
+        units: [{ id: 1, seed: 1, decantedAt: 1, genome: { loci: {} } }],
+        nextId: 2,
+      },
+      version: 1,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v1Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    expect(s.units[0]!.culled).toBe(false);
+  });
+
+  it('parsed.version === 8 after any current-store write', () => {
+    useColonyStore.getState().decant();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(raw!);
+    expect(parsed.version).toBe(8);
   });
 });

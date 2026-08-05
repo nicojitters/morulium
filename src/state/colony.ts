@@ -165,6 +165,7 @@ export const useColonyStore = create<ColonyStore>()(
           id, seed: id, decantedAt: now, genome,
           generation: 0, parentIds: null, wear: {},
           restCurrent: REST_MAX, injuredUntil: null,
+          culled: false,
         };
 
         // On day-rollover: refresh rest on all EXISTING units (injuredUntil is
@@ -226,6 +227,7 @@ export const useColonyStore = create<ColonyStore>()(
           wear,
           restCurrent: REST_MAX,
           injuredUntil: null,
+          culled: false,
         };
 
         set({
@@ -444,7 +446,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 7,
+      version: 8,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -479,6 +481,7 @@ export const useColonyStore = create<ColonyStore>()(
               wear: u.wear ?? {},
               restCurrent: u.restCurrent ?? REST_MAX,
               injuredUntil: u.injuredUntil ?? null,
+              culled: false,
             })),
           };
         }
@@ -512,6 +515,15 @@ export const useColonyStore = create<ColonyStore>()(
             };
           }
           s = { ...s, fronts: nextFronts, lastGarrisonTickAt: Date.now() };
+        }
+        if (from < 8) {
+          s = {
+            ...s,
+            units: s.units.map((u) => ({
+              ...u,
+              culled: (u as Partial<Unit>).culled ?? false,
+            })),
+          };
         }
         return s;
       },

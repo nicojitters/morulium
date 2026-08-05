@@ -15,6 +15,7 @@ const fixture: Unit = {
   wear: {},
   restCurrent: 100,        // NEW
   injuredUntil: null,      // NEW
+  culled: false,
 };
 
 describe('ParentSlot', () => {

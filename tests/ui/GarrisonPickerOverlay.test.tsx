@@ -8,7 +8,7 @@ const stubUnit = (id: number): Unit => ({
   id, seed: id, decantedAt: 100 * id,
   genome: { loci: {} },
   generation: 0, parentIds: null, wear: {},
-  restCurrent: 100, injuredUntil: null,
+  restCurrent: 100, injuredUntil: null, culled: false,
 });
 
 describe('GarrisonPickerOverlay', () => {

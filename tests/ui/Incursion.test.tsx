@@ -17,7 +17,7 @@ function unit(id: number, seed = id): Unit {
     id, seed, decantedAt: 100 * id,
     genome: rollGenome(createRng(seed * 101)),
     generation: 0, parentIds: null, wear: {},
-    restCurrent: 100, injuredUntil: null,  // M6b — literal 100 avoids state-layer import
+    restCurrent: 100, injuredUntil: null, culled: false,  // M6b — literal 100 avoids state-layer import
   };
 }
 
@@ -173,19 +173,19 @@ describe('Incursion screen', () => {
         { id: 1, seed: 1, decantedAt: 100,
           genome: rollGenome(createRng(101)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: injuryTime },   // injured
+          restCurrent: 100, injuredUntil: injuryTime, culled: false },   // injured
         { id: 2, seed: 2, decantedAt: 200,
           genome: rollGenome(createRng(202)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 3, seed: 3, decantedAt: 300,
           genome: rollGenome(createRng(303)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 4, seed: 4, decantedAt: 400,
           genome: rollGenome(createRng(404)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
       ],
       nextId: 5,
     });
@@ -205,19 +205,19 @@ describe('Incursion screen', () => {
         { id: 1, seed: 1, decantedAt: 100,
           genome: rollGenome(createRng(101)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 20, injuredUntil: null },    // under-rested
+          restCurrent: 20, injuredUntil: null, culled: false },    // under-rested
         { id: 2, seed: 2, decantedAt: 200,
           genome: rollGenome(createRng(202)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 3, seed: 3, decantedAt: 300,
           genome: rollGenome(createRng(303)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 4, seed: 4, decantedAt: 400,
           genome: rollGenome(createRng(404)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
       ],
       nextId: 5,
       stims: 3,
@@ -244,7 +244,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       serum: 200,
@@ -264,7 +264,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       serum: STIM_COST_SERUM - 1,
@@ -287,19 +287,19 @@ describe('Incursion screen', () => {
         { id: 1, seed: 1, decantedAt: 100,
           genome: rollGenome(createRng(101)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 20, injuredUntil: null },    // under-rested
+          restCurrent: 20, injuredUntil: null, culled: false },    // under-rested
         { id: 2, seed: 2, decantedAt: 200,
           genome: rollGenome(createRng(202)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 3, seed: 3, decantedAt: 300,
           genome: rollGenome(createRng(303)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
         { id: 4, seed: 4, decantedAt: 400,
           genome: rollGenome(createRng(404)),
           generation: 0, parentIds: null, wear: {},
-          restCurrent: 100, injuredUntil: null },
+          restCurrent: 100, injuredUntil: null, culled: false },
       ],
       nextId: 5,
       stims: 1,
@@ -334,7 +334,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 20, injuredUntil: null,   // all under-rested
+        restCurrent: 20, injuredUntil: null, culled: false,   // all under-rested
       })),
       nextId: 5,
       stims: 0,
@@ -353,7 +353,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       stims: 7,
@@ -368,7 +368,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
@@ -392,7 +392,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
@@ -416,7 +416,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
@@ -437,7 +437,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
@@ -465,7 +465,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 2,
       fronts: {
@@ -486,7 +486,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
@@ -505,7 +505,7 @@ describe('Incursion screen', () => {
         id: i, seed: i, decantedAt: 100 * i,
         genome: rollGenome(createRng(i * 101)),
         generation: 0, parentIds: null, wear: {},
-        restCurrent: 100, injuredUntil: null,
+        restCurrent: 100, injuredUntil: null, culled: false,
       })),
       nextId: 5,
       fronts: {
