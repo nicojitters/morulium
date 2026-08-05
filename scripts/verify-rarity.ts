@@ -1,6 +1,6 @@
 import { createRng } from '../src/sim/rng';
 import { rollGenome } from '../src/sim/genome';
-import { computeRarity } from '../src/sim/rarity';
+import { computeRarity, tierForScore } from '../src/sim/rarity';
 import { resolveExpressed } from '../src/sim/genome';
 import { LOCI } from '../src/sim/data/loci';
 import type { Tier } from '../src/sim/types';
@@ -65,4 +65,40 @@ for (const locusId of Object.keys(LOCI)) {
     .join('  ');
   // eslint-disable-next-line no-console
   console.log(locusId.padEnd(12), `mean ${mean}`.padEnd(13), breakdown);
+}
+
+// eslint-disable-next-line no-console
+console.log(`\n=== NATURAL GAPS (top 4 drops between adjacent scores) ===`);
+
+// Build list of (score, count) pairs in ascending score order, including zeros
+// only if they sit between two non-zero scores (otherwise noise dominates).
+const gapRows: { a: number; b: number; pctA: number; pctB: number; drop: number }[] = [];
+for (let a = 0; a < maxScore; a++) {
+  const nA = scoreHist[a] ?? 0;
+  const nB = scoreHist[a + 1] ?? 0;
+  if (nA === 0 && nB === 0) continue;
+  const pctA = (100 * nA) / N;
+  const pctB = (100 * nB) / N;
+  gapRows.push({ a, b: a + 1, pctA, pctB, drop: pctA - pctB });
+}
+
+gapRows.sort((x, y) => y.drop - x.drop);
+const top4 = gapRows.slice(0, 4);
+
+const TIER_NAMES: Record<Tier, string> = {
+  baseline: 'baseline',
+  strain: 'strain',
+  mutant: 'mutant',
+  chimera: 'chimera',
+  progenitor: 'progenitor',
+};
+
+for (const row of top4) {
+  const tierA = tierForScore(row.a);
+  const tierB = tierForScore(row.b);
+  const boundary = tierA !== tierB ? `← ${TIER_NAMES[tierA]}→${TIER_NAMES[tierB]}` : '';
+  // eslint-disable-next-line no-console
+  console.log(
+    `  score ${row.a}→${row.b}    ${row.pctA.toFixed(2)}% → ${row.pctB.toFixed(2)}%   drop ${row.drop.toFixed(2)}pp   ${boundary}`,
+  );
 }
