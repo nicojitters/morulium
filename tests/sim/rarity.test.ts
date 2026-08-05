@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeRarity } from '../../src/sim/rarity';
-import type { Genome } from '../../src/sim/types';
+import { computeRarity, tierForScore } from '../../src/sim/rarity';
+import type { Genome, Tier } from '../../src/sim/types';
 
 function genome(pairs: Record<string, [string, string]>): Genome {
   return { loci: pairs };
@@ -77,5 +77,43 @@ describe('computeRarity — expressed-only, qualitative-only', () => {
     }));
     expect(loaded.score).toBe(22);
     expect(loaded.tier).toBe('progenitor');
+  });
+});
+
+describe('tierForScore — boundary snapshot (M7c thresholds)', () => {
+  it('score 2 → baseline (upper bound of baseline)', () => {
+    expect(tierForScore(2)).toBe('baseline');
+  });
+  it('score 3 → strain (lower bound of strain)', () => {
+    expect(tierForScore(3)).toBe('strain');
+  });
+  it('score 4 → strain (upper bound of strain)', () => {
+    expect(tierForScore(4)).toBe('strain');
+  });
+  it('score 5 → mutant (lower bound of mutant)', () => {
+    expect(tierForScore(5)).toBe('mutant');
+  });
+  it('score 6 → mutant (NEW: was chimera under old thresholds)', () => {
+    expect(tierForScore(6)).toBe('mutant');
+  });
+  it('score 7 → chimera (NEW lower bound of chimera)', () => {
+    expect(tierForScore(7)).toBe('chimera');
+  });
+  it('score 11 → chimera (upper bound of chimera)', () => {
+    expect(tierForScore(11)).toBe('chimera');
+  });
+  it('score 12 → progenitor (lower bound of progenitor)', () => {
+    expect(tierForScore(12)).toBe('progenitor');
+  });
+  it('boundary snapshot: full ladder maps as documented', () => {
+    const snapshot: Record<number, Tier> = {};
+    for (let s = 0; s <= 15; s++) snapshot[s] = tierForScore(s);
+    expect(snapshot).toEqual({
+      0: 'baseline', 1: 'baseline', 2: 'baseline',
+      3: 'strain', 4: 'strain',
+      5: 'mutant', 6: 'mutant',
+      7: 'chimera', 8: 'chimera', 9: 'chimera', 10: 'chimera', 11: 'chimera',
+      12: 'progenitor', 13: 'progenitor', 14: 'progenitor', 15: 'progenitor',
+    });
   });
 });

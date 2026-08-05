@@ -19,10 +19,10 @@ export function computeRarity(genome: Genome): { score: number; tier: Tier } {
   return { score, tier: tierForScore(score) };
 }
 
-function tierForScore(score: number): Tier {
+export function tierForScore(score: number): Tier {
   if (score <= 2) return 'baseline';
   if (score <= 4) return 'strain';
-  if (score <= 5) return 'mutant';
+  if (score <= 6) return 'mutant';     // was `<= 5`
   if (score <= 11) return 'chimera';
   return 'progenitor';
 }
