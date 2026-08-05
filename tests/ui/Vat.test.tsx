@@ -195,19 +195,26 @@ describe('Vat screen', () => {
     expect(s.nextId).toBe(28);
   });
 
-  it('Cull All processes all culled batches within cap (20 culled = 2 ops)', () => {
-    // 20 culled baselines → 2 ops (2 < VAT_MAX_BATCH_SIZE so no cap activation)
-    // → 0 culled remain + 2 outputs = 2 total
-    const units = Array.from({ length: 20 }, (_, i) => ({
+  it('Cull All caps at VAT_MAX_BATCH_SIZE ops (40 culled + Barracks = exactly 4 ops)', () => {
+    // Cap 40 requires Barracks. 40 culled baselines → 4 ops (cap hit exactly)
+    // → 40 shredded, 4 pristine outputs, 0 culled remain.
+    const units = Array.from({ length: 40 }, (_, i) => ({
       ...baselineUnit(i + 1),
       culled: true,
     }));
-    resetStore({ units, nextId: 21 });
+    resetStore({
+      units, nextId: 41,
+      buildings: { barracks: true, medbay: false },
+      serum: 500,
+    });
     const { getByTestId } = render(<Vat />);
     fireEvent.click(getByTestId('vat-cull-all-button'));
     const s = useColonyStore.getState();
-    expect(s.units).toHaveLength(2);   // 20 - 20 + 2 outputs
-    expect(s.nextId).toBe(23);
+    // 40 - 40 shredded + 4 outputs = 4 total
+    expect(s.units).toHaveLength(4);
+    expect(s.nextId).toBe(45);
+    // All 4 outputs are pristine (not culled)
+    expect(s.units.every((u) => !u.culled)).toBe(true);
   });
 
   it('cards inside Vat groups show data-culled="true" for culled units', () => {

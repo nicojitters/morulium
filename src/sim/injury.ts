@@ -1,6 +1,6 @@
 import { createRng } from './rng';
 
-export const INJURY_CHANCE = 0.25 as const;
+export const INJURY_CHANCE = 0.15 as const;
 
 /**
  * Roll injuries for each under-rested unit in restPenalties.

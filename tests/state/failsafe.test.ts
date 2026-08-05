@@ -10,10 +10,13 @@ import {
 import { computeRarity } from '../../src/sim/rarity';
 
 describe('failsafe constants', () => {
-  it('DROUGHT_THRESHOLD is 50', () => expect(DROUGHT_THRESHOLD).toBe(50));
-  it('FAILSAFE_INDICATOR_APPEARS_AT is 40', () => expect(FAILSAFE_INDICATOR_APPEARS_AT).toBe(40));
+  it('DROUGHT_THRESHOLD is 30', () => expect(DROUGHT_THRESHOLD).toBe(30));
+  it('FAILSAFE_INDICATOR_APPEARS_AT is 20', () => expect(FAILSAFE_INDICATOR_APPEARS_AT).toBe(20));
   it('FAILSAFE_MIN_TIER is chimera', () => expect(FAILSAFE_MIN_TIER).toBe('chimera'));
   it('FAILSAFE_SUBSTREAM_PRIME is 1_000_003', () => expect(FAILSAFE_SUBSTREAM_PRIME).toBe(1_000_003));
+  it('indicator = threshold - 10 (last-10-decants warning window invariant)', () => {
+    expect(FAILSAFE_INDICATOR_APPEARS_AT).toBe(DROUGHT_THRESHOLD - 10);
+  });
 });
 
 describe('tierAtLeast', () => {

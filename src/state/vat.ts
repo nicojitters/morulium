@@ -9,7 +9,7 @@ export const VAT_INPUT_SIZE = 10 as const;
 /**
  * Maximum Vat operations per "Cull All" click. Caps total shredded at 100.
  */
-export const VAT_MAX_BATCH_SIZE = 10 as const;
+export const VAT_MAX_BATCH_SIZE = 4 as const;
 
 /**
  * Deterministic RNG substream prime for Vat rolls.

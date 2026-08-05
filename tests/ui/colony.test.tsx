@@ -7,6 +7,7 @@ import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { REST_MAX } from '../../src/state/rest';
+import { DROUGHT_THRESHOLD, FAILSAFE_INDICATOR_APPEARS_AT } from '../../src/state/failsafe';
 import type { Unit } from '../../src/state/types';
 
 describe('Colony screen', () => {
@@ -107,7 +108,7 @@ describe('Colony screen', () => {
     vi.useRealTimers();
   });
 
-  it('renders the FailsafeIndicator in the header when droughtCount >= 40', () => {
+  it('renders the FailsafeIndicator in the header when droughtCount >= FAILSAFE_INDICATOR_APPEARS_AT', () => {
     useColonyStore.setState({
       units: [
         { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null, culled: false },
@@ -116,14 +117,14 @@ describe('Colony screen', () => {
       lastDecantedId: null,
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
-      droughtCount: 45,
+      droughtCount: DROUGHT_THRESHOLD - 5,
     });
     const { getByTestId } = render(<Colony />);
     const pill = getByTestId('failsafe-indicator');
     expect(pill.textContent).toContain('Failsafe in 5');
   });
 
-  it('does not render the FailsafeIndicator when droughtCount < 40', () => {
+  it('does not render the FailsafeIndicator when droughtCount < FAILSAFE_INDICATOR_APPEARS_AT', () => {
     useColonyStore.setState({
       units: [
         { id: 1, seed: 1, decantedAt: 100, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: REST_MAX, injuredUntil: null, culled: false },
@@ -132,7 +133,7 @@ describe('Colony screen', () => {
       lastDecantedId: null,
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
-      droughtCount: 20,
+      droughtCount: FAILSAFE_INDICATOR_APPEARS_AT - 1,
     });
     const { queryByTestId } = render(<Colony />);
     expect(queryByTestId('failsafe-indicator')).toBeNull();

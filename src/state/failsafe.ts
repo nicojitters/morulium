@@ -3,8 +3,8 @@ import { rollGenome } from '../sim/genome';
 import { createRng } from '../sim/rng';
 import { computeRarity } from '../sim/rarity';
 
-export const DROUGHT_THRESHOLD = 50 as const;
-export const FAILSAFE_INDICATOR_APPEARS_AT = 40 as const;
+export const DROUGHT_THRESHOLD = 30 as const;
+export const FAILSAFE_INDICATOR_APPEARS_AT = 20 as const;
 export const FAILSAFE_MIN_TIER: Tier = 'chimera';
 export const FAILSAFE_SUBSTREAM_PRIME = 1_000_003 as const;
 const MAX_ATTEMPTS = 1000;

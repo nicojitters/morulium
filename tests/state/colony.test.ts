@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
-import { tierAtLeast } from '../../src/state/failsafe';
+import { tierAtLeast, DROUGHT_THRESHOLD } from '../../src/state/failsafe';
 import { computeRarity } from '../../src/sim/rarity';
 import { rollGenome } from '../../src/sim/genome';
 import { createRng } from '../../src/sim/rng';
@@ -159,31 +159,29 @@ describe('colony store', () => {
     }
   });
 
-  it('failsafe fires when droughtCount >= 50 and returns a Chimera+ genome', () => {
+  it('failsafe fires when droughtCount >= DROUGHT_THRESHOLD and returns a Chimera+ genome', () => {
     useColonyStore.setState({
       units: [], nextId: 42, lastDecantedId: null,
-      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const unit = useColonyStore.getState().decant();
     expect(tierAtLeast(computeRarity(unit.genome).tier, 'chimera')).toBe(true);
-    // After the guaranteed roll, droughtCount resets to 0
     expect(useColonyStore.getState().droughtCount).toBe(0);
-    // nextId still advances by exactly 1
     expect(useColonyStore.getState().nextId).toBe(43);
   });
 
-  it('failsafe is deterministic: same (nextId, droughtCount=50) yields same genome', () => {
+  it('failsafe is deterministic: same (nextId, droughtCount=DROUGHT_THRESHOLD) yields same genome', () => {
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
-      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const first = useColonyStore.getState().decant();
 
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
-      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 50,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const second = useColonyStore.getState().decant();

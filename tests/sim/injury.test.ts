@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { INJURY_CHANCE, rollInjuries } from '../../src/sim/injury';
 
 describe('injury constants', () => {
-  it('INJURY_CHANCE is 0.25', () => expect(INJURY_CHANCE).toBe(0.25));
+  it('INJURY_CHANCE is 0.15', () => expect(INJURY_CHANCE).toBe(0.15));
 });
 
 describe('rollInjuries', () => {
@@ -27,17 +27,17 @@ describe('rollInjuries', () => {
     expect(typeof out[2]).toBe('boolean');
   });
 
-  it('injury rate is roughly INJURY_CHANCE (0.25) across 100 seeds', () => {
+  it('injury rate is roughly INJURY_CHANCE (0.15) across 100 seeds', () => {
     // Roll one under-rested unit against 100 different seeds
     let injuredCount = 0;
     for (let seed = 1; seed <= 100; seed++) {
       const out = rollInjuries({ 1: 0.7 }, seed * 1_000_213);
       if (out[1]) injuredCount++;
     }
-    // With INJURY_CHANCE=0.25 and 100 rolls, expected ~25 with variance.
-    // Wide tolerance to avoid flakiness: 10-40 (very generous).
-    expect(injuredCount).toBeGreaterThan(10);
-    expect(injuredCount).toBeLessThan(40);
+    // With INJURY_CHANCE=0.15 and 100 rolls, expected ~15 with variance.
+    // Wide tolerance to avoid flakiness: 5-30 (very generous — mean 15, std ~3.6).
+    expect(injuredCount).toBeGreaterThan(5);
+    expect(injuredCount).toBeLessThan(30);
   });
 
   it('two under-rested units roll independently', () => {

@@ -14,8 +14,8 @@ describe('Vat constants', () => {
     expect(VAT_INPUT_SIZE).toBe(10);
   });
 
-  it('VAT_MAX_BATCH_SIZE = 10', () => {
-    expect(VAT_MAX_BATCH_SIZE).toBe(10);
+  it('VAT_MAX_BATCH_SIZE = 4', () => {
+    expect(VAT_MAX_BATCH_SIZE).toBe(4);
   });
 
   it('VAT_SUBSTREAM_PRIME = 1_000_331 (distinct from other primes)', () => {
