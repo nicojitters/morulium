@@ -70,11 +70,10 @@ export const styles = {
     position: 'relative',
     aspectRatio: '5 / 7',
     background: bgTint,
-    border: `1px solid ${bgTint}`,
     borderRadius: 6,
     padding: 8,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
     overflow: 'hidden',
+    color: TOKENS.inkPrimary,
   }),
 
   cardSprite: {
@@ -120,9 +119,7 @@ export const styles = {
   decantButton: {
     padding: '10px 20px',
     borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.teal}`,
     background: TOKENS.groundPanel,
-    color: TOKENS.inkLab,
     fontFamily: TOKENS.fontDisplay,
     fontSize: 13,
     fontWeight: 700,
@@ -166,9 +163,7 @@ export const styles = {
   decantButtonDisabled: {
     padding: '10px 20px',
     borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.iron}`,
     background: TOKENS.groundPanel,
-    color: TOKENS.inkDim,
     fontFamily: TOKENS.fontDisplay,
     fontSize: 13,
     fontWeight: 700,
@@ -221,9 +216,7 @@ export const styles = {
   breedButton: {
     padding: '10px 20px',
     borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.teal}`,
     background: TOKENS.groundPanel,
-    color: TOKENS.inkLab,
     fontFamily: TOKENS.fontDisplay,
     fontSize: 13,
     fontWeight: 700,
@@ -235,9 +228,7 @@ export const styles = {
   breedButtonDisabled: {
     padding: '10px 20px',
     borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.iron}`,
     background: TOKENS.groundPanel,
-    color: TOKENS.inkDim,
     fontFamily: TOKENS.fontDisplay,
     fontSize: 13,
     fontWeight: 700,
@@ -453,6 +444,7 @@ export const styles = {
     border: '2px solid #22c55e',   // green
     background: '#f0fdf4',
     cursor: 'not-allowed',
+    pointerEvents: 'none',
     fontFamily: 'inherit',
     padding: 12,
   } as CSSProperties,
@@ -470,6 +462,7 @@ export const styles = {
     background: '#f1f5f9',
     color: '#94a3b8',
     cursor: 'not-allowed',
+    pointerEvents: 'none',
     fontFamily: 'inherit',
     padding: 12,
   } as CSSProperties,

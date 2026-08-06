@@ -275,7 +275,8 @@ button {
   transition:
     filter var(--dur-fast) var(--ease-clinic),
     box-shadow var(--dur-fast) var(--ease-clinic),
-    border-color var(--dur-fast) var(--ease-clinic);
+    border-color var(--dur-fast) var(--ease-clinic),
+    color var(--dur-fast) var(--ease-clinic);
   box-shadow: var(--rim-inner);
 }
 .btn:hover:not(:disabled) {
