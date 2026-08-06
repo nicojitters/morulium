@@ -14,12 +14,34 @@ const TIERS: readonly TermKey[] = [
   'tier-baseline','tier-strain','tier-mutant','tier-chimera','tier-progenitor',
 ];
 
+const TERM_LABELS: Readonly<Record<TermKey, string>> = {
+  morula:           TERMS.morula,
+  decant:           TERMS.decant,
+  harvest:          TERMS.harvest,
+  incursion:        TERMS.incursion,
+  occupation:       TERMS.occupation,
+  vat:              TERMS.vat,
+  dnaLab:           TERMS.dnaLab,
+  sequencer:        TERMS.sequencer,
+  registry:         TERMS.registry,
+  colony:           TERMS.colony,
+  vivarium:         TERMS.vivarium,
+  serum:            TERMS.serum,
+  freeDecant:       TERMS.freeDecant,
+  generation:       TERMS.generation,
+  'tier-baseline':  TERMS.tiers.baseline,
+  'tier-strain':    TERMS.tiers.strain,
+  'tier-mutant':    TERMS.tiers.mutant,
+  'tier-chimera':   TERMS.tiers.chimera,
+  'tier-progenitor':TERMS.tiers.progenitor,
+};
+
 function Row(props: { termKey: TermKey; discovered: boolean }) {
   return (
     <li data-testid={`registry-row-${props.termKey}`} style={{ padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
       {props.discovered ? (
         <>
-          <strong>{props.termKey}</strong> — {DEFINITIONS[props.termKey]}
+          <strong>{TERM_LABELS[props.termKey]}</strong> — {DEFINITIONS[props.termKey]}
         </>
       ) : (
         <span style={{ color: '#94a3b8' }}>??? — locked</span>

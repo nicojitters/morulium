@@ -279,6 +279,22 @@ describe('colony persistence', () => {
     expect(parsed.state.activeIncursion).toBeUndefined();
   });
 
+  it('lastIncursionResolution is transient — never in localStorage', () => {
+    useColonyStore.setState({
+      lastIncursionResolution: {
+        frontId: 'infrastructure' as const,
+        teamIds: [1, 2, 3, 4] as const,
+        coverage: { INT: 1 },
+        bestContributors: { INT: 1 },
+        successP: 1,
+        outcome: 'won' as const,
+        beats: [],
+      },
+    });
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(parsed.state.lastIncursionResolution).toBeUndefined();
+  });
+
   it('M6a serum field persists across a rehydration cycle', () => {
     useColonyStore.setState({ serum: 137 });
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -559,7 +575,7 @@ describe('colony persistence', () => {
     expect(s.units[0]!.culled).toBe(false);
   });
 
-  it('parsed.version === 10 after any current-store write', () => {
+  it('parsed.version === 14 after any current-store write', () => {
     useColonyStore.getState().decant();
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);

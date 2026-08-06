@@ -20,6 +20,7 @@ import { ConquestMap } from './ui/screens/ConquestMap';
 import { Vivarium } from './ui/screens/Vivarium';
 import { Vat } from './ui/screens/Vat';
 import { Registry } from './ui/screens/Registry';
+import { SequencerPlaceholder } from './ui/screens/SequencerPlaceholder';
 import { DevPanel } from './ui/components/DevPanel';
 
 export function App(): ReactElement {
@@ -63,7 +64,7 @@ export function App(): ReactElement {
       case 'conquest-map': return <ConquestMap />;
       case 'vivarium':     return <Vivarium />;
       case 'vat':          return <Vat />;
-      case 'sequencer':    return <Registry />;
+      case 'sequencer':    return <SequencerPlaceholder />;
       case 'registry':     return <Registry />;
     }
   })();

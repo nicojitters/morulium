@@ -94,6 +94,16 @@ describe('DNA Lab', () => {
     expect(queryByTestId('first-visit-dna-lab')).toBeNull();
   });
 
+  it('callout still mounts on the populated-state render path', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.setState({
+      units: [{ id: 1, seed: 1, decantedAt: 1, genome: { loci: {} }, generation: 0, parentIds: null, wear: {}, restCurrent: 100, injuredUntil: null, culled: false }],
+      nextId: 2,
+    });
+    const { getByTestId } = render(<DNALab />);
+    expect(getByTestId('first-visit-dna-lab')).toBeDefined();
+  });
+
   it('does not expose numeric rarity score or stat numbers', () => {
     useColonyStore.setState({
       units: [{

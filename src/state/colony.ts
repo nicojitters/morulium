@@ -571,9 +571,6 @@ export const useColonyStore = create<ColonyStore>()(
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
         get().emitDirectiveAction({ kind: 'garrison-assigned' });
-        if (newFrontState.captured && newFrontState.garrison.length >= GARRISON_TARGET) {
-          get().emitDirectiveAction({ kind: 'front-captured' });
-        }
         get().emitActionMessage(`Garrisoned #${unitId} on ${FRONTS[frontId].label}.`);
         get().discoverTerm('occupation');
       },
@@ -775,6 +772,7 @@ export const useColonyStore = create<ColonyStore>()(
         const restDelta = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
         const s = { ...state, ...flareDelta, ...tickDelta, ...restDelta };
 
+        const wasCaptured = state.fronts[r.frontId].captured;
         const target: FrontState = { ...s.fronts[r.frontId] };
         const nextFronts = { ...s.fronts } as Record<FrontId, FrontState>;
         if (r.outcome === 'won') {
@@ -787,7 +785,10 @@ export const useColonyStore = create<ColonyStore>()(
           nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
         }
         set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null, lastIncursionResolution: r });
-        if (r) get().emitDirectiveAction({ kind: 'incursion-resolved', outcome: r.outcome === 'won' ? 'won' : 'lost', rewardCollected: true });
+        get().emitDirectiveAction({ kind: 'incursion-resolved', outcome: r.outcome === 'won' ? 'won' : 'lost', rewardCollected: r.outcome === 'won' });
+        if (r.outcome === 'won' && !wasCaptured) {
+          get().emitDirectiveAction({ kind: 'front-captured' });
+        }
       },
 
       emitDirectiveAction: (action) => {
@@ -824,6 +825,7 @@ export const useColonyStore = create<ColonyStore>()(
 
       discoverTerm: (k) => {
         const s = get();
+        if (!(k in s.discoveredTerms)) return;
         if (s.discoveredTerms[k]) return;
         set({ discoveredTerms: { ...s.discoveredTerms, [k]: true } });
       },
@@ -1014,6 +1016,7 @@ export const useColonyStore = create<ColonyStore>()(
         seenSurfaces: state.seenSurfaces,
         discoveredTerms: state.discoveredTerms,
         // activeIncursion excluded (transient — ticker not resumable)
+        // lastIncursionResolution excluded (transient — dismissed to null)
         // recentReward is transient — omit
       }),
     },

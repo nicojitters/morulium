@@ -13,7 +13,7 @@ const ORDER: readonly SurfaceId[] = [
 const LABELS: Readonly<Record<SurfaceId, string>> = {
   'colony':       TERMS.colony,
   'dna-lab':      TERMS.dnaLab,
-  'breed':        'Breed',
+  'breed':        TERMS.breed,
   'incursion':    TERMS.incursion,
   'conquest-map': TERMS.conquestMap,
   'vivarium':     TERMS.vivarium,

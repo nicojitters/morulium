@@ -37,4 +37,6 @@ export const TERMS = {
   continueGame:'Continue',
   unlocked:    'Unlocked',
   region:      'Region',
+  generation:  'Generation',
+  breed:       'Breed',
 } as const;
