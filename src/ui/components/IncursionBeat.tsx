@@ -9,10 +9,11 @@ interface Props {
 }
 
 export function IncursionBeat({ beat, visible, index }: Props): ReactElement {
-  const style = { ...styles.incursionBeat, ...(visible ? styles.incursionBeatVisible : styles.incursionBeatHidden) };
   return (
     <div
-      style={style}
+      key={index}
+      className={visible ? 'a-ticker-glitch' : undefined}
+      style={{ ...styles.incursionBeat, ...(visible ? styles.incursionBeatVisible : styles.incursionBeatHidden) }}
       data-testid={`incursion-beat-${index}`}
       data-visible={visible ? 'true' : undefined}
     >

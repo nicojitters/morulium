@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useState, useEffect } from 'react';
 import type { FrontId } from '../../sim/data/fronts';
 import type { FrontState } from '../../state/incursion';
 import type { Unit } from '../../state/types';
@@ -30,6 +30,14 @@ export function FrontCard({
   frontId, label, state, selected, now, onClick,
   expanded = false, garrisonUnits, onGarrisonSlotClick, onGarrisonSlotClear,
 }: Props): ReactElement {
+  const [stampKey, setStampKey] = useState(0);
+
+  useEffect(() => {
+    if (selected) {
+      setStampKey((k) => k + 1);
+    }
+  }, [selected]);
+
   const cooldownActive = state.cooldownUntil !== null && state.cooldownUntil > now;
   const clickable = !cooldownActive;   // Captured fronts are clickable for expand/collapse
 
@@ -53,7 +61,8 @@ export function FrontCard({
 
   return (
     <div
-      className="card card--front"
+      key={stampKey}
+      className={`card card--front${selected ? ' a-stamp-in' : ''}`}
       style={style}
       onClick={() => { if (clickable) onClick(); }}
       data-testid={`front-card-${frontId}`}
