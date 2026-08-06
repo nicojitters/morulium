@@ -290,6 +290,16 @@ describe('Colony first-visit callout (P6 Task 6.5)', () => {
     const { queryByTestId } = render(<Colony />);
     expect(queryByTestId('first-visit-colony')).toBeNull();
   });
+
+  it('callout still mounts on the populated-state render path', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.setState({
+      units: [{ id: 1, seed: 1, decantedAt: 1, genome: makeMinimalGenome(), generation: 0, parentIds: null, wear: {}, restCurrent: 100, injuredUntil: null, culled: false }],
+      nextId: 2,
+    });
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('first-visit-colony')).toBeDefined();
+  });
 });
 
 // Helper: a genome shape that resolves through the sim without errors. Uses the
