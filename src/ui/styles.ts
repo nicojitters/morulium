@@ -42,7 +42,7 @@ export const styles = {
     gap: 16,
     alignItems: 'center',
     fontSize: 12,
-    color: '#555',
+    color: TOKENS.inkDim,
     marginBottom: 24,
     flexWrap: 'wrap',
   } as CSSProperties,
@@ -107,8 +107,6 @@ export const styles = {
     backgroundColor: color,
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
   }),
-
-  highlightedCard: {} as CSSProperties,
 
   decantButton: {
     padding: '10px 20px',
@@ -965,16 +963,6 @@ export const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100,
-  } as CSSProperties,
-
-  modalCard: {
-    background: TOKENS.ironPlate,
-    borderRadius: TOKENS.radiusLg,
-    padding: 24,
-    minWidth: 320,
-    maxWidth: 480,
-    boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-    color: TOKENS.inkPrimary,
   } as CSSProperties,
 
   modalTitle: {

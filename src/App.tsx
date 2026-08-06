@@ -73,7 +73,9 @@ export function App(): ReactElement {
     <>
       <AppShell current={current} onNavigate={setCurrent} directiveText={directiveText}>
         <DirectiveBanner />
-        {screen}
+        <div key={current} className="a-screen-fade">
+          {screen}
+        </div>
       </AppShell>
       {!firstRunComplete && <IntroModal onDone={markFirstRunComplete} />}
       <AwaySummary />
