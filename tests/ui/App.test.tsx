@@ -6,6 +6,7 @@ import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
 import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
+import { DEFAULT_UNLOCKS } from '../../src/state/unlocks';
 
 describe('App', () => {
   beforeEach(() => {
@@ -23,6 +24,9 @@ describe('App', () => {
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
       lastGarrisonTickAt: Date.now(),   // NEW
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+      unlocks: DEFAULT_UNLOCKS,
     });
   });
   afterEach(() => cleanup());
@@ -66,11 +70,20 @@ describe('App', () => {
     expect(getByTestId('empty-colony')).toBeDefined();
   });
 
-  it('renders SerumBadge in the nav on default state', () => {
+  it('renders StatusHud with serum in the header', () => {
     const { getByTestId } = render(<App />);
-    const badge = getByTestId('serum-badge');
-    expect(badge).toBeDefined();
-    expect(badge.textContent).toBe('SR 200');
+    const item = getByTestId('hud-serum');
+    expect(item.textContent).toContain('200');
+  });
+
+  it('renders every nav tab (9 surfaces)', () => {
+    const { getByTestId } = render(<App />);
+    for (const id of [
+      'colony', 'dna-lab', 'breed', 'incursion',
+      'conquest-map', 'vivarium', 'vat', 'sequencer', 'registry',
+    ]) {
+      expect(getByTestId(`nav-tab-${id}`)).toBeDefined();
+    }
   });
 });
 
@@ -90,6 +103,9 @@ describe('nav — Vat tab (M7a)', () => {
       serum: 200,
       stims: 0,
       lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+      unlocks: DEFAULT_UNLOCKS,
     });
   });
   afterEach(() => cleanup());
@@ -123,6 +139,7 @@ describe('nav — Vivarium tab (M7b)', () => {
       serum: 200, stims: 0, lastGarrisonTickAt: Date.now(),
       buildings: { barracks: false, medbay: false },
       lastRestTickAt: Date.now(),
+      unlocks: DEFAULT_UNLOCKS,
     });
   });
   afterEach(() => cleanup());

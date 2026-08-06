@@ -1,44 +1,35 @@
 import { useState, type ReactElement } from 'react';
+import type { SurfaceId } from './state/unlocks';
+import { AppShell } from './ui/components/AppShell';
 import { Colony } from './ui/screens/Colony';
+import { DNALab } from './ui/screens/DNALab';
 import { Breed } from './ui/screens/Breed';
 import { Incursion } from './ui/screens/Incursion';
-import { Vat } from './ui/screens/Vat';
+import { ConquestMap } from './ui/screens/ConquestMap';
 import { Vivarium } from './ui/screens/Vivarium';
-import { SerumBadge } from './ui/components/SerumBadge';
-import { styles } from './ui/styles';
-
-type Tab = 'colony' | 'breed' | 'incursion' | 'vat' | 'vivarium';
+import { Vat } from './ui/screens/Vat';
+import { Registry } from './ui/screens/Registry';
 
 export function App(): ReactElement {
-  const [tab, setTab] = useState<Tab>('colony');
+  const [current, setCurrent] = useState<SurfaceId>('colony');
 
-  const active = (t: Tab) => (tab === t ? styles.navTabActive : styles.navTab);
+  const screen = (() => {
+    switch (current) {
+      case 'colony':       return <Colony />;
+      case 'dna-lab':      return <DNALab />;
+      case 'breed':        return <Breed />;
+      case 'incursion':    return <Incursion />;
+      case 'conquest-map': return <ConquestMap />;
+      case 'vivarium':     return <Vivarium />;
+      case 'vat':          return <Vat />;
+      case 'sequencer':    return <Registry />;   // temporary until deferred model change
+      case 'registry':     return <Registry />;
+    }
+  })();
 
   return (
-    <>
-      <nav style={styles.nav}>
-        <button type="button" style={active('colony')} onClick={() => setTab('colony')} data-testid="nav-tab-colony">
-          Colony
-        </button>
-        <button type="button" style={active('breed')} onClick={() => setTab('breed')} data-testid="nav-tab-breed">
-          Breed
-        </button>
-        <button type="button" style={active('incursion')} onClick={() => setTab('incursion')} data-testid="nav-tab-incursion">
-          Incursion
-        </button>
-        <button type="button" style={active('vat')} onClick={() => setTab('vat')} data-testid="nav-tab-vat">
-          Vat
-        </button>
-        <button type="button" style={active('vivarium')} onClick={() => setTab('vivarium')} data-testid="nav-tab-vivarium">
-          Vivarium
-        </button>
-        <SerumBadge />
-      </nav>
-      {tab === 'colony' && <Colony />}
-      {tab === 'breed' && <Breed />}
-      {tab === 'incursion' && <Incursion />}
-      {tab === 'vat' && <Vat />}
-      {tab === 'vivarium' && <Vivarium />}
-    </>
+    <AppShell current={current} onNavigate={setCurrent} directiveText={null}>
+      {screen}
+    </AppShell>
   );
 }
