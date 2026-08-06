@@ -62,7 +62,7 @@ export const styles = {
 
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gridTemplateColumns: 'repeat(3, 1fr)',
     gap: 12,
   } as CSSProperties,
 
