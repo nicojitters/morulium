@@ -5,6 +5,7 @@ import {
   harvestsRemaining,
   millisUntilLocalMidnight,
 } from '../../state/harvest';
+import { TERMS } from '../terms';
 import { styles } from '../styles';
 
 interface Props {
@@ -27,6 +28,7 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
   const harvestDayKey = useColonyStore((s) => s.harvestDayKey);
   const units = useColonyStore((s) => s.units);
   const buildings = useColonyStore((s) => s.buildings);
+  const free = useColonyStore((s) => s.freeDecantsRemaining);
 
   const [, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -42,9 +44,10 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
     ? 'limit'
     : atCap ? 'cap' : null;
 
+  const freeTag = free > 0 ? ` (free ×${free})` : '';
   const defaultLabel = variant === 'empty-cta'
-    ? `Decant your first Morula (${remaining}/${DAILY_HARVEST_LIMIT})`
-    : `Decant a Morula (${remaining}/${DAILY_HARVEST_LIMIT})`;
+    ? `${TERMS.decant} your first ${TERMS.morula}${freeTag} (${remaining}/${DAILY_HARVEST_LIMIT})`
+    : `${TERMS.decant} a ${TERMS.morula}${freeTag} (${remaining}/${DAILY_HARVEST_LIMIT})`;
 
   const enabledLabel = label ?? defaultLabel;
   const displayLabel = disabledReason === 'limit'

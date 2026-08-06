@@ -21,6 +21,7 @@ describe('DecantButton', () => {
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
       lastGarrisonTickAt: Date.now(),   // NEW
+      freeDecantsRemaining: 0,
     });
   });
 
@@ -72,6 +73,12 @@ describe('DecantButton', () => {
     expect(btn.textContent).toBe('Next Harvest in 7h 23m');
     expect(btn.getAttribute('disabled')).not.toBeNull();
     expect(btn.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('shows free count in label when freeDecantsRemaining > 0', () => {
+    useColonyStore.setState({ freeDecantsRemaining: 3 });
+    const { getByTestId } = render(<DecantButton />);
+    expect(getByTestId('decant-button').textContent).toContain('free ×3');
   });
 
   it('click is a no-op when disabled — store state unchanged', () => {

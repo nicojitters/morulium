@@ -17,6 +17,9 @@ function seed(overrides: Partial<Parameters<typeof useColonyStore.setState>[0]> 
     buildings: { barracks: false, medbay: false },
     lastRestTickAt: Date.now(),
     unlocks: DEFAULT_UNLOCKS,
+    freeDecantsRemaining: 3,
+    firstRunComplete: false,
+    pendingAwaySummary: null,
     ...overrides,
   });
 }
@@ -48,5 +51,11 @@ describe('StatusHud', () => {
     seed({ buildings: { barracks: true, medbay: false } });
     const { getByTestId } = render(<StatusHud directiveText={null} />);
     expect(getByTestId('hud-colony-cap').textContent).toContain('0/40');
+  });
+
+  it('reflects freeDecantsRemaining from the store', () => {
+    seed({ freeDecantsRemaining: 3 });
+    const { getByTestId } = render(<StatusHud directiveText={null} />);
+    expect(getByTestId('hud-free-decants').textContent).toContain('3');
   });
 });

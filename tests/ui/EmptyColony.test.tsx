@@ -23,6 +23,7 @@ describe('EmptyColony', () => {
       serum: SERUM_STARTING_BALANCE,
       stims: 0,
       lastGarrisonTickAt: Date.now(),   // NEW
+      freeDecantsRemaining: 3,
     });
   });
 
@@ -35,6 +36,17 @@ describe('EmptyColony', () => {
     expect(getByTestId('empty-colony')).toBeDefined();
     expect(getByText(/your colony is empty/i)).toBeDefined();
     expect(getByTestId('decant-button').textContent).toBe('Decant your first Morula');
+  });
+
+  it('shows free Decant count in body when freeDecantsRemaining > 0', () => {
+    const { getByTestId } = render(<EmptyColony />);
+    expect(getByTestId('empty-colony').textContent).toContain('3 free Decants available');
+  });
+
+  it('shows paid-path body when freeDecantsRemaining is 0', () => {
+    useColonyStore.setState({ freeDecantsRemaining: 0 });
+    const { getByTestId } = render(<EmptyColony />);
+    expect(getByTestId('empty-colony').textContent).toContain('Decant a Morula to begin');
   });
 
   it('clicking the CTA decants the first specimen', () => {

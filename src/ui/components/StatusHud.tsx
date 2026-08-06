@@ -17,9 +17,7 @@ export function StatusHud(props: { directiveText: string | null }): ReactElement
       <span style={styles.hudItem} data-testid="hud-colony-cap">
         {TERMS.colony} {unitCount}/{cap}
       </span>
-      <span style={styles.hudItem} data-testid="hud-free-decants">
-        {TERMS.freeDecant} 0
-      </span>
+      <FreeDecantsBadge />
       <span
         style={props.directiveText ? styles.hudItem : { ...styles.hudItem, ...styles.hudDirectiveEmpty }}
         data-testid="hud-directive"
@@ -27,5 +25,14 @@ export function StatusHud(props: { directiveText: string | null }): ReactElement
         {TERMS.directive}: {props.directiveText ?? 'No directive'}
       </span>
     </div>
+  );
+}
+
+function FreeDecantsBadge(): ReactElement {
+  const free = useColonyStore((s) => s.freeDecantsRemaining);
+  return (
+    <span style={styles.hudItem} data-testid="hud-free-decants">
+      {TERMS.freeDecant}: {free}
+    </span>
   );
 }
