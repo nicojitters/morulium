@@ -9,6 +9,7 @@ import { DirectiveBanner } from './ui/components/DirectiveBanner';
 import { RewardToast } from './ui/components/RewardToast';
 import { UnlockedToast } from './ui/components/UnlockedToast';
 import { ActionToast } from './ui/components/ActionToast';
+import { IncursionResultSummary } from './ui/components/IncursionResultSummary';
 import { directiveById } from './state/directives';
 import { NewGameGate } from './ui/screens/NewGameGate';
 import { Colony } from './ui/screens/Colony';
@@ -65,6 +66,7 @@ export function App(): ReactElement {
       <RewardToast />
       <UnlockedToast />
       <ActionToast />
+      <IncursionResultSummary />
     </>
   );
 }

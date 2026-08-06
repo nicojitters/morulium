@@ -77,6 +77,8 @@ interface ColonyStore {
   readonly breedDayKey: string;
   readonly fronts: Readonly<Record<FrontId, FrontState>>;
   readonly activeIncursion: IncursionResolution | null;
+  readonly lastIncursionResolution: IncursionResolution | null;
+  clearLastIncursionResolution: () => void;
   readonly serum: number;
   readonly stims: number;
   readonly lastGarrisonTickAt: number;   // NEW
@@ -206,6 +208,7 @@ const INITIAL_STATE = {
   breedDayKey: todayLocalKey(),
   fronts: FRESH_FRONTS,
   activeIncursion: null as IncursionResolution | null,
+  lastIncursionResolution: null as IncursionResolution | null,
   serum: SERUM_STARTING_BALANCE,
   stims: 0,
   lastGarrisonTickAt: Date.now(),
@@ -750,7 +753,7 @@ export const useColonyStore = create<ColonyStore>()(
         for (const fid of Object.keys(nextFronts) as FrontId[]) {
           nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
         }
-        set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null });
+        set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null, lastIncursionResolution: r });
         if (r) get().emitDirectiveAction({ kind: 'incursion-resolved', outcome: r.outcome === 'won' ? 'won' : 'lost', rewardCollected: true });
       },
 
@@ -780,6 +783,7 @@ export const useColonyStore = create<ColonyStore>()(
           queueMicrotask(() => get().unlockSurface('vat'));
         }
       },
+      clearLastIncursionResolution: () => set({ lastIncursionResolution: null }),
       clearRecentReward: () => set({ recentReward: null }),
 
       emitActionMessage: (msg) => set({ recentActionMessage: msg }),
