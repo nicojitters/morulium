@@ -5,6 +5,9 @@ import { STORAGE_KEY } from './state/persist';
 import { AppShell } from './ui/components/AppShell';
 import { AwaySummary } from './ui/components/AwaySummary';
 import { IntroModal } from './ui/components/IntroModal';
+import { DirectiveBanner } from './ui/components/DirectiveBanner';
+import { RewardToast } from './ui/components/RewardToast';
+import { directiveById } from './state/directives';
 import { NewGameGate } from './ui/screens/NewGameGate';
 import { Colony } from './ui/screens/Colony';
 import { DNALab } from './ui/screens/DNALab';
@@ -21,6 +24,8 @@ export function App(): ReactElement {
   const resetGame = useColonyStore((s) => s.resetGame);
   const firstRunComplete = useColonyStore((s) => s.firstRunComplete);
   const markFirstRunComplete = useColonyStore((s) => s.markFirstRunComplete);
+  const activeId = useColonyStore((s) => s.activeDirectiveId);
+  const directiveText = activeId === null ? null : directiveById(activeId).title;
 
   if (!bootPassed) {
     const hasExistingSave = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY) !== null;
@@ -49,11 +54,13 @@ export function App(): ReactElement {
 
   return (
     <>
-      <AppShell current={current} onNavigate={setCurrent} directiveText={null}>
+      <AppShell current={current} onNavigate={setCurrent} directiveText={directiveText}>
+        <DirectiveBanner />
         {screen}
       </AppShell>
       {!firstRunComplete && <IntroModal onDone={markFirstRunComplete} />}
       <AwaySummary />
+      <RewardToast />
     </>
   );
 }

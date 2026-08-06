@@ -59,6 +59,28 @@ describe('DNA Lab', () => {
     expect(detail.textContent?.toLowerCase()).toContain('generation');
   });
 
+  it('clicking a row emits view-dna-lab-detail', () => {
+    useColonyStore.setState({
+      units: [{
+        id: 3, seed: 3, decantedAt: 100, genome: { loci: {} },
+        generation: 0, parentIds: null, wear: {},
+        restCurrent: REST_MAX, injuredUntil: null, culled: false,
+      }],
+      nextId: 4, lastDecantedId: null,
+      harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 0,
+      breedsToday: 0, breedDayKey: todayLocalKey(),
+      fronts: FRESH_FRONTS, activeIncursion: null,
+      serum: 0, stims: 0, lastGarrisonTickAt: Date.now(),
+      buildings: { barracks: false, medbay: false },
+      lastRestTickAt: Date.now(),
+      unlocks: DEFAULT_UNLOCKS,
+      activeDirectiveId: 'inspect-first',
+    });
+    const { getByTestId } = render(<DNALab />);
+    fireEvent.click(getByTestId('dna-lab-row-3'));
+    expect(useColonyStore.getState().activeDirectiveId).toBe('decant-second');
+  });
+
   it('does not expose numeric rarity score or stat numbers', () => {
     useColonyStore.setState({
       units: [{

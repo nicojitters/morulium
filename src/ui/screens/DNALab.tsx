@@ -39,7 +39,10 @@ export function DNALab(): ReactElement {
               <button
                 type="button"
                 data-testid={`dna-lab-row-${u.id}`}
-                onClick={() => setPickedId(u.id)}
+                onClick={() => {
+                  setPickedId(u.id);
+                  useColonyStore.getState().emitDirectiveAction({ kind: 'view-dna-lab-detail', unitId: u.id });
+                }}
                 style={{
                   width: '100%',
                   textAlign: 'left',
