@@ -29,4 +29,18 @@ describe('unlockSurface', () => {
     useColonyStore.getState().clearRecentUnlock();
     expect(useColonyStore.getState().recentUnlock).toBeNull();
   });
+
+  it('completing collect-first-reward unlocks the Vat', async () => {
+    useColonyStore.setState({
+      activeDirectiveId: 'collect-first-reward',
+      completedDirectiveIds: ['decant-first','inspect-first','decant-second','launch-first-incursion'],
+    });
+    useColonyStore.getState().emitDirectiveAction({
+      kind: 'incursion-resolved', outcome: 'won', rewardCollected: true,
+    });
+    // queueMicrotask flush
+    await Promise.resolve();
+    expect(useColonyStore.getState().unlocks.vat.status).toBe('unlocked');
+    expect(useColonyStore.getState().recentUnlock?.id).toBe('vat');
+  });
 });

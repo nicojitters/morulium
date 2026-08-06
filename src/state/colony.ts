@@ -758,6 +758,12 @@ export const useColonyStore = create<ColonyStore>()(
           completedDirectiveIds: completed,
           recentReward: { directiveId: d.id, serum: d.rewardSerum },
         });
+
+        // Unlock cascades keyed to directive completions.
+        if (d.id === 'collect-first-reward') {
+          // Deferred: call inside a queueMicrotask so it runs after the set() above commits.
+          queueMicrotask(() => get().unlockSurface('vat'));
+        }
       },
       clearRecentReward: () => set({ recentReward: null }),
 
