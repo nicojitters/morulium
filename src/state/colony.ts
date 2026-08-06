@@ -53,6 +53,7 @@ import { summarize, isSignificant, type StoreSnapshot } from './session';
 import type { AwaySummary } from './session';
 import { VAT_INPUT_SIZE } from './vat';
 import { resolveVatOperation } from '../sim/vat';
+import { STARTER_FREE_DECANTS } from './bootstrap';
 import {
   COLONY_CAP_BASE,
   COLONY_CAP_BARRACKS,
@@ -83,6 +84,9 @@ interface ColonyStore {
   readonly lastRestTickAt: number;
   readonly unlocks: UnlocksMap;
   readonly pendingAwaySummary: AwaySummary | null;
+  readonly freeDecantsRemaining: number;
+  readonly firstRunComplete: boolean;
+  markFirstRunComplete: () => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -193,6 +197,8 @@ const INITIAL_STATE = {
   lastRestTickAt: Date.now(),
   unlocks: DEFAULT_UNLOCKS,
   pendingAwaySummary: null as AwaySummary | null,
+  freeDecantsRemaining: STARTER_FREE_DECANTS,
+  firstRunComplete: false,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -684,10 +690,12 @@ export const useColonyStore = create<ColonyStore>()(
       },
 
       clearAwaySummary: () => set({ pendingAwaySummary: null }),
+
+      markFirstRunComplete: () => set({ firstRunComplete: true }),
     }),
     {
       name: STORAGE_KEY,
-      version: 10,
+      version: 11,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -776,6 +784,13 @@ export const useColonyStore = create<ColonyStore>()(
         if (from < 10) {
           s = { ...s, unlocks: (s as Partial<ColonyStore>).unlocks ?? DEFAULT_UNLOCKS };
         }
+        if (from < 11) {
+          s = {
+            ...s,
+            freeDecantsRemaining: (s as Partial<ColonyStore>).freeDecantsRemaining ?? STARTER_FREE_DECANTS,
+            firstRunComplete: (s as Partial<ColonyStore>).firstRunComplete ?? true,   // existing saves = already played
+          };
+        }
         return s;
       },
       onRehydrateStorage: () => (rehydrated) => {
@@ -817,6 +832,8 @@ export const useColonyStore = create<ColonyStore>()(
         buildings: state.buildings,
         lastRestTickAt: state.lastRestTickAt,
         unlocks: state.unlocks,
+        freeDecantsRemaining: state.freeDecantsRemaining,
+        firstRunComplete: state.firstRunComplete,
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },
