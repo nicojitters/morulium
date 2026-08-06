@@ -23,8 +23,8 @@ export function IncursionResultSummary(): ReactElement | null {
   }
 
   return (
-    <div style={styles.modalBackdrop}>
-      <div style={styles.modalCard} data-testid="incursion-result">
+    <div className="modal-backdrop">
+      <div className="modal" data-testid="incursion-result">
         <h2 style={styles.modalTitle}>{r.outcome === 'won' ? 'Victory' : 'Defeat'}</h2>
         <div style={styles.modalBody}>
           <p>{verdict}</p>

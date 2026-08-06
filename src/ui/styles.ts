@@ -731,32 +731,39 @@ export const styles = {
     justifyContent: 'center',
     gap: 8,
     padding: 48,
-    background: '#f0fdf4',
-    border: '2px solid #22c55e',
+    background: TOKENS.bioGreenDeep,
+    border: '2px solid ' + TOKENS.bioGreenDim,
     borderRadius: 12,
     marginTop: 24,
+    color: TOKENS.bioGreen,
   } as CSSProperties,
 
   regionConqueredTitle: {
     fontSize: 20,
     fontWeight: 600,
-    color: '#166534',
+    color: TOKENS.bioGreen,
+    fontFamily: TOKENS.fontDisplay,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
   } as CSSProperties,
 
   regionConqueredBody: {
     fontSize: 14,
-    color: '#166534',
+    color: TOKENS.inkLab,
     textAlign: 'center',
   } as CSSProperties,
 
   serumBadge: {
     marginLeft: 'auto',
-    padding: '6px 12px',
+    padding: '4px 10px',
     fontSize: 13,
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    fontFamily: TOKENS.fontMono,
     fontWeight: 500,
-    color: '#334155',   // slate-700
+    color: TOKENS.inkLab,
     alignSelf: 'center',
+    background: TOKENS.groundRaised,
+    border: '1px solid ' + TOKENS.tealDeep,
+    borderRadius: 3,
   } as CSSProperties,
 
   stimShopRow: {
@@ -770,8 +777,8 @@ export const styles = {
 
   stimInventoryLabel: {
     fontSize: 13,
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-    color: '#475569',
+    fontFamily: TOKENS.fontMono,
+    color: TOKENS.inkLab,
   } as CSSProperties,
 
   buyStimButton: {
@@ -809,9 +816,9 @@ export const styles = {
     right: 4,
     padding: '2px 6px',
     borderRadius: 4,
-    border: '1px solid #cbd5e1',
-    background: '#ffffff',
-    color: '#475569',
+    border: '1px solid ' + TOKENS.iron,
+    background: TOKENS.groundRaised,
+    color: TOKENS.inkSecondary,
     fontSize: 10,
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -823,9 +830,9 @@ export const styles = {
     right: 4,
     padding: '2px 6px',
     borderRadius: 4,
-    border: '1px solid #7c3aed',
-    background: '#8b5cf6',
-    color: '#ffffff',
+    border: '1px solid ' + TOKENS.bruiseGlow,
+    background: TOKENS.bruise,
+    color: TOKENS.inkLab,
     fontSize: 10,
     fontWeight: 600,
     cursor: 'pointer',
@@ -839,10 +846,10 @@ export const styles = {
     zIndex: 10,
     marginTop: 4,
     padding: 8,
-    background: '#ffffff',
-    border: '1px solid #cbd5e1',
+    background: TOKENS.groundRaised,
+    border: '1px solid ' + TOKENS.tealDeep,
     borderRadius: 6,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
     minWidth: 180,
     maxHeight: 240,
     overflowY: 'auto',
@@ -864,21 +871,21 @@ export const styles = {
     fontSize: 12,
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
     borderRadius: 4,
-    color: '#0f172a',
+    color: TOKENS.inkLab,
   } as CSSProperties,
 
   garrisonPickerRowEmpty: {
     padding: '6px 8px',
     fontSize: 12,
-    color: '#94a3b8',
+    color: TOKENS.inkDim,
     fontStyle: 'italic',
   } as CSSProperties,
 
   garrisonBadge: {
     marginTop: 2,
     fontSize: 10,
-    color: '#7c3aed',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: TOKENS.bruiseGlow,
+    fontFamily: TOKENS.fontMono,
   } as CSSProperties,
 
   culledCardOverlay: {
@@ -890,7 +897,7 @@ export const styles = {
     top: 4,
     right: 4,
     fontSize: 10,
-    color: '#dc2626',
+    color: TOKENS.signalDanger,
     fontWeight: 700,
     pointerEvents: 'none',
   } as CSSProperties,
@@ -899,12 +906,12 @@ export const styles = {
     marginTop: 4,
     padding: '2px 6px',
     fontSize: 10,
-    border: '1px solid #cbd5e1',
+    border: '1px solid ' + TOKENS.iron,
     borderRadius: 3,
     background: 'transparent',
-    color: '#64748b',
+    color: TOKENS.inkDim,
     cursor: 'pointer',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    fontFamily: TOKENS.fontMono,
   } as CSSProperties,
 
   hudRow: {
@@ -954,7 +961,9 @@ export const styles = {
   modalBackdrop: {
     position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(15, 23, 42, 0.5)',
+    background: 'rgba(5, 7, 10, 0.8)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -962,24 +971,31 @@ export const styles = {
   } as CSSProperties,
 
   modalCard: {
-    background: '#ffffff',
-    borderRadius: 8,
+    background: TOKENS.ironPlate,
+    borderRadius: TOKENS.radiusLg,
     padding: 24,
     minWidth: 320,
     maxWidth: 480,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+    color: TOKENS.inkPrimary,
   } as CSSProperties,
 
   modalTitle: {
     fontSize: 18,
     fontWeight: 600,
     marginBottom: 12,
+    fontFamily: TOKENS.fontDisplay,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: TOKENS.inkPrimary,
   } as CSSProperties,
 
   modalBody: {
     fontSize: 14,
     lineHeight: 1.6,
     marginBottom: 16,
+    fontFamily: TOKENS.fontUi,
+    color: TOKENS.inkSecondary,
   } as CSSProperties,
 
   modalPrimary: {
@@ -997,23 +1013,27 @@ export const styles = {
   } as CSSProperties,
 
   directiveBanner: {
-    background: '#fef3c7',
-    borderLeft: '4px solid #f59e0b',
+    background: TOKENS.ironPlate,
+    borderLeft: '4px solid ' + TOKENS.signalWarn,
     padding: '10px 16px',
     margin: '0 auto 16px auto',
     maxWidth: 1400,
     borderRadius: 4,
+    color: TOKENS.inkPrimary,
   } as CSSProperties,
 
   directiveTitle: {
     fontWeight: 600,
     fontSize: 14,
-    color: '#78350f',
+    color: TOKENS.signalWarn,
+    fontFamily: TOKENS.fontDisplay,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
   } as CSSProperties,
 
   directiveHint: {
     fontSize: 12,
-    color: '#92400e',
+    color: TOKENS.inkSecondary,
     marginTop: 2,
   } as CSSProperties,
 
@@ -1022,9 +1042,11 @@ export const styles = {
     bottom: 24, right: 24,
     padding: '10px 16px',
     borderRadius: 6,
-    background: '#0f172a',
-    color: '#e2e8f0',
+    background: TOKENS.groundRaised,
+    color: TOKENS.inkPrimary,
     fontSize: 13,
+    fontFamily: TOKENS.fontMono,
+    border: '1px solid ' + TOKENS.ironLight,
     boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
     zIndex: 90,
     maxWidth: 320,
@@ -1033,7 +1055,7 @@ export const styles = {
   toastBody: { lineHeight: 1.4 } as CSSProperties,
 
   tooltipTrigger: {
-    borderBottom: '1px dotted #64748b',
+    borderBottom: '1px dotted ' + TOKENS.tealDeep,
     cursor: 'help',
     position: 'relative',
     display: 'inline',
@@ -1045,19 +1067,21 @@ export const styles = {
     left: 0,
     zIndex: 50,
     padding: '6px 10px',
-    background: '#0f172a',
-    color: '#e2e8f0',
+    background: TOKENS.groundRaised,
+    color: TOKENS.inkLab,
     fontSize: 12,
     lineHeight: 1.4,
     borderRadius: 4,
     maxWidth: 280,
+    border: '1px solid ' + TOKENS.tealDeep,
+    fontFamily: TOKENS.fontMono,
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     whiteSpace: 'normal',
   } as CSSProperties,
 
   firstVisitCallout: {
-    background: '#eff6ff',
-    borderLeft: '4px solid #3b82f6',
+    background: TOKENS.groundPanel,
+    borderLeft: '4px solid ' + TOKENS.teal,
     padding: '12px 16px',
     margin: '0 auto 16px auto',
     maxWidth: 1400,
@@ -1065,13 +1089,13 @@ export const styles = {
     position: 'relative',
   } as CSSProperties,
 
-  firstVisitTitle: { fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#1e3a8a' } as CSSProperties,
-  firstVisitBody:  { fontSize: 13, color: '#1e40af', marginBottom: 4 } as CSSProperties,
-  firstVisitAction:{ fontSize: 12, color: '#1e40af', fontStyle: 'italic' } as CSSProperties,
+  firstVisitTitle: { fontWeight: 600, fontSize: 14, marginBottom: 4, color: TOKENS.inkLab, fontFamily: TOKENS.fontDisplay, letterSpacing: '0.06em', textTransform: 'uppercase' } as CSSProperties,
+  firstVisitBody:  { fontSize: 13, color: TOKENS.inkSecondary, marginBottom: 4 } as CSSProperties,
+  firstVisitAction:{ fontSize: 12, color: TOKENS.inkDim, fontStyle: 'italic' } as CSSProperties,
   firstVisitDismiss: {
     position: 'absolute', top: 4, right: 8,
     border: 'none', background: 'transparent', cursor: 'pointer',
-    color: '#1e40af', fontSize: 18, lineHeight: 1,
+    color: TOKENS.inkSecondary, fontSize: 18, lineHeight: 1,
     fontFamily: 'inherit',
   } as CSSProperties,
 

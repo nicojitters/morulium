@@ -16,8 +16,8 @@ export function AwaySummary(): ReactElement | null {
   if (summary === null) return null;
 
   return (
-    <div style={styles.modalBackdrop}>
-      <div style={styles.modalCard} data-testid="away-summary">
+    <div className="modal-backdrop">
+      <div className="modal" data-testid="away-summary">
         <h2 style={styles.modalTitle}>While you were away…</h2>
         <div style={styles.modalBody}>
           <p>Elapsed: {formatElapsed(summary.elapsedMs)}</p>

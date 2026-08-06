@@ -3,8 +3,8 @@ import { styles } from '../styles';
 
 export function IntroModal(props: { onDone: () => void }): ReactElement {
   return (
-    <div style={styles.modalBackdrop}>
-      <div style={styles.modalCard} data-testid="intro-modal">
+    <div className="modal-backdrop">
+      <div className="modal" data-testid="intro-modal">
         <h2 style={styles.modalTitle}>Morulium</h2>
         <div style={styles.modalBody}>
           <p>You are a villain building an army in a vat.</p>

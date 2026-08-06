@@ -27,7 +27,7 @@ export function UnlockedToast(): ReactElement | null {
 
   if (recent === null) return null;
   return (
-    <div style={styles.toast} data-testid="unlocked-toast">
+    <div className="a-toast-slide" style={styles.toast} data-testid="unlocked-toast">
       <div style={styles.toastBody}>
         <strong>{TERMS.unlocked}:</strong> {LABELS[recent.id]} — {recent.reason}
       </div>
