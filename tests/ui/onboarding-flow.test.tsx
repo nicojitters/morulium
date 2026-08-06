@@ -25,4 +25,34 @@ describe('onboarding — locked → unlocked flow', () => {
     expect((getByTestId('nav-tab-vat') as HTMLButtonElement).disabled).toBe(false);
     expect(getByTestId('unlocked-toast')).toBeDefined();
   });
+
+  it('full onboarding: gate → intro → directive → decant → registry discovers', () => {
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('new-game-gate-new-game'));
+    fireEvent.click(getByTestId('intro-modal-begin'));
+    expect(getByTestId('directive-banner').textContent).toContain('Decant your first specimen');
+    // navigate to Colony and Decant
+    fireEvent.click(getByTestId('nav-tab-colony'));
+    fireEvent.click(getByTestId('decant-button'));
+    // directive advanced, reward toast fired, term discovered
+    expect(getByTestId('directive-banner').textContent).toContain('DNA Lab');
+    expect(useColonyStore.getState().discoveredTerms.morula).toBe(true);
+    expect(useColonyStore.getState().discoveredTerms.decant).toBe(true);
+    // navigate to Registry — morula row shows definition, not ???
+    fireEvent.click(getByTestId('nav-tab-registry'));
+    expect(getByTestId('registry-row-morula').textContent?.toLowerCase()).toContain('vat-embryo');
+  });
+
+  it('dev panel reset returns to first-run', () => {
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('new-game-gate-new-game'));
+    fireEvent.click(getByTestId('intro-modal-skip'));
+    fireEvent.click(getByTestId('decant-button'));
+    expect(useColonyStore.getState().units).toHaveLength(1);
+    // open dev panel via keyboard
+    fireEvent.keyDown(window, { key: 'D', shiftKey: true, metaKey: true });
+    fireEvent.click(getByTestId('dev-panel-reset'));
+    expect(useColonyStore.getState().units).toEqual([]);
+    expect(useColonyStore.getState().firstRunComplete).toBe(false);
+  });
 });
