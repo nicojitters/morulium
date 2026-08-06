@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { styles } from '../styles';
 import { TERMS } from '../terms';
+import { Wordmark } from '../components/Wordmark';
 
 export function NewGameGate(props: {
   hasExistingSave: boolean;
@@ -8,13 +9,13 @@ export function NewGameGate(props: {
   onNewGame: () => void;
 }): ReactElement {
   return (
-    <main style={styles.page} data-testid="new-game-gate">
-      <h1 style={styles.headerTitle}>Morulium</h1>
-      <p style={styles.headerSub}>Grow monsters. Take fronts. Rule.</p>
-      <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+    <main style={styles.newGameGateRoot} data-testid="new-game-gate" data-register="lab">
+      <Wordmark size="hero" />
+      <p style={styles.newGameGateTagline}>Specimen management console · v0.0.1</p>
+      <div style={styles.newGameGateActions}>
         <button
           type="button"
-          style={props.hasExistingSave ? styles.modalPrimary : styles.decantButtonDisabled}
+          style={props.hasExistingSave ? styles.newGameGateGhost : styles.newGameGateGhostDisabled}
           disabled={!props.hasExistingSave}
           onClick={props.onContinue}
           data-testid="new-game-gate-continue"
@@ -23,13 +24,14 @@ export function NewGameGate(props: {
         </button>
         <button
           type="button"
-          style={styles.modalPrimary}
+          style={styles.newGameGatePrimary}
           onClick={props.onNewGame}
           data-testid="new-game-gate-new-game"
         >
           {TERMS.newGame}
         </button>
       </div>
+      <div style={styles.newGameGateFooter}>Cultivate. Conquer.</div>
     </main>
   );
 }

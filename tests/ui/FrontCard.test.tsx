@@ -89,8 +89,8 @@ describe('FrontCard', () => {
       />
     );
     const card = getByTestId('front-card-infrastructure');
-    // Selected border is violet 8b5cf6
-    expect(card.style.borderColor).toMatch(/(#8b5cf6)|(rgb\(139, ?92, ?246\))/i);
+    // Selected border is rust (TOKENS.rust = #7a3419)
+    expect(card.style.borderColor).toMatch(/(#7a3419)|(rgb\(122, ?52, ?25\))/i);
   });
 
   it('calls onClick when available and clicked', () => {

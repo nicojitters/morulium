@@ -15,6 +15,7 @@ export function ActionToast(): ReactElement | null {
   if (msg === null) return null;
   return (
     <div
+      className="a-toast-slide"
       style={{ ...styles.toast, bottom: 80 }}
       data-testid="action-toast"
     >

@@ -4,6 +4,7 @@ import { millisUntilLocalMidnight } from '../../state/harvest';
 import { DAILY_BREED_LIMIT, breedsRemaining } from '../../state/breed';
 import { BREED_COST_SERUM } from '../../state/serum';
 import { styles } from '../styles';
+import { TOKENS } from '../tokens';
 
 interface Props {
   readonly onClick: () => void;
@@ -57,11 +58,14 @@ export function BreedButton({ onClick, disabled = false }: Props): ReactElement 
         ? `Breed costs ${BREED_COST_SERUM} SR (have ${serum})`
         : `Confirm Breed (${remaining}/${DAILY_BREED_LIMIT})`;
 
-  const style = isDisabled ? styles.breedButtonDisabled : styles.breedButton;
+  const style = isDisabled
+    ? styles.breedButtonDisabled
+    : { ...styles.breedButton, boxShadow: TOKENS.bioGlowHot };
 
   return (
     <button
       type="button"
+      className="btn btn--primary"
       style={style}
       onClick={() => { if (!isDisabled) onClick(); }}
       disabled={isDisabled}

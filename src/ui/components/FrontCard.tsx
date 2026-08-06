@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useRef, useEffect } from 'react';
 import type { FrontId } from '../../sim/data/fronts';
 import type { FrontState } from '../../state/incursion';
 import type { Unit } from '../../state/types';
@@ -30,6 +30,18 @@ export function FrontCard({
   frontId, label, state, selected, now, onClick,
   expanded = false, garrisonUnits, onGarrisonSlotClick, onGarrisonSlotClear,
 }: Props): ReactElement {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    if (!selected || !cardRef.current) return;
+    const el = cardRef.current;
+    el.classList.remove('a-stamp-in');
+    void el.offsetWidth; // trigger reflow so re-add fires the animation
+    el.classList.add('a-stamp-in');
+  }, [selected]);
+
   const cooldownActive = state.cooldownUntil !== null && state.cooldownUntil > now;
   const clickable = !cooldownActive;   // Captured fronts are clickable for expand/collapse
 
@@ -53,6 +65,8 @@ export function FrontCard({
 
   return (
     <div
+      ref={cardRef}
+      className="card card--front"
       style={style}
       onClick={() => { if (clickable) onClick(); }}
       data-testid={`front-card-${frontId}`}

@@ -8,7 +8,8 @@ import { VAT_INPUT_SIZE, VAT_MAX_BATCH_SIZE } from '../../state/vat';
 import type { Tier } from '../../sim/types';
 import type { FrontId } from '../../sim/data/fronts';
 import { TERMS } from '../terms';
-import { styles } from '../styles';
+import { styles, TIER_COLORS } from '../styles';
+import { TOKENS } from '../tokens';
 import { FirstVisitCallout } from '../components/FirstVisitCallout';
 
 const TIERS: readonly Tier[] = ['baseline', 'strain', 'mutant', 'chimera', 'progenitor'];
@@ -115,11 +116,34 @@ export function Vat(): ReactElement {
 
   if (totalEligible === 0 && buckets.ineligibleCount === 0) {
     return (
-      <main style={styles.page}>
+      <main style={styles.page} data-register="lab">
         <FirstVisitCallout surface="vat" title="The Vat" body="Fuse ten same-tier specimens into one, pristine." action="Select ten of one tier and run." />
-        <h1 style={styles.headerTitle}>Morulium</h1>
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
+          <div className="a-vat-bubble" style={{
+            position: 'absolute',
+            top: 8, left: '30%',
+            width: 6, height: 6,
+            borderRadius: '50%',
+            background: TOKENS.bioGreen,
+            opacity: 0.06,
+            filter: 'blur(1px)',
+          }} />
+          <div className="a-vat-bubble" style={{
+            position: 'absolute',
+            top: 4, left: '55%',
+            width: 4, height: 4,
+            borderRadius: '50%',
+            background: TOKENS.bioGreen,
+            opacity: 0.05,
+            animationDelay: '1.4s',
+            filter: 'blur(1px)',
+          }} />
+          <h1 className="text-stamp" style={styles.headerTitle} data-testid="vat-header">
+            The Vat
+          </h1>
+        </div>
         <p style={styles.headerSub}>The Vat — 10 same-tier specimens → 1</p>
-        <div data-testid="vat-empty-state" style={{ marginTop: 24, color: '#94a3b8' }}>
+        <div data-testid="vat-empty-state" style={{ marginTop: 24, color: TOKENS.inkDim }}>
           Your Colony is empty. Harvest or Breed some specimens first.
         </div>
       </main>
@@ -127,14 +151,38 @@ export function Vat(): ReactElement {
   }
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="vat" title="The Vat" body="Fuse ten same-tier specimens into one, pristine." action="Select ten of one tier and run." />
-      <h1 style={styles.headerTitle}>Morulium</h1>
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <div className="a-vat-bubble" style={{
+          position: 'absolute',
+          top: 8, left: '30%',
+          width: 6, height: 6,
+          borderRadius: '50%',
+          background: TOKENS.bioGreen,
+          opacity: 0.06,
+          filter: 'blur(1px)',
+        }} />
+        <div className="a-vat-bubble" style={{
+          position: 'absolute',
+          top: 4, left: '55%',
+          width: 4, height: 4,
+          borderRadius: '50%',
+          background: TOKENS.bioGreen,
+          opacity: 0.05,
+          animationDelay: '1.4s',
+          filter: 'blur(1px)',
+        }} />
+        <h1 className="text-stamp" style={styles.headerTitle} data-testid="vat-header">
+          The Vat
+        </h1>
+      </div>
       <p style={styles.headerSub}>The Vat — 10 same-tier specimens → 1</p>
 
       <div style={{ margin: '12px 0' }}>
         <button
           type="button"
+          className="btn btn--danger"
           data-testid="vat-cull-all-button"
           disabled={cullAllPlan.totalOps === 0}
           onClick={onCullAll}
@@ -146,7 +194,7 @@ export function Vat(): ReactElement {
       </div>
 
       {buckets.ineligibleCount > 0 && (
-        <div data-testid="vat-ineligible-count" style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8 }}>
+        <div data-testid="vat-ineligible-count" style={{ color: TOKENS.inkDim, fontSize: 12, marginBottom: 8 }}>
           {buckets.ineligibleCount} hidden (garrisoned/injured)
         </div>
       )}
@@ -159,17 +207,17 @@ export function Vat(): ReactElement {
           <section
             key={tier}
             data-testid={`vat-tier-group-${tier}`}
-            style={{ marginTop: 16 }}
           >
-            <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-              <h2 style={{ fontSize: 16, margin: 0 }}>
-                {TERMS.tiers[tier]} —{' '}
-                <span data-testid={`vat-tier-count-${tier}`}>
-                  {groupUnits.length} eligible, {culledCount} culled
-                </span>
+            <div style={styles.tierSectionHeader(TIER_COLORS[tier])}>
+              <h2 style={styles.tierSectionLabel(TIER_COLORS[tier])}>
+                {TERMS.tiers[tier]}
               </h2>
+              <span data-testid={`vat-tier-count-${tier}`} style={{ color: TOKENS.inkDim, fontFamily: TOKENS.fontMono, fontSize: 12 }}>
+                {groupUnits.length} eligible, {culledCount} culled
+              </span>
               <button
                 type="button"
+                className="btn btn--primary"
                 data-testid={`vat-tier-run-button-${tier}`}
                 disabled={selection.size !== VAT_INPUT_SIZE}
                 onClick={() => runTier(tier)}
@@ -182,10 +230,10 @@ export function Vat(): ReactElement {
                 <div
                   key={unit.id}
                   onClick={() => toggleSelection(tier, unit.id)}
+                  className={selection.has(unit.id) ? 'a-bio-pulse' : undefined}
                   style={{
                     cursor: 'pointer',
-                    outline: selection.has(unit.id) ? '2px solid #2563eb' : 'none',
-                    outlineOffset: 2,
+                    borderRadius: 8,
                   }}
                 >
                   <SpecimenCard

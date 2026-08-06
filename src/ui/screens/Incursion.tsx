@@ -217,7 +217,7 @@ export function Incursion(): ReactElement {
   }
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="conquest">
       <FirstVisitCallout surface="incursion" title="Incursion" body="Push against a contested front with four specimens." action="Pick a front and fill your team." />
       <h1 style={styles.headerTitle}>Morulium</h1>
       <p style={styles.headerSub}>Incursion — Region 1</p>
@@ -327,6 +327,7 @@ export function Incursion(): ReactElement {
           <div style={styles.incursionLaunchRow}>
             <button
               type="button"
+              className="btn btn--danger btn--stamp"
               style={canLaunch ? styles.incursionLaunchButton : styles.incursionLaunchButtonDisabled}
               onClick={handleLaunch}
               disabled={!canLaunch}
@@ -379,15 +380,18 @@ export function Incursion(): ReactElement {
 
       {phase !== 'idle' && activeIncursion !== null && (
         <div style={styles.incursionSection}>
-          <IncursionTicker
-            resolution={activeIncursion}
-            visibleBeatCount={visibleBeatCount}
-            onSkip={handleSkip}
-          />
+          <div className="scanline-overlay">
+            <IncursionTicker
+              resolution={activeIncursion}
+              visibleBeatCount={visibleBeatCount}
+              onSkip={handleSkip}
+            />
+          </div>
           {phase === 'resolved' && (
             <div style={styles.incursionLaunchRow}>
               <button
                 type="button"
+                className="btn btn--ghost btn--stamp"
                 style={styles.incursionContinueButton}
                 onClick={handleContinue}
                 data-testid="incursion-continue-button"

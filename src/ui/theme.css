@@ -1,0 +1,474 @@
+/* ================================================================
+   Morulium — theme.css
+   All design tokens, resets, focus rings, scrollbars, keyframes,
+   and global juice classes. Component styles compose with these.
+   ================================================================ */
+
+:root {
+  /* Grounds (near-black, teal-tinged) */
+  --ground-void:      #05070a;
+  --ground-deep:      #0a1014;
+  --ground-panel:     #0f1720;
+  --ground-raised:    #142130;
+
+  /* Structure (deep teal) */
+  --teal-abyss:       #0a1e26;
+  --teal-deep:        #0f3541;
+  --teal:             #14b8a6;
+
+  /* Menace / dread (bruised purple) */
+  --bruise-deep:      #1a0f2b;
+  --bruise:           #3d1f56;
+  --bruise-glow:      #6b3aa0;
+
+  /* Hero accent — bio-green (SPARINGLY) */
+  --bio-green:        #7fff9b;
+  --bio-green-dim:    #46a05e;
+  --bio-green-deep:   #1a3a24;
+  --bio-glow:         0 0 12px rgba(127, 255, 155, 0.45);
+  --bio-glow-hot:     0 0 20px rgba(127, 255, 155, 0.75), 0 0 4px rgba(127, 255, 155, 1);
+
+  /* Machinery — Conquest register */
+  --iron-plate:       #1a1a1c;
+  --iron:             #2a2a2e;
+  --iron-light:       #4a4a50;
+  --rust:             #7a3419;
+  --rust-hot:         #b8541e;
+  --steel-cool:       #6b7280;
+
+  /* Text / ink */
+  --ink-primary:      #e6ecec;
+  --ink-secondary:    #9aa8b0;
+  --ink-dim:          #707d8a;
+  --ink-lab:          #b8f0d0;
+
+  /* Signal */
+  --signal-warn:      #f0b840;
+  --signal-danger:    #e04848;
+  --signal-good:      var(--bio-green);
+
+  /* Tier ramp (retuned for dark ground) */
+  --tier-baseline:    #7889a0;
+  --tier-strain:      #4dd3a8;
+  --tier-mutant:      #f0b840;
+  --tier-chimera:     #a86bd8;
+  --tier-progenitor:  #ff5a68;
+
+  /* Typography */
+  --font-display: 'Big Shoulders Display', 'Oswald', system-ui, sans-serif;
+  --font-ui:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Motion */
+  --ease-lab:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-clinic: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-stamp:  cubic-bezier(0.68, -0.15, 0.27, 1.4);
+  --dur-instant: 80ms;
+  --dur-fast:    160ms;
+  --dur-med:     280ms;
+  --dur-slow:    480ms;
+  --dur-slower:  720ms;
+
+  /* Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Rim treatments (drop shadows are invisible on black; use inner glow + rim light) */
+  --rim-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --rim-teal:  0 0 0 1px rgba(20, 184, 166, 0.35), inset 0 1px 0 rgba(180, 240, 220, 0.08);
+  --rim-iron:  0 0 0 1px rgba(180, 180, 190, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --rim-bio:   0 0 0 1px rgba(127, 255, 155, 0.4), var(--bio-glow);
+}
+
+/* ---------- Global reset + atmosphere ---------- */
+
+html, body {
+  background: var(--ground-void);
+  color: var(--ink-primary);
+  color-scheme: dark;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+::selection {
+  background: var(--bio-green);
+  color: var(--bruise-deep);
+}
+
+/* Scrollbars — dark, thin, unobtrusive */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--ground-panel); }
+::-webkit-scrollbar-thumb { background: var(--iron); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--iron-light); }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--iron) var(--ground-panel);
+}
+
+/* Focus rings — bio-green everywhere */
+:focus-visible {
+  outline: 2px solid var(--bio-green);
+  outline-offset: 2px;
+  box-shadow: var(--bio-glow);
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Kill the ugly default button appearance so components can style freely */
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ---------- Keyframes (juice library) ---------- */
+
+@keyframes bio-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(127, 255, 155, 0.4), 0 0 8px rgba(127, 255, 155, 0.35); }
+  50%      { box-shadow: 0 0 0 1px rgba(127, 255, 155, 0.7), 0 0 18px rgba(127, 255, 155, 0.65); }
+}
+
+@keyframes vat-bubble {
+  0%   { transform: translateY(0) scale(0.9); opacity: 0; }
+  30%  { opacity: 0.35; }
+  100% { transform: translateY(-14px) scale(1.05); opacity: 0; }
+}
+
+@keyframes drip {
+  0%   { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(6px); opacity: 0; }
+}
+
+@keyframes flash-number {
+  0%   { color: var(--bio-green); text-shadow: 0 0 8px rgba(127, 255, 155, 0.7); }
+  100% { color: inherit; text-shadow: none; }
+}
+
+@keyframes stamp-in {
+  0%   { transform: scale(0.94); }
+  60%  { transform: scale(1.02); }
+  100% { transform: scale(1.00); }
+}
+
+@keyframes toast-slide {
+  0%   { transform: translateY(12px); opacity: 0; box-shadow: 0 0 0 0 rgba(127, 255, 155, 0); }
+  60%  { transform: translateY(0);    opacity: 1; box-shadow: 0 0 18px 0 rgba(127, 255, 155, 0.55); }
+  100% { transform: translateY(0);    opacity: 1; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+}
+
+@keyframes screen-fade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes membrane-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ticker-glitch {
+  0%   { text-shadow: -1px 0 rgba(255, 0, 60, 0.6), 1px 0 rgba(0, 255, 200, 0.6); }
+  100% { text-shadow: none; }
+}
+
+@keyframes decant-emerge {
+  0%   { transform: scale(0.9); opacity: 0; filter: brightness(1.6) blur(2px); }
+  100% { transform: scale(1);   opacity: 1; filter: brightness(1) blur(0); }
+}
+
+/* ---------- Animation utility classes ---------- */
+
+.a-bio-pulse       { animation: bio-pulse       2.4s ease-in-out infinite; }
+.a-flash-number    { animation: flash-number    240ms var(--ease-clinic) 1; }
+.a-stamp-in        { animation: stamp-in        220ms var(--ease-stamp) 1; }
+.a-toast-slide     { animation: toast-slide     280ms var(--ease-lab) 1; }
+.a-screen-fade     { animation: screen-fade     160ms var(--ease-clinic) 1; }
+.a-decant-emerge   { animation: decant-emerge   380ms var(--ease-lab) 1; }
+.a-membrane-shimmer{
+  background-image: linear-gradient(120deg,
+    transparent 30%,
+    rgba(184, 240, 208, 0.03) 50%,
+    transparent 70%);
+  background-size: 200% 100%;
+  animation: membrane-shimmer 8s linear infinite;
+}
+.a-ticker-glitch   { animation: ticker-glitch   40ms linear 1; }
+.a-drip            { animation: drip            4s ease-in infinite; }
+.a-vat-bubble      { animation: vat-bubble      3s ease-out infinite; }
+
+/* ---------- Text effect utilities ---------- */
+
+.text-glow-bio {
+  color: var(--bio-green);
+  text-shadow: 0 0 6px currentColor;
+}
+
+.text-stamp {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.text-readout {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+}
+
+/* ---------- Reduced motion — non-negotiable ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Button primitives ---------- */
+
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--teal-deep);
+  background: var(--ground-panel);
+  color: var(--ink-primary);
+  cursor: pointer;
+  transition:
+    filter var(--dur-fast) var(--ease-clinic),
+    box-shadow var(--dur-fast) var(--ease-clinic),
+    border-color var(--dur-fast) var(--ease-clinic),
+    color var(--dur-fast) var(--ease-clinic);
+  box-shadow: var(--rim-inner);
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  border-color: var(--teal);
+  box-shadow: var(--rim-inner), var(--bio-glow);
+}
+.btn:active:not(:disabled) {
+  filter: brightness(0.95);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.btn--primary {
+  border-color: var(--teal);
+  color: var(--ink-lab);
+}
+.btn--primary:hover:not(:disabled) {
+  border-color: var(--bio-green);
+  color: var(--bio-green);
+  box-shadow: var(--rim-inner), var(--bio-glow);
+}
+
+.btn--danger {
+  border-color: var(--rust);
+  color: var(--rust-hot);
+}
+.btn--danger:hover:not(:disabled) {
+  border-color: var(--rust-hot);
+  color: var(--signal-danger);
+  box-shadow: var(--rim-inner), 0 0 12px rgba(224, 72, 72, 0.45);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-secondary);
+}
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--teal-deep);
+  color: var(--ink-primary);
+  box-shadow: none;
+}
+
+.btn--stamp {
+  background: var(--iron-plate);
+  border-color: var(--iron-light);
+  color: var(--ink-primary);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--rim-iron);
+}
+.btn--stamp:hover:not(:disabled) {
+  filter: brightness(1.12);
+  border-color: var(--rust);
+  box-shadow: var(--rim-iron), 0 0 10px rgba(184, 84, 30, 0.4);
+}
+
+/* ---------- Card primitives ---------- */
+
+.card {
+  background: var(--ground-panel);
+  border-radius: var(--radius-md);
+  box-shadow: var(--rim-teal), var(--rim-inner);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-clinic),
+    transform var(--dur-fast) var(--ease-clinic);
+  color: var(--ink-primary);
+}
+.card:hover {
+  box-shadow: var(--rim-teal), var(--rim-inner), var(--bio-glow);
+  transform: scale(1.005);
+}
+
+.card--specimen {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.card--highlighted {
+  box-shadow: var(--rim-bio), var(--rim-inner);
+  transition: box-shadow 240ms ease;
+}
+.card--highlighted:hover {
+  box-shadow: var(--rim-bio), var(--rim-inner), var(--bio-glow);
+}
+
+.card--front {
+  background: var(--iron-plate);
+  box-shadow: var(--rim-iron), var(--rim-inner);
+  color: var(--ink-primary);
+}
+.card--front:hover {
+  box-shadow: var(--rim-iron), var(--rim-inner), 0 0 12px rgba(184, 84, 30, 0.35);
+}
+
+/* ---------- Panel primitive ---------- */
+
+.panel {
+  background: var(--ground-panel);
+  border-radius: var(--radius-md);
+  box-shadow: var(--rim-teal), var(--rim-inner);
+  padding: 16px;
+  color: var(--ink-primary);
+}
+
+.panel--iron {
+  background: var(--iron-plate);
+  box-shadow: var(--rim-iron), var(--rim-inner);
+}
+
+/* ---------- Pill + chip primitives (small labels) ---------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--ground-raised);
+  color: var(--ink-secondary);
+  border: 1px solid var(--teal-deep);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ground-void);
+  box-shadow: var(--rim-inner);
+}
+
+/* ---------- Toast primitive ---------- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--ground-raised);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border: 1px solid var(--iron-light);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  max-width: 340px;
+}
+
+/* ---------- Modal primitives ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--iron-plate);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: var(--rim-iron), var(--rim-inner), 0 20px 60px rgba(0, 0, 0, 0.7);
+  color: var(--ink-primary);
+}
+
+/* CRT scanline overlay — apply as a positioned pseudo via className */
+.scanline-overlay {
+  position: relative;
+  isolation: isolate;
+}
+.scanline-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(255, 255, 255, 0.02) 3px,
+    rgba(255, 255, 255, 0.02) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Garrison row hover treatment */
+.garrison-row {
+  transition: background var(--dur-fast) var(--ease-clinic);
+}
+.garrison-row:hover {
+  background: rgba(20, 184, 166, 0.1);
+  border-left: 2px solid var(--bio-green);
+}

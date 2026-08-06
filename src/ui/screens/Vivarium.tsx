@@ -6,6 +6,7 @@ import {
 } from '../../state/vivarium';
 import { FirstVisitCallout } from '../components/FirstVisitCallout';
 import { styles } from '../styles';
+import { TOKENS } from '../tokens';
 
 interface BuildingPanelProps {
   readonly id: 'barracks' | 'medbay';
@@ -22,7 +23,7 @@ function BuildingPanel({ id, label, cost, effects, built, canAfford, onBuild }: 
     <section
       data-testid={`${id}-panel`}
       style={{
-        border: '1px solid #e2e8f0',
+        border: `1px solid ${TOKENS.ironLight}`,
         borderRadius: 6,
         padding: 12,
         marginTop: 12,
@@ -30,11 +31,11 @@ function BuildingPanel({ id, label, cost, effects, built, canAfford, onBuild }: 
       }}
     >
       <h2 style={{ fontSize: 16, margin: '0 0 6px 0' }}>{label} — {cost} SR</h2>
-      <ul style={{ margin: '6px 0', paddingLeft: 20, color: '#475569', fontSize: 13 }}>
+      <ul style={{ margin: '6px 0', paddingLeft: 20, color: TOKENS.inkSecondary, fontSize: 13 }}>
         {effects.map((e, i) => <li key={i}>{e}</li>)}
       </ul>
       {built ? (
-        <div data-testid={`${id}-status`} style={{ color: '#16a34a', fontWeight: 600 }}>
+        <div data-testid={`${id}-status`} style={{ color: TOKENS.bioGreen, fontWeight: 600 }}>
           Built ✓
         </div>
       ) : (
@@ -62,7 +63,7 @@ export function Vivarium(): ReactElement {
   const cap = capOf({ buildings });
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="vivarium" title="Vivarium" body="Buildings shape your Colony." action="Build the Barracks first." />
       <h1 style={styles.headerTitle}>Morulium — Vivarium</h1>
       <p style={styles.headerSub}>

@@ -17,7 +17,7 @@ export function RewardToast(): ReactElement | null {
   if (reward === null) return null;
   const d = directiveById(reward.directiveId);
   return (
-    <div style={styles.toast} data-testid="reward-toast">
+    <div className="a-toast-slide" style={styles.toast} data-testid="reward-toast">
       <div style={styles.toastBody}>
         <strong>+{reward.serum} {TERMS.serumAbbr}</strong> — {d.title} complete
       </div>

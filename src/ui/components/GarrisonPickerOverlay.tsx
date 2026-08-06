@@ -28,6 +28,7 @@ export function GarrisonPickerOverlay({ frontId, eligibleUnits, onAssign, onDism
           eligibleUnits.map((u) => (
             <div
               key={u.id}
+              className="garrison-row"
               style={styles.garrisonPickerRow}
               onClick={() => onAssign(u.id)}
               data-testid={`front-card-garrison-picker-unit-${frontId}-${u.id}`}

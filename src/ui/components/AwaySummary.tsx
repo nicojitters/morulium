@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { useColonyStore } from '../../state/colony';
 import { TERMS } from '../terms';
-import { styles } from '../styles';
 
 function formatElapsed(ms: number): string {
   const hours = Math.floor(ms / 3_600_000);
@@ -16,18 +15,18 @@ export function AwaySummary(): ReactElement | null {
   if (summary === null) return null;
 
   return (
-    <div style={styles.modalBackdrop}>
-      <div style={styles.modalCard} data-testid="away-summary">
-        <h2 style={styles.modalTitle}>While you were away…</h2>
-        <div style={styles.modalBody}>
-          <p>Elapsed: {formatElapsed(summary.elapsedMs)}</p>
-          <p>{TERMS.serum} earned: {TERMS.serumAbbr} {summary.serumEarned}</p>
-          <p>Rest gained across the {TERMS.colony}: {summary.restGainedTotal}</p>
-          <p>Injuries healed: {summary.injuriesHealed}</p>
+    <div className="modal-backdrop">
+      <div className="modal" data-testid="away-summary">
+        <h2 className="text-stamp" style={{ fontSize: 18, marginBottom: 12 }}>Away Report</h2>
+        <div className="text-readout" style={{ marginBottom: 16, lineHeight: 1.8 }}>
+          <p style={{ margin: '0 0 4px' }}>Elapsed: {formatElapsed(summary.elapsedMs)}</p>
+          <p style={{ margin: '0 0 4px' }}>{TERMS.serum} earned: {TERMS.serumAbbr} {summary.serumEarned}</p>
+          <p style={{ margin: '0 0 4px' }}>Rest gained across the {TERMS.colony}: {summary.restGainedTotal}</p>
+          <p style={{ margin: 0 }}>Injuries healed: {summary.injuriesHealed}</p>
         </div>
         <button
           type="button"
-          style={styles.modalPrimary}
+          className="btn btn--stamp"
           onClick={clear}
           data-testid="away-summary-dismiss"
         >
