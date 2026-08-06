@@ -44,7 +44,7 @@ export function Breed(): ReactElement {
 
   if (units.length < 2) {
     return (
-      <main style={styles.page}>
+      <main style={styles.page} data-register="lab">
         <FirstVisitCallout surface="breed" title="Breeding" body="Cross two specimens to produce a new one." action="Pick two parents." />
         <h1 style={styles.headerTitle}>Morulium</h1>
         <p style={styles.headerSub}>Breed a Morula from two parents · <BreedIndicator /></p>
@@ -82,15 +82,18 @@ export function Breed(): ReactElement {
   };
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="breed" title="Breeding" body="Cross two specimens to produce a new one." action="Pick two parents." />
       <h1 style={styles.headerTitle}>Morulium</h1>
       <p style={styles.headerSub}>Breed a Morula from two parents · <BreedIndicator /></p>
 
       <div style={styles.breedSection}>
-        <div style={styles.breedParentsRow}>
+        <div
+          style={styles.breedParentsRow}
+          className={bothPicked ? 'a-bio-pulse' : undefined}
+        >
           <ParentSlot unit={parentA} slotLabel="A" onClear={() => setParentAId(null)} />
-          <div style={styles.breedTimesX} aria-hidden="true">×</div>
+          <div className="text-stamp" style={styles.breedTimesX} aria-hidden="true">×</div>
           <ParentSlot unit={parentB} slotLabel="B" onClear={() => setParentBId(null)} />
         </div>
         <div style={styles.breedConfirmRow}>

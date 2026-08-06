@@ -70,6 +70,12 @@ export function Colony(): ReactElement {
     return () => clearInterval(t);
   }, []);
 
+  // Decant-emerge: apply .a-decant-emerge to the newest card for one render.
+  const newestId = units.length > 0 ? Math.max(...units.map((u) => u.id)) : -1;
+  const [lastSeenNewest, setLastSeenNewest] = useState(newestId);
+  useEffect(() => { setLastSeenNewest(newestId); }, [newestId]);
+  const justArrivedId = newestId !== lastSeenNewest ? newestId : -1;
+
   // Sort newest-first by decantedAt (stable copy — do not mutate store state).
   // id tiebreaker matches Breed screen: same-timestamp decants (fake-timer tests)
   // stay deterministic across both screens.
@@ -142,16 +148,17 @@ export function Colony(): ReactElement {
               </div>
               <div style={styles.grid}>
                 {groupUnits.map((unit) => (
-                  <SpecimenCard
-                    key={unit.id}
-                    row={unitToRow(unit)}
-                    highlighted={unit.id === lastDecantedId}
-                    lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
-                    restState={restStateFor(unit, now)}
-                    garrisonedAt={garrisonedAtFor(unit.id, fronts)}
-                    culled={unit.culled}
-                    onToggleCull={() => useColonyStore.getState().toggleCulled(unit.id)}
-                  />
+                  <div key={unit.id} className={unit.id === justArrivedId ? 'a-decant-emerge' : undefined}>
+                    <SpecimenCard
+                      row={unitToRow(unit)}
+                      highlighted={unit.id === lastDecantedId}
+                      lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
+                      restState={restStateFor(unit, now)}
+                      garrisonedAt={garrisonedAtFor(unit.id, fronts)}
+                      culled={unit.culled}
+                      onToggleCull={() => useColonyStore.getState().toggleCulled(unit.id)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

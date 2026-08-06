@@ -103,9 +103,9 @@ describe('Vat screen', () => {
     for (const c of cards.slice(0, 5)) fireEvent.click(c);
     expect(getByTestId('vat-tier-run-button-baseline').textContent).toContain('(5/10)');
 
-    // First card should now have the selection outline.
+    // First card should now have the bio-pulse selection class (replaces hard outline).
     const firstWrapper = cards[0]?.parentElement;
-    expect(firstWrapper?.getAttribute('style')).toContain('outline: 2px solid #2563eb');
+    expect(firstWrapper?.className).toContain('a-bio-pulse');
 
     // Click remaining 5 — button should now be enabled.
     for (const c of cards.slice(5)) fireEvent.click(c);

@@ -204,8 +204,8 @@ export const styles = {
 
   harvestIndicator: {
     fontSize: 13,
-    color: '#555',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: TOKENS.inkLab,
+    fontFamily: TOKENS.fontMono,
   } as CSSProperties,
 
   failsafeIndicator: {
@@ -216,15 +216,15 @@ export const styles = {
     borderRadius: 10,
     fontSize: 12,
     fontWeight: 500,
-    color: '#92400e',           // amber-800
-    backgroundColor: '#fef3c7', // amber-100
-    border: '1px solid #fde68a',// amber-200
+    color: TOKENS.signalWarn,
+    background: 'rgba(240, 184, 64, 0.1)',
+    border: '1px solid ' + TOKENS.signalWarn + '55',
   } as CSSProperties,
 
   breedIndicator: {
     fontSize: 13,
-    color: '#555',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: TOKENS.inkLab,
+    fontFamily: TOKENS.fontMono,
   } as CSSProperties,
 
   breedButton: {
@@ -396,9 +396,7 @@ export const styles = {
 
   breedTimesX: {
     fontSize: 24,
-    fontWeight: 600,
-    color: '#94a3b8',
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: TOKENS.inkDim,
   } as CSSProperties,
 
   breedConfirmRow: {
@@ -409,7 +407,7 @@ export const styles = {
 
   breedHint: {
     textAlign: 'center',
-    color: '#94a3b8',
+    color: TOKENS.inkDim,
     fontSize: 13,
     marginBottom: 12,
   } as CSSProperties,
