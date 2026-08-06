@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import type { Tier } from '../../sim/types';
 import { TERMS } from '../terms';
-import { TIER_COLORS } from '../styles';
 
 interface Props {
   readonly tier: Tier;
@@ -10,10 +9,17 @@ interface Props {
 export function TierBadge({ tier }: Props): ReactElement {
   return (
     <span
-      className="chip"
-      style={{ position: 'absolute', top: 6, right: 6, backgroundColor: TIER_COLORS[tier] }}
+      style={{ position: 'absolute', top: 6, right: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+      aria-label={TERMS.tiers[tier]}
     >
-      {TERMS.tiers[tier]}
+      <img
+        src={`/assets/pixellab/rarity/${tier}.png`}
+        alt=""
+        width={24}
+        height={24}
+        style={{ imageRendering: 'pixelated', display: 'block' }}
+        draggable={false}
+      />
     </span>
   );
 }

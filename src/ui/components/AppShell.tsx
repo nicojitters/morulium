@@ -35,6 +35,18 @@ const LABELS: Readonly<Record<SurfaceId, string>> = {
   'registry':     TERMS.registry,
 };
 
+const NAV_ICONS: Readonly<Record<SurfaceId, string>> = {
+  'colony':       '/assets/pixellab/nav/colony.png',
+  'dna-lab':      '/assets/pixellab/nav/dna_lab.png',
+  'breed':        '/assets/pixellab/nav/breed.png',
+  'incursion':    '/assets/pixellab/nav/incursion.png',
+  'conquest-map': '/assets/pixellab/nav/conquest_map.png',
+  'vivarium':     '/assets/pixellab/nav/vivarium.png',
+  'vat':          '/assets/pixellab/nav/vat.png',
+  'sequencer':    '/assets/pixellab/nav/sequencer.png',
+  'registry':     '/assets/pixellab/nav/registry.png',
+};
+
 export function AppShell(props: {
   current: SurfaceId;
   onNavigate: (id: SurfaceId) => void;
@@ -61,13 +73,31 @@ export function AppShell(props: {
             <button
               key={id}
               type="button"
-              style={style}
+              style={{ ...style, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               disabled={!unlocked}
               onClick={() => unlocked && props.onNavigate(id)}
               data-testid={`nav-tab-${id}`}
               title={!unlocked && unlocks[id].reason ? unlocks[id].reason : undefined}
             >
+              <img
+                src={NAV_ICONS[id]}
+                alt=""
+                width={16}
+                height={16}
+                style={{ imageRendering: 'pixelated', display: 'block', opacity: unlocked ? 1 : 0.4 }}
+                draggable={false}
+              />
               {LABELS[id]}
+              {!unlocked && (
+                <img
+                  src="/assets/pixellab/nav/locked.png"
+                  alt=""
+                  width={12}
+                  height={12}
+                  style={{ imageRendering: 'pixelated', display: 'block' }}
+                  draggable={false}
+                />
+              )}
             </button>
           );
         })}

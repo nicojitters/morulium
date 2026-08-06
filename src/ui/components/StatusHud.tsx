@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 import { useColonyStore, capOf } from '../../state/colony';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
+
+const HUD_ICON_STYLE: CSSProperties = {
+  imageRendering: 'pixelated',
+  display: 'inline-block',
+  verticalAlign: 'middle',
+  marginRight: 4,
+};
 
 export function StatusHud(props: { directiveText: string | null }): ReactElement {
   const serum = useColonyStore((s) => s.serum);
@@ -12,6 +19,7 @@ export function StatusHud(props: { directiveText: string | null }): ReactElement
   return (
     <div style={styles.hudRow} data-testid="status-hud">
       <FlashOnChange value={serum} testid="hud-serum">
+        <img src="/assets/pixellab/resources/serum.png" alt="" width={16} height={16} style={HUD_ICON_STYLE} draggable={false} />
         {TERMS.serumAbbr} {serum}
       </FlashOnChange>
       <FlashOnChange value={unitCount} testid="hud-colony-cap">
@@ -51,6 +59,7 @@ function FreeDecantsBadge(): ReactElement {
   const free = useColonyStore((s) => s.freeDecantsRemaining);
   return (
     <FlashOnChange value={free} testid="hud-free-decants">
+      <img src="/assets/pixellab/resources/morula.png" alt="" width={16} height={16} style={HUD_ICON_STYLE} draggable={false} />
       {TERMS.freeDecant}: {free}
     </FlashOnChange>
   );

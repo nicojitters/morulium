@@ -30,6 +30,13 @@ export function ConquestMap(): ReactElement {
         <p style={styles.headerSub}>{region.subtitle}</p>
       </div>
 
+      <img
+        src="/assets/pixellab/conquest/region1_map.png"
+        alt=""
+        style={{ imageRendering: 'pixelated', width: '100%', maxWidth: 800, height: 'auto', display: 'block', margin: '12px 0', borderRadius: 4 }}
+        draggable={false}
+      />
+
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '16px 0' }}>
         {region.frontIds.map((fid) => {
           const f = fronts[fid];

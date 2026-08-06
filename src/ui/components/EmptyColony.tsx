@@ -22,6 +22,14 @@ export function EmptyColony(): ReactElement {
 
   return (
     <div style={styles.emptyState} data-testid="empty-colony">
+      <img
+        src="/assets/pixellab/overlays/empty_colony.png"
+        alt=""
+        width={400}
+        height={300}
+        style={{ imageRendering: 'pixelated', maxWidth: '100%', height: 'auto', display: 'block', marginBottom: 16 }}
+        draggable={false}
+      />
       <div className="text-stamp" style={styles.emptyStateTitle}>Your Colony is empty</div>
       <div style={styles.emptyStateBody}>
         {bodyContent}

@@ -72,6 +72,20 @@ export function FrontCard({
       data-testid={`front-card-${frontId}`}
       data-disabled={clickable ? undefined : 'true'}
     >
+      <img
+        src={`/assets/pixellab/conquest/front_${frontId}.png`}
+        alt=""
+        style={{
+          imageRendering: 'pixelated',
+          width: '100%',
+          height: 120,
+          objectFit: 'cover',
+          borderRadius: 4,
+          marginBottom: 6,
+          filter: cooldownActive ? 'saturate(0.4) brightness(0.7)' : undefined,
+        }}
+        draggable={false}
+      />
       <div style={styles.frontCardLabel}>{label}</div>
       <div style={styles.frontCardStatus} data-testid={`front-card-status-${frontId}`}>
         {statusText}

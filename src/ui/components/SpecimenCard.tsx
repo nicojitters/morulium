@@ -33,6 +33,12 @@ const GARRISON_LABELS: Readonly<Record<FrontId, string>> = {
   guerrilla: 'Guer',
 };
 
+const GARRISON_PENNANTS: Readonly<Record<FrontId, string>> = {
+  infrastructure: '/assets/pixellab/states/garrison_infrastructure.png',
+  military: '/assets/pixellab/states/garrison_military.png',
+  guerrilla: '/assets/pixellab/states/garrison_guerrilla.png',
+};
+
 function formatInjuryCountdown(msRemaining: number): string {
   const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -79,8 +85,26 @@ export function SpecimenCard({
     >
       {culled && (
         <div style={styles.culledBadge} data-testid={`culled-badge-${row.seed}`}>
-          ✗
+          <img
+            src="/assets/pixellab/states/culled_badge.png"
+            alt="Culled"
+            width={40}
+            height={40}
+            style={{ imageRendering: 'pixelated', display: 'block' }}
+            draggable={false}
+          />
         </div>
+      )}
+      {isInjured && (
+        <img
+          src="/assets/pixellab/states/injured.png"
+          alt=""
+          width={32}
+          height={32}
+          style={{ imageRendering: 'pixelated', position: 'absolute', top: 6, left: 6, pointerEvents: 'none' }}
+          draggable={false}
+          data-testid={`injured-overlay-${row.seed}`}
+        />
       )}
       <TierBadge tier={row.tier} />
       <div style={styles.cardSprite}>
@@ -105,7 +129,15 @@ export function SpecimenCard({
         </div>
       )}
       {isGarrisoned && (
-        <div style={styles.garrisonBadge} data-testid={`garrison-badge-${row.seed}`}>
+        <div style={{ ...styles.garrisonBadge, display: 'flex', alignItems: 'center', gap: 4 }} data-testid={`garrison-badge-${row.seed}`}>
+          <img
+            src={GARRISON_PENNANTS[garrisonedAt!]}
+            alt=""
+            width={16}
+            height={22}
+            style={{ imageRendering: 'pixelated', display: 'block' }}
+            draggable={false}
+          />
           Garrison: {GARRISON_LABELS[garrisonedAt!]}
         </div>
       )}

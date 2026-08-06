@@ -23,15 +23,37 @@ export function Wordmark(props: {
 }): ReactElement {
   const dims = SIZES[props.size];
   return (
-    <img
-      src={wordmarkSrc}
-      width={dims.width}
-      height={dims.height}
-      style={{ ...BASE_STYLE, ...props.style }}
-      className={props.className}
-      alt={props.alt ?? 'Morulium'}
-      draggable={false}
-      data-testid="wordmark"
-    />
+    <span style={{ position: 'relative', display: 'inline-block', ...props.style }}>
+      {props.size === 'hero' && (
+        <img
+          src="/assets/pixellab/branding/wordmark_flourish.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            imageRendering: 'pixelated',
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: dims.width * 1.2,
+            height: 'auto',
+            pointerEvents: 'none',
+            opacity: 0.5,
+            zIndex: 0,
+          }}
+          draggable={false}
+        />
+      )}
+      <img
+        src={wordmarkSrc}
+        width={dims.width}
+        height={dims.height}
+        style={{ ...BASE_STYLE, position: 'relative', zIndex: 1 }}
+        className={props.className}
+        alt={props.alt ?? 'Morulium'}
+        draggable={false}
+        data-testid="wordmark"
+      />
+    </span>
   );
 }

@@ -12,8 +12,16 @@ export function FailsafeIndicator(): ReactElement | null {
     : `Failsafe in ${DROUGHT_THRESHOLD - droughtCount}`;
 
   return (
-    <span style={styles.failsafeIndicator} data-testid="failsafe-indicator">
-      <span aria-hidden="true">⚠️</span> {label}
+    <span style={{ ...styles.failsafeIndicator, display: 'inline-flex', alignItems: 'center', gap: 4 }} data-testid="failsafe-indicator">
+      <img
+        src="/assets/pixellab/resources/failsafe.png"
+        alt=""
+        width={16}
+        height={16}
+        style={{ imageRendering: 'pixelated', display: 'block' }}
+        draggable={false}
+      />
+      {label}
     </span>
   );
 }

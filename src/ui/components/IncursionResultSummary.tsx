@@ -30,6 +30,12 @@ export function IncursionResultSummary(): ReactElement | null {
   return (
     <div className="modal-backdrop">
       <div className="modal panel--iron" data-testid="incursion-result">
+        <img
+          src={r.outcome === 'won' ? '/assets/pixellab/conquest/banner_win.png' : '/assets/pixellab/conquest/banner_fail.png'}
+          alt=""
+          style={{ imageRendering: 'pixelated', width: '100%', maxWidth: 400, height: 'auto', display: 'block', margin: '0 auto 8px auto' }}
+          draggable={false}
+        />
         <div className="text-stamp" style={{
           fontSize: 36,
           color: verdictColor,

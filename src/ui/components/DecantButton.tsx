@@ -64,13 +64,21 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
     <button
       type="button"
       className="btn btn--primary"
-      style={style}
+      style={{ ...style, display: 'inline-flex', alignItems: 'center', gap: 6 }}
       onClick={() => { if (!disabled) decant(); }}
       disabled={disabled}
       data-testid="decant-button"
       data-disabled={disabled ? 'true' : undefined}
       data-disabled-reason={disabledReason ?? undefined}
     >
+      <img
+        src="/assets/pixellab/resources/morula.png"
+        alt=""
+        width={20}
+        height={20}
+        style={{ imageRendering: 'pixelated', display: 'block', opacity: disabled ? 0.5 : 1 }}
+        draggable={false}
+      />
       {displayLabel}
     </button>
   );

@@ -153,6 +153,12 @@ export function Vat(): ReactElement {
   return (
     <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="vat" title="The Vat" body="Fuse ten same-tier specimens into one, pristine." action="Select ten of one tier and run." />
+      <img
+        src="/assets/pixellab/chrome/vat_environment.png"
+        alt=""
+        style={{ imageRendering: 'pixelated', width: '100%', maxWidth: 600, height: 'auto', display: 'block', margin: '0 auto 12px auto', borderRadius: 4 }}
+        draggable={false}
+      />
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <div className="a-vat-bubble" style={{
           position: 'absolute',

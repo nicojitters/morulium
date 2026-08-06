@@ -34,7 +34,15 @@ export function HarvestIndicator(): ReactElement {
     : `Next Harvest in ${formatCountdown(millisUntilLocalMidnight(Date.now()))}`;
 
   return (
-    <span style={styles.harvestIndicator} data-testid="harvest-indicator">
+    <span style={{ ...styles.harvestIndicator, display: 'inline-flex', alignItems: 'center', gap: 4 }} data-testid="harvest-indicator">
+      <img
+        src="/assets/pixellab/resources/harvest.png"
+        alt=""
+        width={16}
+        height={16}
+        style={{ imageRendering: 'pixelated', display: 'block' }}
+        draggable={false}
+      />
       {label}
     </span>
   );

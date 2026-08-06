@@ -5,6 +5,14 @@ export function IntroModal(props: { onDone: () => void }): ReactElement {
   return (
     <div className="modal-backdrop">
       <div className="modal" data-testid="intro-modal">
+        <img
+          src="/assets/pixellab/overlays/intro_splash.png"
+          alt=""
+          width={688}
+          height={384}
+          style={{ imageRendering: 'pixelated', maxWidth: '100%', height: 'auto', display: 'block', marginBottom: 12, borderRadius: 4 }}
+          draggable={false}
+        />
         <h2 style={styles.modalTitle}>Morulium</h2>
         <div style={styles.modalBody}>
           <p>You are a villain building an army in a vat.</p>

@@ -19,6 +19,7 @@ interface BuildingPanelProps {
 }
 
 function BuildingPanel({ id, label, cost, effects, built, canAfford, onBuild }: BuildingPanelProps): ReactElement {
+  const artSrc = `/assets/pixellab/buildings/${id}_${built ? 'built' : 'unbuilt'}.png`;
   return (
     <section
       data-testid={`${id}-panel`}
@@ -28,27 +29,40 @@ function BuildingPanel({ id, label, cost, effects, built, canAfford, onBuild }: 
         padding: 12,
         marginTop: 12,
         maxWidth: 600,
+        display: 'flex',
+        gap: 16,
+        alignItems: 'flex-start',
       }}
     >
-      <h2 style={{ fontSize: 16, margin: '0 0 6px 0' }}>{label} — {cost} SR</h2>
-      <ul style={{ margin: '6px 0', paddingLeft: 20, color: TOKENS.inkSecondary, fontSize: 13 }}>
-        {effects.map((e, i) => <li key={i}>{e}</li>)}
-      </ul>
-      {built ? (
-        <div data-testid={`${id}-status`} style={{ color: TOKENS.bioGreen, fontWeight: 600 }}>
-          Built ✓
-        </div>
-      ) : (
-        <button
-          type="button"
-          data-testid={`${id}-build-button`}
-          disabled={!canAfford}
-          onClick={onBuild}
-          style={{ padding: '6px 12px', cursor: canAfford ? 'pointer' : 'not-allowed' }}
-        >
-          {canAfford ? `Build (${cost} SR)` : `Build (${cost} SR — need more SR)`}
-        </button>
-      )}
+      <img
+        src={artSrc}
+        alt=""
+        width={140}
+        height={140}
+        style={{ imageRendering: 'pixelated', flexShrink: 0, display: 'block' }}
+        draggable={false}
+      />
+      <div style={{ flex: 1 }}>
+        <h2 style={{ fontSize: 16, margin: '0 0 6px 0' }}>{label} — {cost} SR</h2>
+        <ul style={{ margin: '6px 0', paddingLeft: 20, color: TOKENS.inkSecondary, fontSize: 13 }}>
+          {effects.map((e, i) => <li key={i}>{e}</li>)}
+        </ul>
+        {built ? (
+          <div data-testid={`${id}-status`} style={{ color: TOKENS.bioGreen, fontWeight: 600 }}>
+            Built ✓
+          </div>
+        ) : (
+          <button
+            type="button"
+            data-testid={`${id}-build-button`}
+            disabled={!canAfford}
+            onClick={onBuild}
+            style={{ padding: '6px 12px', cursor: canAfford ? 'pointer' : 'not-allowed' }}
+          >
+            {canAfford ? `Build (${cost} SR)` : `Build (${cost} SR — need more SR)`}
+          </button>
+        )}
+      </div>
     </section>
   );
 }
@@ -65,6 +79,12 @@ export function Vivarium(): ReactElement {
   return (
     <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="vivarium" title="Vivarium" body="Buildings shape your Colony." action="Build the Barracks first." />
+      <img
+        src="/assets/pixellab/buildings/vivarium_ground.png"
+        alt=""
+        style={{ imageRendering: 'pixelated', width: '100%', maxWidth: 800, height: 'auto', display: 'block', marginBottom: 12, borderRadius: 4 }}
+        draggable={false}
+      />
       <h1 style={styles.headerTitle}>Morulium — Vivarium</h1>
       <p style={styles.headerSub}>
         Colony <span data-testid="vivarium-cap-counter">{units.length}/{cap}</span>
