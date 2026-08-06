@@ -951,4 +951,25 @@ export const styles = {
     cursor: 'pointer',
     fontFamily: 'inherit',
   } as CSSProperties,
+
+  directiveBanner: {
+    background: '#fef3c7',
+    borderLeft: '4px solid #f59e0b',
+    padding: '10px 16px',
+    margin: '0 auto 16px auto',
+    maxWidth: 1400,
+    borderRadius: 4,
+  } as CSSProperties,
+
+  directiveTitle: {
+    fontWeight: 600,
+    fontSize: 14,
+    color: '#78350f',
+  } as CSSProperties,
+
+  directiveHint: {
+    fontSize: 12,
+    color: '#92400e',
+    marginTop: 2,
+  } as CSSProperties,
 };
