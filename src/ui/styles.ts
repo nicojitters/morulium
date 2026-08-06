@@ -706,39 +706,18 @@ export const styles = {
 
   incursionLaunchButton: {
     padding: '14px 32px',
-    borderRadius: TOKENS.radiusSm,
-    border: '1px solid ' + TOKENS.rust,
-    background: TOKENS.ironPlate,
-    color: TOKENS.rustHot,
-    fontFamily: TOKENS.fontDisplay,
     letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
   } as CSSProperties,
 
   incursionLaunchButtonDisabled: {
     padding: '14px 32px',
-    borderRadius: TOKENS.radiusSm,
-    border: '1px solid ' + TOKENS.iron,
-    background: TOKENS.ironPlate,
-    color: TOKENS.inkDim,
-    fontFamily: TOKENS.fontDisplay,
     letterSpacing: '0.1em',
-    textTransform: 'uppercase',
     cursor: 'not-allowed',
     opacity: 0.5,
   } as CSSProperties,
 
   incursionContinueButton: {
     padding: '10px 24px',
-    borderRadius: TOKENS.radiusSm,
-    border: '1px solid ' + TOKENS.ironLight,
-    background: 'transparent',
-    color: TOKENS.inkPrimary,
-    fontFamily: TOKENS.fontDisplay,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
     marginTop: 12,
   } as CSSProperties,
 
