@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import type { SurfaceId } from './state/unlocks';
 import { useColonyStore } from './state/colony';
 import { STORAGE_KEY } from './state/persist';
@@ -20,10 +20,23 @@ import { ConquestMap } from './ui/screens/ConquestMap';
 import { Vivarium } from './ui/screens/Vivarium';
 import { Vat } from './ui/screens/Vat';
 import { Registry } from './ui/screens/Registry';
+import { DevPanel } from './ui/components/DevPanel';
 
 export function App(): ReactElement {
   const [current, setCurrent] = useState<SurfaceId>('colony');
   const [bootPassed, setBootPassed] = useState<boolean>(false);
+  const [devOpen, setDevOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setDevOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
   const resetGame = useColonyStore((s) => s.resetGame);
   const firstRunComplete = useColonyStore((s) => s.firstRunComplete);
   const markFirstRunComplete = useColonyStore((s) => s.markFirstRunComplete);
@@ -67,6 +80,7 @@ export function App(): ReactElement {
       <UnlockedToast />
       <ActionToast />
       <IncursionResultSummary />
+      <DevPanel open={devOpen} onClose={() => setDevOpen(false)} />
     </>
   );
 }

@@ -110,6 +110,7 @@ interface ColonyStore {
   readonly discoveredTerms: DiscoveredMap;
   discoverTerm: (k: TermKey) => void;
 
+  fastForwardMs: (ms: number) => void;
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
   launchIncursion: (
@@ -235,6 +236,21 @@ export const useColonyStore = create<ColonyStore>()(
   persist(
     (set, get) => ({
       ...INITIAL_STATE,
+
+      fastForwardMs: (ms: number) => {
+        const s = get();
+        set({
+          lastGarrisonTickAt: s.lastGarrisonTickAt - ms,
+          lastRestTickAt: s.lastRestTickAt - ms,
+        });
+        // Trigger the tick cascade the way decant() does, but without creating a unit:
+        const state = get();
+        const now = Date.now();
+        const flareDelta = checkFlareTimers(state, now);
+        const tickDelta  = applyGarrisonTick({ ...state, ...flareDelta }, now);
+        const restDelta  = applyRestTick({ ...state, ...flareDelta, ...tickDelta }, now);
+        set({ ...flareDelta, ...tickDelta, ...restDelta });
+      },
 
       decant: () => {
         const state = get();
