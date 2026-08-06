@@ -3,7 +3,20 @@ import { useColonyStore } from '../../state/colony';
 import { isUnlocked, type SurfaceId } from '../../state/unlocks';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
+import { TOKENS } from '../tokens';
 import { StatusHud } from './StatusHud';
+
+const REGISTER_BY_SURFACE: Readonly<Record<SurfaceId, 'lab' | 'conquest'>> = {
+  'colony':       'lab',
+  'dna-lab':      'lab',
+  'breed':        'lab',
+  'vivarium':     'lab',
+  'vat':          'lab',
+  'sequencer':    'lab',
+  'registry':     'lab',
+  'incursion':    'conquest',
+  'conquest-map': 'conquest',
+};
 
 const ORDER: readonly SurfaceId[] = [
   'colony', 'dna-lab', 'breed', 'incursion',
@@ -39,7 +52,10 @@ export function AppShell(props: {
           const style = !unlocked
             ? styles.navTabLocked
             : isCurrent
-              ? styles.navTabActive
+              ? {
+                  ...styles.navTabActive,
+                  borderBottomColor: REGISTER_BY_SURFACE[id] === 'conquest' ? TOKENS.rust : TOKENS.teal,
+                }
               : styles.navTab;
           return (
             <button

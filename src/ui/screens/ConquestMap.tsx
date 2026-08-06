@@ -4,6 +4,7 @@ import { REGIONS } from '../../sim/data/regions';
 import { FRONTS } from '../../sim/data/fronts';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
+import { TOKENS } from '../tokens';
 import { FirstVisitCallout } from '../components/FirstVisitCallout';
 
 export function ConquestMap(): ReactElement {
@@ -14,7 +15,7 @@ export function ConquestMap(): ReactElement {
   const conquered = held.length === region.frontIds.length && !flaring;
 
   return (
-    <main style={styles.page} data-testid="conquest-map-screen">
+    <main style={styles.page} data-register="conquest" data-testid="conquest-map-screen">
       <FirstVisitCallout
         surface="conquest-map"
         title={TERMS.conquestMap}
@@ -23,7 +24,9 @@ export function ConquestMap(): ReactElement {
       />
 
       <div data-testid="region-header-region-1">
-        <h1 style={styles.headerTitle}>{region.label}</h1>
+        <h1 className="text-stamp" style={{ fontSize: 28, marginBottom: 4 }}>
+          REGION I — {region.label}
+        </h1>
         <p style={styles.headerSub}>{region.subtitle}</p>
       </div>
 
@@ -31,40 +34,65 @@ export function ConquestMap(): ReactElement {
         {region.frontIds.map((fid) => {
           const f = fronts[fid];
           const status = f.captured ? 'held' : f.cooldownUntil && f.cooldownUntil > Date.now() ? 'cooling' : 'available';
+          const isCaptured = status === 'held';
           return (
             <div
               key={fid}
               data-testid={`map-front-${fid}`}
-              style={{
-                minWidth: 200, padding: 12,
-                border: `2px solid ${status === 'held' ? '#22c55e' : '#cbd5e1'}`,
-                borderRadius: 8,
-                background: status === 'held' ? '#f0fdf4' : '#ffffff',
+              className={`panel panel--iron${isCaptured ? ' a-bio-pulse' : ''}`}
+              style={isCaptured ? {
+                minWidth: 200,
+                background: TOKENS.bioGreenDeep,
+                border: `2px solid ${TOKENS.bioGreen}`,
+              } : {
+                minWidth: 200,
               }}
             >
               <div style={{ fontWeight: 600 }}>{FRONTS[fid].label}</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Status: {status}</div>
+              <div style={{ fontSize: 12, color: isCaptured ? TOKENS.bioGreen : TOKENS.inkDim }}>Status: {status}</div>
               {f.captured && (
-                <div style={{ fontSize: 12, color: '#64748b' }}>Garrison: {f.garrison.length}</div>
+                <div style={{ fontSize: 12, color: TOKENS.inkSecondary }}>Garrison: {f.garrison.length}</div>
               )}
               {f.hardening > 0 && (
-                <div style={{ fontSize: 12, color: '#b45309' }}>Hardening: {f.hardening}</div>
+                <div style={{ fontSize: 12, color: TOKENS.rust }}>Hardening: {f.hardening}</div>
               )}
               {f.flareStartedAt !== null && (
-                <div style={{ fontSize: 12, color: '#b45309' }}>Flaring — reinforce</div>
+                <div style={{ fontSize: 12, color: TOKENS.rust }}>Flaring — reinforce</div>
               )}
             </div>
           );
         })}
       </div>
 
-      <div data-testid="region-progress" style={{ fontSize: 14, marginTop: 12 }}>
-        {conquered
-          ? `${region.label} conquered.`
-          : `${held.length} of ${region.frontIds.length} fronts held.`}
-      </div>
+      {conquered ? (
+        <div data-testid="region-progress" style={styles.regionConquered}>
+          <div style={styles.regionConqueredTitle}>Region Conquered</div>
+          <div style={styles.regionConqueredBody}>{region.label} conquered.</div>
+        </div>
+      ) : (
+        <div data-testid="region-progress" style={{ fontSize: 14, marginTop: 12 }}>
+          <div style={{ marginBottom: 8 }}>
+            {held.length} of {region.frontIds.length} fronts held.
+          </div>
+          <div style={{
+            height: 6,
+            borderRadius: 3,
+            background: TOKENS.iron,
+            maxWidth: 320,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${region.frontIds.length > 0 ? (held.length / region.frontIds.length) * 100 : 0}%`,
+              background: held.length === region.frontIds.length ? TOKENS.bioGreen : TOKENS.rust,
+              borderRadius: 3,
+              transition: 'width 400ms ease',
+            }} />
+          </div>
+        </div>
+      )}
 
-      <p data-testid="region-footer" style={{ marginTop: 24, fontStyle: 'italic', color: '#64748b' }}>
+      <p data-testid="region-footer" style={{ marginTop: 24, fontStyle: 'italic', color: TOKENS.inkDim }}>
         {region.label} is the first of many. Take it, hold it — then the next opens.
       </p>
     </main>
