@@ -1,16 +1,15 @@
 import type { ReactElement } from 'react';
 import { useColonyStore } from '../../state/colony';
 import { directiveById } from '../../state/directives';
-import { styles } from '../styles';
 
 export function DirectiveBanner(): ReactElement | null {
   const id = useColonyStore((s) => s.activeDirectiveId);
   if (id === null) return null;
   const d = directiveById(id);
   return (
-    <div style={styles.directiveBanner} data-testid="directive-banner">
-      <div style={styles.directiveTitle}>{d.title}</div>
-      <div style={styles.directiveHint}>{d.hint}</div>
+    <div className="panel panel--iron" data-testid="directive-banner" style={{ borderLeft: '4px solid var(--signal-warn)', margin: '0 auto 16px auto', maxWidth: 1400 }}>
+      <div className="text-stamp" style={{ fontSize: 14, color: 'var(--signal-warn)' }}>{d.title}</div>
+      <div style={{ fontSize: 12, color: 'var(--ink-secondary)', marginTop: 2 }}>{d.hint}</div>
     </div>
   );
 }
