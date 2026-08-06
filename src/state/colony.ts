@@ -49,6 +49,8 @@ import {
   computeHardeningFor,
 } from './occupation';
 import { DEFAULT_UNLOCKS, type UnlocksMap } from './unlocks';
+import { summarize, isSignificant, type StoreSnapshot } from './session';
+import type { AwaySummary } from './session';
 import { VAT_INPUT_SIZE } from './vat';
 import { resolveVatOperation } from '../sim/vat';
 import {
@@ -80,6 +82,7 @@ interface ColonyStore {
   };
   readonly lastRestTickAt: number;
   readonly unlocks: UnlocksMap;
+  readonly pendingAwaySummary: AwaySummary | null;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -93,6 +96,8 @@ interface ColonyStore {
   assignToGarrison: (frontId: FrontId, unitId: number) => void;
   removeFromGarrison: (frontId: FrontId, unitId: number) => void;
   clearHighlight: () => void;
+  resetGame: () => void;
+  clearAwaySummary: () => void;
   runVatOperation: (donorIds: readonly number[]) => Unit;
   toggleCulled: (unitId: number) => void;
   buildBarracks: () => void;
@@ -170,25 +175,30 @@ function applyRestTick(state: ColonyStore, now: number): Partial<ColonyStore> {
   };
 }
 
+const INITIAL_STATE = {
+  units: [] as Unit[],
+  nextId: 1,
+  lastDecantedId: null as number | null,
+  harvestsToday: 0,
+  harvestDayKey: todayLocalKey(),
+  droughtCount: 0,
+  breedsToday: 0,
+  breedDayKey: todayLocalKey(),
+  fronts: FRESH_FRONTS,
+  activeIncursion: null as IncursionResolution | null,
+  serum: SERUM_STARTING_BALANCE,
+  stims: 0,
+  lastGarrisonTickAt: Date.now(),
+  buildings: { barracks: false, medbay: false },
+  lastRestTickAt: Date.now(),
+  unlocks: DEFAULT_UNLOCKS,
+  pendingAwaySummary: null as AwaySummary | null,
+};
+
 export const useColonyStore = create<ColonyStore>()(
   persist(
     (set, get) => ({
-      units: [],
-      nextId: 1,
-      lastDecantedId: null,
-      harvestsToday: 0,
-      harvestDayKey: todayLocalKey(),
-      droughtCount: 0,
-      breedsToday: 0,
-      breedDayKey: todayLocalKey(),
-      fronts: FRESH_FRONTS,
-      activeIncursion: null,
-      serum: SERUM_STARTING_BALANCE,
-      stims: 0,
-      lastGarrisonTickAt: Date.now(),
-      buildings: { barracks: false, medbay: false },
-      lastRestTickAt: Date.now(),
-      unlocks: DEFAULT_UNLOCKS,
+      ...INITIAL_STATE,
 
       decant: () => {
         const state = get();
@@ -668,6 +678,12 @@ export const useColonyStore = create<ColonyStore>()(
       },
 
       clearHighlight: () => set({ lastDecantedId: null }),
+
+      resetGame: () => {
+        set({ ...INITIAL_STATE, lastGarrisonTickAt: Date.now(), lastRestTickAt: Date.now() });
+      },
+
+      clearAwaySummary: () => set({ pendingAwaySummary: null }),
     }),
     {
       name: STORAGE_KEY,
@@ -761,6 +777,30 @@ export const useColonyStore = create<ColonyStore>()(
           s = { ...s, unlocks: (s as Partial<ColonyStore>).unlocks ?? DEFAULT_UNLOCKS };
         }
         return s;
+      },
+      onRehydrateStorage: () => (rehydrated) => {
+        if (!rehydrated) return;
+        const now = Date.now();
+        const snapshotPre: StoreSnapshot = {
+          serum: rehydrated.serum,
+          units: rehydrated.units.map((u) => ({ id: u.id, restCurrent: u.restCurrent, injuredUntil: u.injuredUntil })),
+        };
+        const prevNow = rehydrated.lastGarrisonTickAt;
+        const flareDelta   = checkFlareTimers(rehydrated as ColonyStore, now);
+        const withFlare    = { ...rehydrated, ...flareDelta } as ColonyStore;
+        const garrisonDelta = applyGarrisonTick(withFlare, now);
+        const withGarrison  = { ...withFlare, ...garrisonDelta } as ColonyStore;
+        const restDelta     = applyRestTick(withGarrison, now);
+        const nextState = { ...withGarrison, ...restDelta } as ColonyStore;
+        const snapshotPost: StoreSnapshot = {
+          serum: nextState.serum,
+          units: nextState.units.map((u) => ({ id: u.id, restCurrent: u.restCurrent, injuredUntil: u.injuredUntil })),
+        };
+        const summary = summarize(snapshotPre, snapshotPost, prevNow, now);
+        useColonyStore.setState({
+          ...flareDelta, ...garrisonDelta, ...restDelta,
+          pendingAwaySummary: isSignificant(summary) ? summary : null,
+        });
       },
       partialize: (state) => ({
         units: state.units,

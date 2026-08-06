@@ -643,4 +643,12 @@ describe('colony persistence', () => {
     const s = useColonyStore.getState();
     expect(s.unlocks).toEqual(DEFAULT_UNLOCKS);
   });
+
+  it('pendingAwaySummary is transient — never appears in localStorage', () => {
+    useColonyStore.setState({
+      pendingAwaySummary: { elapsedMs: 1000, serumEarned: 5, restGainedTotal: 0, injuriesHealed: 0 },
+    });
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(parsed.state.pendingAwaySummary).toBeUndefined();
+  });
 });
