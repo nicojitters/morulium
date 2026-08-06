@@ -84,7 +84,11 @@ export function ConquestMap(): ReactElement {
             <div style={{
               height: '100%',
               width: `${region.frontIds.length > 0 ? (held.length / region.frontIds.length) * 100 : 0}%`,
-              background: held.length === region.frontIds.length ? TOKENS.bioGreen : TOKENS.rust,
+              background: flaring
+                ? TOKENS.signalWarn
+                : held.length === region.frontIds.length
+                  ? TOKENS.bioGreen
+                  : TOKENS.rust,
               borderRadius: 3,
               transition: 'width 400ms ease',
             }} />
