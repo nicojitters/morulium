@@ -972,4 +972,19 @@ export const styles = {
     color: '#92400e',
     marginTop: 2,
   } as CSSProperties,
+
+  toast: {
+    position: 'fixed',
+    bottom: 24, right: 24,
+    padding: '10px 16px',
+    borderRadius: 6,
+    background: '#0f172a',
+    color: '#e2e8f0',
+    fontSize: 13,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+    zIndex: 90,
+    maxWidth: 320,
+  } as CSSProperties,
+
+  toastBody: { lineHeight: 1.4 } as CSSProperties,
 };
