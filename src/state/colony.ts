@@ -65,6 +65,8 @@ import {
 } from './vivarium';
 import type { DirectiveId, DirectiveAction } from './directives';
 import { STANDING, nextInChain, completesFrom, directiveById } from './directives';
+import { DISCOVERED_INITIAL, type DiscoveredMap } from './discovered';
+import type { TermKey } from '../ui/definitions';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -105,6 +107,8 @@ interface ColonyStore {
   readonly recentActionMessage: string | null;
   emitActionMessage: (msg: string) => void;
   clearActionMessage: () => void;
+  readonly discoveredTerms: DiscoveredMap;
+  discoverTerm: (k: TermKey) => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -224,6 +228,7 @@ const INITIAL_STATE = {
   recentUnlock: null as { readonly id: SurfaceId; readonly reason: string } | null,
   seenSurfaces: SEEN_INITIAL,
   recentActionMessage: null as string | null,
+  discoveredTerms: DISCOVERED_INITIAL,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -271,6 +276,9 @@ export const useColonyStore = create<ColonyStore>()(
           get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
           get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(newUnit.genome).tier });
           get().emitActionMessage(`Decanted #${newUnit.id}.`);
+          get().discoverTerm('morula');
+          get().discoverTerm('decant');
+          get().discoverTerm((`tier-${computeRarity(newUnit.genome).tier}`) as TermKey);
           return newUnit;
         }
 
@@ -318,6 +326,9 @@ export const useColonyStore = create<ColonyStore>()(
         get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
         get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(unit.genome).tier });
         get().emitActionMessage(`Decanted #${unit.id}.`);
+        get().discoverTerm('morula');
+        get().discoverTerm('decant');
+        get().discoverTerm((`tier-${tier}`) as TermKey);
         return unit;
       },
 
@@ -383,6 +394,7 @@ export const useColonyStore = create<ColonyStore>()(
         get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
         get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(child.genome).tier });
         get().emitActionMessage(`Bred #${child.id} from #${parentAId} × #${parentBId}.`);
+        get().discoverTerm('generation');
         return child;
       },
 
@@ -477,6 +489,7 @@ export const useColonyStore = create<ColonyStore>()(
           stims: s.stims - stimAppliedIds.length,
         });
         get().emitDirectiveAction({ kind: 'incursion-launched' });
+        get().discoverTerm('incursion');
 
         return resolution;
       },
@@ -546,6 +559,7 @@ export const useColonyStore = create<ColonyStore>()(
           get().emitDirectiveAction({ kind: 'front-captured' });
         }
         get().emitActionMessage(`Garrisoned #${unitId} on ${FRONTS[frontId].label}.`);
+        get().discoverTerm('occupation');
       },
 
       removeFromGarrison: (frontId, unitId) => {
@@ -661,6 +675,7 @@ export const useColonyStore = create<ColonyStore>()(
           lastDecantedId: outputId,
         });
         get().emitActionMessage(`Vat run complete — #${output.id} produced.`);
+        get().discoverTerm('vat');
 
         return output;
       },
@@ -706,6 +721,7 @@ export const useColonyStore = create<ColonyStore>()(
           buildings: { ...s.buildings, barracks: true },
         });
         get().emitActionMessage(`Barracks built — cap raised.`);
+        get().discoverTerm('vivarium');
       },
 
       buildMedbay: () => {
@@ -730,6 +746,7 @@ export const useColonyStore = create<ColonyStore>()(
           buildings: { ...s.buildings, medbay: true },
         });
         get().emitActionMessage(`Medbay built.`);
+        get().discoverTerm('vivarium');
       },
 
       dismissIncursion: () => {
@@ -789,6 +806,12 @@ export const useColonyStore = create<ColonyStore>()(
       emitActionMessage: (msg) => set({ recentActionMessage: msg }),
       clearActionMessage: () => set({ recentActionMessage: null }),
 
+      discoverTerm: (k) => {
+        const s = get();
+        if (s.discoveredTerms[k]) return;
+        set({ discoveredTerms: { ...s.discoveredTerms, [k]: true } });
+      },
+
       unlockSurface: (id) => {
         const s = get();
         if (s.unlocks[id].status === 'unlocked') return;
@@ -817,7 +840,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 13,
+      version: 14,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -924,6 +947,9 @@ export const useColonyStore = create<ColonyStore>()(
         if (from < 13) {
           s = { ...s, seenSurfaces: (s as Partial<ColonyStore>).seenSurfaces ?? SEEN_INITIAL };
         }
+        if (from < 14) {
+          s = { ...s, discoveredTerms: (s as Partial<ColonyStore>).discoveredTerms ?? DISCOVERED_INITIAL };
+        }
         return s;
       },
       onRehydrateStorage: () => (rehydrated) => {
@@ -970,6 +996,7 @@ export const useColonyStore = create<ColonyStore>()(
         activeDirectiveId: state.activeDirectiveId,
         completedDirectiveIds: state.completedDirectiveIds,
         seenSurfaces: state.seenSurfaces,
+        discoveredTerms: state.discoveredTerms,
         // activeIncursion excluded (transient — ticker not resumable)
         // recentReward is transient — omit
       }),
