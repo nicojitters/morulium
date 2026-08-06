@@ -252,6 +252,9 @@ export const useColonyStore = create<ColonyStore>()(
             lastDecantedId: newUnit.id,
             freeDecantsRemaining: s.freeDecantsRemaining - 1,
           });
+          get().emitDirectiveAction({ kind: 'decant' });
+          get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
+          get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(newUnit.genome).tier });
           return newUnit;
         }
 
@@ -295,6 +298,9 @@ export const useColonyStore = create<ColonyStore>()(
           droughtCount: newDrought,
           ...(dayRolledOver ? { serum: s.serum + SERUM_DAILY_FAUCET } : {}),
         });
+        get().emitDirectiveAction({ kind: 'decant' });
+        get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
+        get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(unit.genome).tier });
         return unit;
       },
 
@@ -356,6 +362,9 @@ export const useColonyStore = create<ColonyStore>()(
           breedDayKey: today,
           serum: s.serum - BREED_COST_SERUM,
         });
+        get().emitDirectiveAction({ kind: 'breed' });
+        get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
+        get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(child.genome).tier });
         return child;
       },
 
@@ -449,6 +458,7 @@ export const useColonyStore = create<ColonyStore>()(
           units: newUnits,
           stims: s.stims - stimAppliedIds.length,
         });
+        get().emitDirectiveAction({ kind: 'incursion-launched' });
 
         return resolution;
       },
@@ -513,6 +523,10 @@ export const useColonyStore = create<ColonyStore>()(
           ...restDelta,
           fronts: { ...s.fronts, [frontId]: newFrontState },
         });
+        get().emitDirectiveAction({ kind: 'garrison-assigned' });
+        if (newFrontState.captured && newFrontState.garrison.length >= GARRISON_TARGET) {
+          get().emitDirectiveAction({ kind: 'front-captured' });
+        }
       },
 
       removeFromGarrison: (frontId, unitId) => {
@@ -718,6 +732,7 @@ export const useColonyStore = create<ColonyStore>()(
           nextFronts[fid] = { ...nextFronts[fid], hardening: computeHardeningFor(fid, nextFronts) };
         }
         set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null });
+        if (r) get().emitDirectiveAction({ kind: 'incursion-resolved', outcome: r.outcome === 'won' ? 'won' : 'lost', rewardCollected: true });
       },
 
       emitDirectiveAction: (action) => {
