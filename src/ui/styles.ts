@@ -1010,4 +1010,24 @@ export const styles = {
     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
     whiteSpace: 'normal',
   } as CSSProperties,
+
+  firstVisitCallout: {
+    background: '#eff6ff',
+    borderLeft: '4px solid #3b82f6',
+    padding: '12px 16px',
+    margin: '0 auto 16px auto',
+    maxWidth: 1400,
+    borderRadius: 4,
+    position: 'relative',
+  } as CSSProperties,
+
+  firstVisitTitle: { fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#1e3a8a' } as CSSProperties,
+  firstVisitBody:  { fontSize: 13, color: '#1e40af', marginBottom: 4 } as CSSProperties,
+  firstVisitAction:{ fontSize: 12, color: '#1e40af', fontStyle: 'italic' } as CSSProperties,
+  firstVisitDismiss: {
+    position: 'absolute', top: 4, right: 8,
+    border: 'none', background: 'transparent', cursor: 'pointer',
+    color: '#1e40af', fontSize: 18, lineHeight: 1,
+    fontFamily: 'inherit',
+  } as CSSProperties,
 };
