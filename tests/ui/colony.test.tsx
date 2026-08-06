@@ -275,6 +275,23 @@ describe('Colony header cap counter (M7b)', () => {
   });
 });
 
+describe('Colony first-visit callout (P6 Task 6.5)', () => {
+  afterEach(() => cleanup());
+
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<Colony />);
+    expect(getByTestId('first-visit-colony')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('colony');
+    const { queryByTestId } = render(<Colony />);
+    expect(queryByTestId('first-visit-colony')).toBeNull();
+  });
+});
+
 // Helper: a genome shape that resolves through the sim without errors. Uses the
 // baseline allele for every locus, giving a deterministic score-0 "Baseline"
 // specimen. Enough for Colony rendering assertions.

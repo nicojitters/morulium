@@ -91,3 +91,20 @@ describe('Vivarium screen', () => {
     expect(getByTestId('vivarium-cap-counter').textContent).toBe('0/40');
   });
 });
+
+describe('Vivarium first-visit callout (P6 Task 6.5)', () => {
+  afterEach(() => cleanup());
+
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<Vivarium />);
+    expect(getByTestId('first-visit-vivarium')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('vivarium');
+    const { queryByTestId } = render(<Vivarium />);
+    expect(queryByTestId('first-visit-vivarium')).toBeNull();
+  });
+});

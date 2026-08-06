@@ -55,6 +55,30 @@ describe('EmptyColony', () => {
     expect(useColonyStore.getState().units).toHaveLength(1);
   });
 
+  it('empty state includes hoverable TermTooltip for Morula in paid-path body', () => {
+    useColonyStore.setState({ freeDecantsRemaining: 0 });
+    const { getByText, queryByTestId } = render(<EmptyColony />);
+    const morulaTrigger = getByText('Morula').closest('span')!;
+    expect(morulaTrigger).toBeDefined();
+    // Before hover — no bubble
+    expect(queryByTestId('tooltip-bubble-morula')).toBeNull();
+    fireEvent.mouseEnter(morulaTrigger);
+    // After hover — bubble should appear
+    expect(queryByTestId('tooltip-bubble-morula')).not.toBeNull();
+    fireEvent.mouseLeave(morulaTrigger);
+  });
+
+  it('empty state includes hoverable TermTooltip for Decant in paid-path body', () => {
+    useColonyStore.setState({ freeDecantsRemaining: 0 });
+    const { getAllByText, queryByTestId } = render(<EmptyColony />);
+    const decantTriggers = getAllByText('Decant');
+    const decantTrigger = decantTriggers[0]!.closest('span')!;
+    expect(decantTrigger).toBeDefined();
+    fireEvent.mouseEnter(decantTrigger);
+    expect(queryByTestId('tooltip-bubble-decant')).not.toBeNull();
+    fireEvent.mouseLeave(decantTrigger);
+  });
+
   it('CTA is disabled when the daily Harvest limit is already hit', () => {
     useColonyStore.setState({
       units: [],

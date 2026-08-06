@@ -598,3 +598,20 @@ describe('Incursion picker culled visual (M7a)', () => {
     expect(queryAllByTestId(/^cull-toggle-/)).toHaveLength(0);
   });
 });
+
+describe('Incursion first-visit callout (P6 Task 6.5)', () => {
+  afterEach(() => cleanup());
+
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<Incursion />);
+    expect(getByTestId('first-visit-incursion')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('incursion');
+    const { queryByTestId } = render(<Incursion />);
+    expect(queryByTestId('first-visit-incursion')).toBeNull();
+  });
+});

@@ -229,3 +229,20 @@ describe('Vat screen', () => {
     expect(culledCards).toHaveLength(1);
   });
 });
+
+describe('Vat first-visit callout (P6 Task 6.5)', () => {
+  afterEach(() => cleanup());
+
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<Vat />);
+    expect(getByTestId('first-visit-vat')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('vat');
+    const { queryByTestId } = render(<Vat />);
+    expect(queryByTestId('first-visit-vat')).toBeNull();
+  });
+});

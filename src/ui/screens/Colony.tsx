@@ -12,6 +12,7 @@ import { styles, TIER_COLORS } from '../styles';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { DecantButton } from '../components/DecantButton';
 import { EmptyColony } from '../components/EmptyColony';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 import { HarvestIndicator } from '../components/HarvestIndicator';
 import { FailsafeIndicator } from '../components/FailsafeIndicator';
 import type { DemoRow } from '../../sim/__demo__';
@@ -86,6 +87,7 @@ export function Colony(): ReactElement {
   if (units.length === 0) {
     return (
       <main style={styles.page}>
+        <FirstVisitCallout surface="colony" title="Your Colony" body="Every specimen you Decant lives here." action="Decant a Morula." />
         <EmptyColony />
       </main>
     );
@@ -93,6 +95,7 @@ export function Colony(): ReactElement {
 
   return (
     <main style={styles.page}>
+      <FirstVisitCallout surface="colony" title="Your Colony" body="Every specimen you Decant lives here." action="Decant a Morula." />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <h1 style={styles.headerTitle}>Morulium</h1>

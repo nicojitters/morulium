@@ -9,6 +9,7 @@ import type { Tier } from '../../sim/types';
 import type { FrontId } from '../../sim/data/fronts';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 
 const TIERS: readonly Tier[] = ['baseline', 'strain', 'mutant', 'chimera', 'progenitor'];
 
@@ -115,6 +116,7 @@ export function Vat(): ReactElement {
   if (totalEligible === 0 && buckets.ineligibleCount === 0) {
     return (
       <main style={styles.page}>
+        <FirstVisitCallout surface="vat" title="The Vat" body="Fuse ten same-tier specimens into one, pristine." action="Select ten of one tier and run." />
         <h1 style={styles.headerTitle}>Morulium</h1>
         <p style={styles.headerSub}>The Vat — 10 same-tier specimens → 1</p>
         <div data-testid="vat-empty-state" style={{ marginTop: 24, color: '#94a3b8' }}>
@@ -126,6 +128,7 @@ export function Vat(): ReactElement {
 
   return (
     <main style={styles.page}>
+      <FirstVisitCallout surface="vat" title="The Vat" body="Fuse ten same-tier specimens into one, pristine." action="Select ten of one tier and run." />
       <h1 style={styles.headerTitle}>Morulium</h1>
       <p style={styles.headerSub}>The Vat — 10 same-tier specimens → 1</p>
 

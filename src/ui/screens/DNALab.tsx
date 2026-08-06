@@ -3,6 +3,7 @@ import { useColonyStore } from '../../state/colony';
 import { computeRarity } from '../../sim/rarity';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 
 export function DNALab(): ReactElement {
   const units = useColonyStore((s) => s.units);
@@ -11,6 +12,7 @@ export function DNALab(): ReactElement {
   if (units.length === 0) {
     return (
       <main style={styles.page} data-testid="dna-lab-screen">
+        <FirstVisitCallout surface="dna-lab" title="The DNA Lab" body="Inspect any specimen you already own — lineage, generation, condition." action="Pick a specimen from the list." />
         <h1 style={styles.headerTitle}>{TERMS.dnaLab}</h1>
         <div style={styles.emptyState} data-testid="dna-lab-empty">
           <p style={styles.emptyStateTitle}>No specimens to inspect yet</p>
@@ -26,6 +28,7 @@ export function DNALab(): ReactElement {
 
   return (
     <main style={styles.page} data-testid="dna-lab-screen">
+      <FirstVisitCallout surface="dna-lab" title="The DNA Lab" body="Inspect any specimen you already own — lineage, generation, condition." action="Pick a specimen from the list." />
       <h1 style={styles.headerTitle}>{TERMS.dnaLab}</h1>
       <p style={styles.headerSub}>Inspect a specimen you already own.</p>
 

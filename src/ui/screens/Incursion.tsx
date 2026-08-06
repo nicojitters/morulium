@@ -8,6 +8,7 @@ import { FrontCard } from '../components/FrontCard';
 import { IncursionTicker } from '../components/IncursionTicker';
 import { unitToRow, restStateFor, garrisonedAtFor } from './Colony';
 import { GarrisonPickerOverlay } from '../components/GarrisonPickerOverlay';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 import { styles } from '../styles';
 import { UNDER_RESTED_THRESHOLD, STIM_COST_SERUM } from '../../state/rest';
 import { GARRISON_TARGET } from '../../state/occupation';
@@ -78,6 +79,7 @@ export function Incursion(): ReactElement {
   if (allCaptured && !anyFlaring) {
     return (
       <main style={styles.page}>
+        <FirstVisitCallout surface="incursion" title="Incursion" body="Push against a contested front with four specimens." action="Pick a front and fill your team." />
         <h1 style={styles.headerTitle}>Morulium</h1>
         <p style={styles.headerSub}>Incursion — Region 1</p>
         <div style={styles.regionConquered} data-testid="incursion-region-conquered">
@@ -95,6 +97,7 @@ export function Incursion(): ReactElement {
   if (units.length < 4 && !anyCaptured) {
     return (
       <main style={styles.page}>
+        <FirstVisitCallout surface="incursion" title="Incursion" body="Push against a contested front with four specimens." action="Pick a front and fill your team." />
         <h1 style={styles.headerTitle}>Morulium</h1>
         <p style={styles.headerSub}>Incursion — Region 1</p>
         <div style={styles.emptyState} data-testid="incursion-empty-state">
@@ -215,6 +218,7 @@ export function Incursion(): ReactElement {
 
   return (
     <main style={styles.page}>
+      <FirstVisitCallout surface="incursion" title="Incursion" body="Push against a contested front with four specimens." action="Pick a front and fill your team." />
       <h1 style={styles.headerTitle}>Morulium</h1>
       <p style={styles.headerSub}>Incursion — Region 1</p>
 

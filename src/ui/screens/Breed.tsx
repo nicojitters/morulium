@@ -6,6 +6,7 @@ import { BreedIndicator } from '../components/BreedIndicator';
 import { ParentSlot } from '../components/ParentSlot';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { unitToRow, restStateFor, garrisonedAtFor } from './Colony';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 import { styles } from '../styles';
 import { BREED_COST_SERUM } from '../../state/serum';
 import { breedsRemaining } from '../../state/breed';
@@ -44,6 +45,7 @@ export function Breed(): ReactElement {
   if (units.length < 2) {
     return (
       <main style={styles.page}>
+        <FirstVisitCallout surface="breed" title="Breeding" body="Cross two specimens to produce a new one." action="Pick two parents." />
         <h1 style={styles.headerTitle}>Morulium</h1>
         <p style={styles.headerSub}>Breed a Morula from two parents · <BreedIndicator /></p>
         <div style={styles.emptyState} data-testid="breed-empty-state">
@@ -81,6 +83,7 @@ export function Breed(): ReactElement {
 
   return (
     <main style={styles.page}>
+      <FirstVisitCallout surface="breed" title="Breeding" body="Cross two specimens to produce a new one." action="Pick two parents." />
       <h1 style={styles.headerTitle}>Morulium</h1>
       <p style={styles.headerSub}>Breed a Morula from two parents · <BreedIndicator /></p>
 

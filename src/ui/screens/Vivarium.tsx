@@ -4,6 +4,7 @@ import {
   BARRACKS_COST_SERUM,
   MEDBAY_COST_SERUM,
 } from '../../state/vivarium';
+import { FirstVisitCallout } from '../components/FirstVisitCallout';
 import { styles } from '../styles';
 
 interface BuildingPanelProps {
@@ -62,6 +63,7 @@ export function Vivarium(): ReactElement {
 
   return (
     <main style={styles.page}>
+      <FirstVisitCallout surface="vivarium" title="Vivarium" body="Buildings shape your Colony." action="Build the Barracks first." />
       <h1 style={styles.headerTitle}>Morulium — Vivarium</h1>
       <p style={styles.headerSub}>
         Colony <span data-testid="vivarium-cap-counter">{units.length}/{cap}</span>

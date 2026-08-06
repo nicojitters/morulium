@@ -81,6 +81,19 @@ describe('DNA Lab', () => {
     expect(useColonyStore.getState().activeDirectiveId).toBe('decant-second');
   });
 
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<DNALab />);
+    expect(getByTestId('first-visit-dna-lab')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('dna-lab');
+    const { queryByTestId } = render(<DNALab />);
+    expect(queryByTestId('first-visit-dna-lab')).toBeNull();
+  });
+
   it('does not expose numeric rarity score or stat numbers', () => {
     useColonyStore.setState({
       units: [{

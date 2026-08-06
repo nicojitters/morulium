@@ -231,6 +231,23 @@ describe('Breed screen', () => {
   });
 });
 
+describe('Breed first-visit callout (P6 Task 6.5)', () => {
+  afterEach(() => cleanup());
+
+  it('mounts the first-visit callout when unseen', () => {
+    useColonyStore.getState().resetGame();
+    const { getByTestId } = render(<Breed />);
+    expect(getByTestId('first-visit-breed')).toBeDefined();
+  });
+
+  it('hides the callout after markSeen', () => {
+    useColonyStore.getState().resetGame();
+    useColonyStore.getState().markSeen('breed');
+    const { queryByTestId } = render(<Breed />);
+    expect(queryByTestId('first-visit-breed')).toBeNull();
+  });
+});
+
 describe('Breed picker culled visual (M7a)', () => {
   beforeEach(() => {
     localStorage.clear();
