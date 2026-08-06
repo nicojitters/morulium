@@ -556,7 +556,7 @@ describe('colony persistence', () => {
     expect(s.units[0]!.culled).toBe(false);
   });
 
-  it('parsed.version === 9 after any current-store write', () => {
+  it('parsed.version === 10 after any current-store write', () => {
     useColonyStore.getState().decant();
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
@@ -604,13 +604,6 @@ describe('colony persistence', () => {
     expect(s.buildings).toEqual({ barracks: false, medbay: false });
     expect(typeof s.lastRestTickAt).toBe('number');
     expect(s.unlocks).toEqual(DEFAULT_UNLOCKS);
-  });
-
-  it('parsed.version === 9 after any current-store write', () => {
-    useColonyStore.getState().decant();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = JSON.parse(raw!);
-    expect(parsed.version).toBe(10);
   });
 
   it('buildings + lastRestTickAt persist across a rehydration cycle', async () => {
