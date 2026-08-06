@@ -987,4 +987,27 @@ export const styles = {
   } as CSSProperties,
 
   toastBody: { lineHeight: 1.4 } as CSSProperties,
+
+  tooltipTrigger: {
+    borderBottom: '1px dotted #64748b',
+    cursor: 'help',
+    position: 'relative',
+    display: 'inline',
+  } as CSSProperties,
+
+  tooltipBubble: {
+    position: 'absolute',
+    bottom: 'calc(100% + 6px)',
+    left: 0,
+    zIndex: 50,
+    padding: '6px 10px',
+    background: '#0f172a',
+    color: '#e2e8f0',
+    fontSize: 12,
+    lineHeight: 1.4,
+    borderRadius: 4,
+    maxWidth: 280,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+    whiteSpace: 'normal',
+  } as CSSProperties,
 };
