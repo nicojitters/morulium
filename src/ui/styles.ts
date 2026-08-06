@@ -908,4 +908,47 @@ export const styles = {
     fontFamily: 'inherit',
     borderBottom: '2px solid transparent',
   } as CSSProperties,
+
+  modalBackdrop: {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(15, 23, 42, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  } as CSSProperties,
+
+  modalCard: {
+    background: '#ffffff',
+    borderRadius: 8,
+    padding: 24,
+    minWidth: 320,
+    maxWidth: 480,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+  } as CSSProperties,
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+    marginBottom: 12,
+  } as CSSProperties,
+
+  modalBody: {
+    fontSize: 14,
+    lineHeight: 1.6,
+    marginBottom: 16,
+  } as CSSProperties,
+
+  modalPrimary: {
+    padding: '8px 20px',
+    borderRadius: 6,
+    border: '1px solid #14b8a6',
+    background: '#14b8a6',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  } as CSSProperties,
 };
