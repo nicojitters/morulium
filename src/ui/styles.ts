@@ -870,4 +870,42 @@ export const styles = {
     cursor: 'pointer',
     fontFamily: 'ui-monospace, SFMono-Regular, monospace',
   } as CSSProperties,
+
+  hudRow: {
+    display: 'flex',
+    gap: 16,
+    alignItems: 'center',
+    padding: '8px 24px',
+    borderBottom: '1px solid #e2e8f0',
+    fontSize: 13,
+    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    color: '#334155',
+    maxWidth: 1400,
+    margin: '0 auto',
+  } as CSSProperties,
+
+  hudItem: {
+    padding: '2px 8px',
+    borderRadius: 4,
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+  } as CSSProperties,
+
+  hudDirectiveEmpty: {
+    color: '#94a3b8',
+    fontStyle: 'italic',
+  } as CSSProperties,
+
+  navTabLocked: {
+    padding: '10px 16px',
+    borderRadius: '6px 6px 0 0',
+    border: 'none',
+    background: 'transparent',
+    color: '#cbd5e1',
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: 'not-allowed',
+    fontFamily: 'inherit',
+    borderBottom: '2px solid transparent',
+  } as CSSProperties,
 };

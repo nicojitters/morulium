@@ -29,4 +29,12 @@ export const TERMS = {
   serumAbbr:   'SR',            // was CR
   registry:    'the Registry',  // was Codex
   colony:      'the Colony',    // was Roster
+  freeDecant:  'Free Decant',
+  directive:   'Directive',
+  dnaLab:      'the DNA Lab',
+  conquestMap: 'Conquest Map',
+  newGame:     'New Game',
+  continueGame:'Continue',
+  unlocked:    'Unlocked',
+  region:      'Region',
 } as const;
