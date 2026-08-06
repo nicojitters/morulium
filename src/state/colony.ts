@@ -62,6 +62,8 @@ import {
   REST_REGEN_PER_HOUR,
   INJURY_DURATION_MEDBAY_MS,
 } from './vivarium';
+import type { DirectiveId, DirectiveAction } from './directives';
+import { STANDING, nextInChain, completesFrom, directiveById } from './directives';
 
 interface ColonyStore {
   readonly units: Unit[];
@@ -87,6 +89,11 @@ interface ColonyStore {
   readonly freeDecantsRemaining: number;
   readonly firstRunComplete: boolean;
   markFirstRunComplete: () => void;
+  readonly activeDirectiveId: DirectiveId | null;
+  readonly completedDirectiveIds: readonly DirectiveId[];
+  readonly recentReward: { readonly directiveId: DirectiveId; readonly serum: number } | null;
+  emitDirectiveAction: (action: DirectiveAction) => void;
+  clearRecentReward: () => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -199,6 +206,9 @@ const INITIAL_STATE = {
   pendingAwaySummary: null as AwaySummary | null,
   freeDecantsRemaining: STARTER_FREE_DECANTS,
   firstRunComplete: false,
+  activeDirectiveId: 'decant-first' as DirectiveId,
+  completedDirectiveIds: [] as readonly DirectiveId[],
+  recentReward: null as { readonly directiveId: DirectiveId; readonly serum: number } | null,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -710,6 +720,28 @@ export const useColonyStore = create<ColonyStore>()(
         set({ ...flareDelta, ...tickDelta, ...restDelta, fronts: nextFronts, activeIncursion: null });
       },
 
+      emitDirectiveAction: (action) => {
+        const s = get();
+        if (s.activeDirectiveId === null) return;
+        if (!completesFrom(s.activeDirectiveId, action)) return;
+
+        const d = directiveById(s.activeDirectiveId);
+        const completed = [...s.completedDirectiveIds, s.activeDirectiveId];
+
+        let nextId: DirectiveId | null = nextInChain(s.activeDirectiveId);
+        if (nextId === null) {
+          nextId = STANDING.find((sd) => !completed.includes(sd.id))?.id ?? null;
+        }
+
+        set({
+          serum: s.serum + d.rewardSerum,
+          activeDirectiveId: nextId,
+          completedDirectiveIds: completed,
+          recentReward: { directiveId: d.id, serum: d.rewardSerum },
+        });
+      },
+      clearRecentReward: () => set({ recentReward: null }),
+
       clearHighlight: () => set({ lastDecantedId: null }),
 
       resetGame: () => {
@@ -722,7 +754,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 11,
+      version: 12,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -818,6 +850,14 @@ export const useColonyStore = create<ColonyStore>()(
             firstRunComplete: (s as Partial<ColonyStore>).firstRunComplete ?? true,   // existing saves = already played
           };
         }
+        if (from < 12) {
+          const partial = s as Partial<ColonyStore>;
+          s = {
+            ...s,
+            activeDirectiveId: partial.activeDirectiveId ?? null,       // existing saves = no chain
+            completedDirectiveIds: partial.completedDirectiveIds ?? [],
+          };
+        }
         return s;
       },
       onRehydrateStorage: () => (rehydrated) => {
@@ -861,7 +901,10 @@ export const useColonyStore = create<ColonyStore>()(
         unlocks: state.unlocks,
         freeDecantsRemaining: state.freeDecantsRemaining,
         firstRunComplete: state.firstRunComplete,
+        activeDirectiveId: state.activeDirectiveId,
+        completedDirectiveIds: state.completedDirectiveIds,
         // activeIncursion excluded (transient — ticker not resumable)
+        // recentReward is transient — omit
       }),
     },
   ),
