@@ -8,6 +8,7 @@ import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { REST_MAX } from '../../src/state/rest';
 import { DEFAULT_UNLOCKS } from '../../src/state/unlocks';
 import { STARTER_FREE_DECANTS } from '../../src/state/bootstrap';
+import { SEEN_INITIAL } from '../../src/state/seen';
 
 describe('colony persistence', () => {
   beforeEach(() => {
@@ -89,7 +90,7 @@ describe('colony persistence', () => {
     expect(parsed.state.harvestDayKey).toBe('2026-08-04');
     expect(parsed.state.droughtCount).toBe(17);
     expect(parsed.state.lastDecantedId).toBeUndefined(); // still transient
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate function upgrades a v1 shape by adding M3b fields', async () => {
@@ -135,7 +136,7 @@ describe('colony persistence', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed.state.breedsToday).toBe(2);
     expect(parsed.state.breedDayKey).toBe('2026-08-04');
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v2 → v3 backfills unit fields and store fields with defaults', async () => {
@@ -214,7 +215,7 @@ describe('colony persistence', () => {
     expect(parsed.state.fronts.infrastructure.captured).toBe(true);
     expect(parsed.state.fronts.military.cooldownUntil).toBe(1_700_000_000_000);
     expect(parsed.state.activeIncursion).toBeUndefined(); // transient
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v3 → v4 adds FRESH_FRONTS', async () => {
@@ -283,7 +284,7 @@ describe('colony persistence', () => {
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.state.serum).toBe(137);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v4 → v5 adds serum: SERUM_STARTING_BALANCE', async () => {
@@ -355,7 +356,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.stims).toBe(5);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('M6b restCurrent + injuredUntil persist per unit across rehydration', () => {
@@ -431,7 +432,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.lastGarrisonTickAt).toBe(1_700_000_000_000);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('M6c FrontState garrison/flareStartedAt/hardening persist per front', () => {
@@ -561,7 +562,7 @@ describe('colony persistence', () => {
     useColonyStore.getState().decant();
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v8 → v9 backfills buildings + lastRestTickAt', async () => {
@@ -591,7 +592,7 @@ describe('colony persistence', () => {
     expect(typeof s.lastRestTickAt).toBe('number');
   });
 
-  it('migrate v1 → v12 chains through all 11 branches (buildings + lastRestTickAt + unlocks + freeDecantsRemaining + firstRunComplete + activeDirectiveId present)', async () => {
+  it('migrate v1 → v13 chains through all 12 branches (buildings + lastRestTickAt + unlocks + freeDecantsRemaining + firstRunComplete + activeDirectiveId + seenSurfaces present)', async () => {
     const v1Shape = {
       state: {
         units: [{ id: 1, seed: 1, decantedAt: 1, genome: { loci: {} } }],
@@ -608,6 +609,7 @@ describe('colony persistence', () => {
     expect(s.freeDecantsRemaining).toBe(3);
     expect(s.firstRunComplete).toBe(true);
     expect(s.activeDirectiveId).toBeNull();
+    expect(s.seenSurfaces).toEqual(SEEN_INITIAL);
   });
 
   it('buildings + lastRestTickAt persist across a rehydration cycle', async () => {
@@ -626,7 +628,7 @@ describe('colony persistence', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw!);
     expect(parsed.state.unlocks).toEqual(DEFAULT_UNLOCKS);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v9 → v10 adds DEFAULT_UNLOCKS', async () => {
@@ -667,7 +669,7 @@ describe('colony persistence', () => {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(parsed.state.freeDecantsRemaining).toBe(1);
     expect(parsed.state.firstRunComplete).toBe(true);
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v10 → v11: existing saves default firstRunComplete=true and get 3 free Decants', async () => {
@@ -700,7 +702,7 @@ describe('colony persistence', () => {
     expect(parsed.state.activeDirectiveId).toBe('inspect-first');
     expect(parsed.state.completedDirectiveIds).toEqual(['decant-first']);
     expect(parsed.state.recentReward).toBeUndefined();
-    expect(parsed.version).toBe(12);
+    expect(parsed.version).toBe(13);
   });
 
   it('migrate v11 → v12: existing saves default to null active directive', async () => {
@@ -723,5 +725,33 @@ describe('colony persistence', () => {
     const s = useColonyStore.getState();
     expect(s.activeDirectiveId).toBeNull();
     expect(s.completedDirectiveIds).toEqual([]);
+  });
+
+  it('seenSurfaces persists across rehydration', () => {
+    useColonyStore.setState({ seenSurfaces: { ...SEEN_INITIAL, colony: true } });
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(parsed.state.seenSurfaces.colony).toBe(true);
+    expect(parsed.version).toBe(13);
+  });
+
+  it('migrate v12 → v13 backfills SEEN_INITIAL', async () => {
+    const v12Shape = {
+      state: {
+        units: [], nextId: 1,
+        harvestsToday: 0, harvestDayKey: '2026-08-05', droughtCount: 0,
+        breedsToday: 0, breedDayKey: '2026-08-05',
+        fronts: FRESH_FRONTS,
+        serum: 200, stims: 0, lastGarrisonTickAt: 1,
+        buildings: { barracks: false, medbay: false },
+        lastRestTickAt: 1, unlocks: DEFAULT_UNLOCKS,
+        freeDecantsRemaining: 0, firstRunComplete: true,
+        activeDirectiveId: null, completedDirectiveIds: [],
+      },
+      version: 12,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v12Shape));
+    await useColonyStore.persist.rehydrate();
+    const s = useColonyStore.getState();
+    expect(s.seenSurfaces).toEqual(SEEN_INITIAL);
   });
 });

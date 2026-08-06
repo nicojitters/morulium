@@ -49,6 +49,7 @@ import {
   computeHardeningFor,
 } from './occupation';
 import { DEFAULT_UNLOCKS, LOCKED_STARTING, UNLOCK_REASONS, type SurfaceId, type UnlocksMap } from './unlocks';
+import { SEEN_INITIAL, type SeenMap } from './seen';
 import { summarize, isSignificant, type StoreSnapshot } from './session';
 import type { AwaySummary } from './session';
 import { VAT_INPUT_SIZE } from './vat';
@@ -97,6 +98,8 @@ interface ColonyStore {
   readonly recentUnlock: { readonly id: SurfaceId; readonly reason: string } | null;
   unlockSurface: (id: SurfaceId) => void;
   clearRecentUnlock: () => void;
+  readonly seenSurfaces: SeenMap;
+  markSeen: (id: SurfaceId) => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -213,6 +216,7 @@ const INITIAL_STATE = {
   completedDirectiveIds: [] as readonly DirectiveId[],
   recentReward: null as { readonly directiveId: DirectiveId; readonly serum: number } | null,
   recentUnlock: null as { readonly id: SurfaceId; readonly reason: string } | null,
+  seenSurfaces: SEEN_INITIAL,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -777,6 +781,12 @@ export const useColonyStore = create<ColonyStore>()(
       },
       clearRecentUnlock: () => set({ recentUnlock: null }),
 
+      markSeen: (id) => {
+        const s = get();
+        if (s.seenSurfaces[id]) return;
+        set({ seenSurfaces: { ...s.seenSurfaces, [id]: true } });
+      },
+
       clearHighlight: () => set({ lastDecantedId: null }),
 
       resetGame: () => {
@@ -789,7 +799,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 12,
+      version: 13,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -893,6 +903,9 @@ export const useColonyStore = create<ColonyStore>()(
             completedDirectiveIds: partial.completedDirectiveIds ?? [],
           };
         }
+        if (from < 13) {
+          s = { ...s, seenSurfaces: (s as Partial<ColonyStore>).seenSurfaces ?? SEEN_INITIAL };
+        }
         return s;
       },
       onRehydrateStorage: () => (rehydrated) => {
@@ -938,6 +951,7 @@ export const useColonyStore = create<ColonyStore>()(
         firstRunComplete: state.firstRunComplete,
         activeDirectiveId: state.activeDirectiveId,
         completedDirectiveIds: state.completedDirectiveIds,
+        seenSurfaces: state.seenSurfaces,
         // activeIncursion excluded (transient — ticker not resumable)
         // recentReward is transient — omit
       }),
