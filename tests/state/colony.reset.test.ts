@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useColonyStore } from '../../src/state/colony';
 import { STORAGE_KEY } from '../../src/state/persist';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
-import { DEFAULT_UNLOCKS } from '../../src/state/unlocks';
+import { LOCKED_STARTING } from '../../src/state/unlocks';
 
 describe('resetGame', () => {
   beforeEach(() => { localStorage.clear(); });
@@ -19,7 +19,7 @@ describe('resetGame', () => {
     expect(s.units).toEqual([]);
     expect(s.nextId).toBe(1);
     expect(s.serum).toBe(SERUM_STARTING_BALANCE);
-    expect(s.unlocks).toEqual(DEFAULT_UNLOCKS);
+    expect(s.unlocks).toEqual(LOCKED_STARTING);
     // localStorage was refreshed to a new starting shape (not stale from before reset)
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
     expect(parsed.state.units).toEqual([]);

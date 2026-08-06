@@ -648,6 +648,12 @@ describe('colony persistence', () => {
     expect(s.unlocks).toEqual(DEFAULT_UNLOCKS);
   });
 
+  it('recentUnlock is transient — never in localStorage', () => {
+    useColonyStore.setState({ recentUnlock: { id: 'vat', reason: 'test' } });
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(parsed.state.recentUnlock).toBeUndefined();
+  });
+
   it('pendingAwaySummary is transient — never appears in localStorage', () => {
     useColonyStore.setState({
       pendingAwaySummary: { elapsedMs: 1000, serumEarned: 5, restGainedTotal: 0, injuriesHealed: 0 },

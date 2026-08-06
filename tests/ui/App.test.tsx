@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent, cleanup } from '@testing-library/react';
+import { render, fireEvent, cleanup, act } from '@testing-library/react';
 import { App } from '../../src/App';
 import { useColonyStore } from '../../src/state/colony';
 import { todayLocalKey } from '../../src/state/harvest';
@@ -168,6 +168,8 @@ describe('nav — Vat tab (M7a)', () => {
   it('clicking Vat tab switches to the Vat screen', () => {
     const { getByTestId } = render(<App />);
     bootIntoApp(getByTestId);
+    // resetGame() now uses LOCKED_STARTING; explicitly unlock to exercise nav
+    act(() => { useColonyStore.setState({ unlocks: DEFAULT_UNLOCKS }); });
     fireEvent.click(getByTestId('nav-tab-vat'));
     // Empty colony → Vat empty-state visible
     expect(getByTestId('vat-empty-state')).not.toBeNull();

@@ -48,7 +48,7 @@ import {
   computeGarrisonIncome,
   computeHardeningFor,
 } from './occupation';
-import { DEFAULT_UNLOCKS, type UnlocksMap } from './unlocks';
+import { DEFAULT_UNLOCKS, LOCKED_STARTING, UNLOCK_REASONS, type SurfaceId, type UnlocksMap } from './unlocks';
 import { summarize, isSignificant, type StoreSnapshot } from './session';
 import type { AwaySummary } from './session';
 import { VAT_INPUT_SIZE } from './vat';
@@ -94,6 +94,9 @@ interface ColonyStore {
   readonly recentReward: { readonly directiveId: DirectiveId; readonly serum: number } | null;
   emitDirectiveAction: (action: DirectiveAction) => void;
   clearRecentReward: () => void;
+  readonly recentUnlock: { readonly id: SurfaceId; readonly reason: string } | null;
+  unlockSurface: (id: SurfaceId) => void;
+  clearRecentUnlock: () => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -202,13 +205,14 @@ const INITIAL_STATE = {
   lastGarrisonTickAt: Date.now(),
   buildings: { barracks: false, medbay: false },
   lastRestTickAt: Date.now(),
-  unlocks: DEFAULT_UNLOCKS,
+  unlocks: LOCKED_STARTING,
   pendingAwaySummary: null as AwaySummary | null,
   freeDecantsRemaining: STARTER_FREE_DECANTS,
   firstRunComplete: false,
   activeDirectiveId: 'decant-first' as DirectiveId,
   completedDirectiveIds: [] as readonly DirectiveId[],
   recentReward: null as { readonly directiveId: DirectiveId; readonly serum: number } | null,
+  recentUnlock: null as { readonly id: SurfaceId; readonly reason: string } | null,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -756,6 +760,16 @@ export const useColonyStore = create<ColonyStore>()(
         });
       },
       clearRecentReward: () => set({ recentReward: null }),
+
+      unlockSurface: (id) => {
+        const s = get();
+        if (s.unlocks[id].status === 'unlocked') return;
+        set({
+          unlocks: { ...s.unlocks, [id]: { status: 'unlocked' } },
+          recentUnlock: { id, reason: UNLOCK_REASONS[id] },
+        });
+      },
+      clearRecentUnlock: () => set({ recentUnlock: null }),
 
       clearHighlight: () => set({ lastDecantedId: null }),
 
