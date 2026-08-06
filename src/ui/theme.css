@@ -1,0 +1,150 @@
+/* ================================================================
+   Morulium — theme.css
+   All design tokens, resets, focus rings, scrollbars, keyframes,
+   and global juice classes. Component styles compose with these.
+   ================================================================ */
+
+:root {
+  /* Grounds (near-black, teal-tinged) */
+  --ground-void:      #05070a;
+  --ground-deep:      #0a1014;
+  --ground-panel:     #0f1720;
+  --ground-raised:    #142130;
+
+  /* Structure (deep teal) */
+  --teal-abyss:       #0a1e26;
+  --teal-deep:        #0f3541;
+  --teal:             #14b8a6;
+
+  /* Menace / dread (bruised purple) */
+  --bruise-deep:      #1a0f2b;
+  --bruise:           #3d1f56;
+  --bruise-glow:      #6b3aa0;
+
+  /* Hero accent — bio-green (SPARINGLY) */
+  --bio-green:        #7fff9b;
+  --bio-green-dim:    #46a05e;
+  --bio-green-deep:   #1a3a24;
+  --bio-glow:         0 0 12px rgba(127, 255, 155, 0.45);
+  --bio-glow-hot:     0 0 20px rgba(127, 255, 155, 0.75), 0 0 4px rgba(127, 255, 155, 1);
+
+  /* Machinery — Conquest register */
+  --iron-plate:       #1a1a1c;
+  --iron:             #2a2a2e;
+  --iron-light:       #4a4a50;
+  --rust:             #7a3419;
+  --rust-hot:         #b8541e;
+  --steel-cool:       #6b7280;
+
+  /* Text / ink */
+  --ink-primary:      #e6ecec;
+  --ink-secondary:    #9aa8b0;
+  --ink-dim:          #6b7885;
+  --ink-lab:          #b8f0d0;
+
+  /* Signal */
+  --signal-warn:      #f0b840;
+  --signal-danger:    #e04848;
+  --signal-good:      var(--bio-green);
+
+  /* Tier ramp (retuned for dark ground) */
+  --tier-baseline:    #7889a0;
+  --tier-strain:      #4dd3a8;
+  --tier-mutant:      #f0b840;
+  --tier-chimera:     #a86bd8;
+  --tier-progenitor:  #ff5a68;
+
+  /* Typography */
+  --font-display: 'Big Shoulders Display', 'Oswald', system-ui, sans-serif;
+  --font-ui:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Motion */
+  --ease-lab:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-clinic: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-stamp:  cubic-bezier(0.68, -0.15, 0.27, 1.4);
+  --dur-instant: 80ms;
+  --dur-fast:    160ms;
+  --dur-med:     280ms;
+  --dur-slow:    480ms;
+  --dur-slower:  720ms;
+
+  /* Radii */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Rim treatments (drop shadows are invisible on black; use inner glow + rim light) */
+  --rim-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --rim-teal:  0 0 0 1px rgba(20, 184, 166, 0.35), inset 0 1px 0 rgba(180, 240, 220, 0.08);
+  --rim-iron:  0 0 0 1px rgba(180, 180, 190, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --rim-bio:   0 0 0 1px rgba(127, 255, 155, 0.4), var(--bio-glow);
+}
+
+/* Register role assignments — screens set data-register to flip these */
+[data-register='lab'] {
+  --register-ground:     var(--ground-void);
+  --register-panel:      var(--ground-panel);
+  --register-raised:     var(--ground-raised);
+  --register-rim:        var(--rim-teal);
+  --register-ink:        var(--ink-lab);
+  --register-accent:     var(--teal);
+  --register-hover-glow: var(--bio-glow);
+}
+
+[data-register='conquest'] {
+  --register-ground:     var(--iron-plate);
+  --register-panel:      var(--iron);
+  --register-raised:     var(--iron-light);
+  --register-rim:        var(--rim-iron);
+  --register-ink:        var(--ink-primary);
+  --register-accent:     var(--rust);
+  --register-hover-glow: 0 0 10px rgba(184, 84, 30, 0.5);
+}
+
+/* ---------- Global reset + atmosphere ---------- */
+
+html, body {
+  background: var(--ground-void);
+  color: var(--ink-primary);
+  color-scheme: dark;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+::selection {
+  background: var(--bio-green);
+  color: var(--bruise-deep);
+}
+
+/* Scrollbars — dark, thin, unobtrusive */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--ground-panel); }
+::-webkit-scrollbar-thumb { background: var(--iron); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--iron-light); }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--iron) var(--ground-panel);
+}
+
+/* Focus rings — bio-green everywhere */
+:focus-visible {
+  outline: 2px solid var(--bio-green);
+  outline-offset: 2px;
+  box-shadow: var(--bio-glow);
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Kill the ugly default button appearance so components can style freely */
+button {
+  font-family: inherit;
+  color: inherit;
+}
