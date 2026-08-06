@@ -734,6 +734,12 @@ describe('colony persistence', () => {
     expect(parsed.version).toBe(13);
   });
 
+  it('recentActionMessage is transient', () => {
+    useColonyStore.setState({ recentActionMessage: 'x' });
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    expect(parsed.state.recentActionMessage).toBeUndefined();
+  });
+
   it('migrate v12 → v13 backfills SEEN_INITIAL', async () => {
     const v12Shape = {
       state: {

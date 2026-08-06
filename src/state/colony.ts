@@ -100,6 +100,9 @@ interface ColonyStore {
   clearRecentUnlock: () => void;
   readonly seenSurfaces: SeenMap;
   markSeen: (id: SurfaceId) => void;
+  readonly recentActionMessage: string | null;
+  emitActionMessage: (msg: string) => void;
+  clearActionMessage: () => void;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -217,6 +220,7 @@ const INITIAL_STATE = {
   recentReward: null as { readonly directiveId: DirectiveId; readonly serum: number } | null,
   recentUnlock: null as { readonly id: SurfaceId; readonly reason: string } | null,
   seenSurfaces: SEEN_INITIAL,
+  recentActionMessage: null as string | null,
 };
 
 export const useColonyStore = create<ColonyStore>()(
@@ -263,6 +267,7 @@ export const useColonyStore = create<ColonyStore>()(
           get().emitDirectiveAction({ kind: 'decant' });
           get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
           get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(newUnit.genome).tier });
+          get().emitActionMessage(`Decanted #${newUnit.id}.`);
           return newUnit;
         }
 
@@ -309,6 +314,7 @@ export const useColonyStore = create<ColonyStore>()(
         get().emitDirectiveAction({ kind: 'decant' });
         get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
         get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(unit.genome).tier });
+        get().emitActionMessage(`Decanted #${unit.id}.`);
         return unit;
       },
 
@@ -373,6 +379,7 @@ export const useColonyStore = create<ColonyStore>()(
         get().emitDirectiveAction({ kind: 'breed' });
         get().emitDirectiveAction({ kind: 'unit-count-changed', count: get().units.length });
         get().emitDirectiveAction({ kind: 'tier-reached', tier: computeRarity(child.genome).tier });
+        get().emitActionMessage(`Bred #${child.id} from #${parentAId} × #${parentBId}.`);
         return child;
       },
 
@@ -535,6 +542,7 @@ export const useColonyStore = create<ColonyStore>()(
         if (newFrontState.captured && newFrontState.garrison.length >= GARRISON_TARGET) {
           get().emitDirectiveAction({ kind: 'front-captured' });
         }
+        get().emitActionMessage(`Garrisoned #${unitId} on ${FRONTS[frontId].label}.`);
       },
 
       removeFromGarrison: (frontId, unitId) => {
@@ -649,6 +657,7 @@ export const useColonyStore = create<ColonyStore>()(
           nextId: outputId + 1,
           lastDecantedId: outputId,
         });
+        get().emitActionMessage(`Vat run complete — #${output.id} produced.`);
 
         return output;
       },
@@ -693,6 +702,7 @@ export const useColonyStore = create<ColonyStore>()(
           serum: s.serum - BARRACKS_COST_SERUM,
           buildings: { ...s.buildings, barracks: true },
         });
+        get().emitActionMessage(`Barracks built — cap raised.`);
       },
 
       buildMedbay: () => {
@@ -716,6 +726,7 @@ export const useColonyStore = create<ColonyStore>()(
           serum: s.serum - MEDBAY_COST_SERUM,
           buildings: { ...s.buildings, medbay: true },
         });
+        get().emitActionMessage(`Medbay built.`);
       },
 
       dismissIncursion: () => {
@@ -770,6 +781,9 @@ export const useColonyStore = create<ColonyStore>()(
         }
       },
       clearRecentReward: () => set({ recentReward: null }),
+
+      emitActionMessage: (msg) => set({ recentActionMessage: msg }),
+      clearActionMessage: () => set({ recentActionMessage: null }),
 
       unlockSurface: (id) => {
         const s = get();
