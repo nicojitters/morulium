@@ -16,7 +16,7 @@ export function AwaySummary(): ReactElement | null {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal panel--iron" data-testid="away-summary">
+      <div className="modal" data-testid="away-summary">
         <h2 className="text-stamp" style={{ fontSize: 18, marginBottom: 12 }}>Away Report</h2>
         <div className="text-readout" style={{ marginBottom: 16, lineHeight: 1.8 }}>
           <p style={{ margin: '0 0 4px' }}>Elapsed: {formatElapsed(summary.elapsedMs)}</p>

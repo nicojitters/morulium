@@ -17,7 +17,7 @@ export function DevPanel(props: { open: boolean; onClose: () => void }): ReactEl
   return (
     <div
       data-testid="dev-panel"
-      className="modal panel--iron"
+      className="panel panel--iron"
       style={{ position: 'fixed', top: 60, right: 16, zIndex: 200, width: 260, fontSize: 13 }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
