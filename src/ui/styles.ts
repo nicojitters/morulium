@@ -443,8 +443,8 @@ export const styles = {
     borderRadius: 10,
     border: '2px solid #22c55e',   // green
     background: '#f0fdf4',
-    cursor: 'not-allowed',
-    pointerEvents: 'none',
+    cursor: 'pointer',
+    transform: 'none',             // suppress hover scale without killing pointer events
     fontFamily: 'inherit',
     padding: 12,
   } as CSSProperties,
