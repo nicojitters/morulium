@@ -112,6 +112,24 @@ describe('App', () => {
       expect(getByTestId(`nav-tab-${id}`)).toBeDefined();
     }
   });
+
+  it('shows IntroModal on first run after boot', () => {
+    localStorage.clear();
+    useColonyStore.setState({ firstRunComplete: false });
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('new-game-gate-new-game'));
+    expect(getByTestId('intro-modal')).toBeDefined();
+  });
+
+  it('Begin dismisses the intro and marks first-run complete', () => {
+    localStorage.clear();
+    useColonyStore.setState({ firstRunComplete: false });
+    const { getByTestId, queryByTestId } = render(<App />);
+    fireEvent.click(getByTestId('new-game-gate-new-game'));
+    fireEvent.click(getByTestId('intro-modal-begin'));
+    expect(queryByTestId('intro-modal')).toBeNull();
+    expect(useColonyStore.getState().firstRunComplete).toBe(true);
+  });
 });
 
 describe('nav — Vat tab (M7a)', () => {

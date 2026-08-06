@@ -4,6 +4,7 @@ import { useColonyStore } from './state/colony';
 import { STORAGE_KEY } from './state/persist';
 import { AppShell } from './ui/components/AppShell';
 import { AwaySummary } from './ui/components/AwaySummary';
+import { IntroModal } from './ui/components/IntroModal';
 import { NewGameGate } from './ui/screens/NewGameGate';
 import { Colony } from './ui/screens/Colony';
 import { DNALab } from './ui/screens/DNALab';
@@ -18,6 +19,8 @@ export function App(): ReactElement {
   const [current, setCurrent] = useState<SurfaceId>('colony');
   const [bootPassed, setBootPassed] = useState<boolean>(false);
   const resetGame = useColonyStore((s) => s.resetGame);
+  const firstRunComplete = useColonyStore((s) => s.firstRunComplete);
+  const markFirstRunComplete = useColonyStore((s) => s.markFirstRunComplete);
 
   if (!bootPassed) {
     const hasExistingSave = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY) !== null;
@@ -49,6 +52,7 @@ export function App(): ReactElement {
       <AppShell current={current} onNavigate={setCurrent} directiveText={null}>
         {screen}
       </AppShell>
+      {!firstRunComplete && <IntroModal onDone={markFirstRunComplete} />}
       <AwaySummary />
     </>
   );
