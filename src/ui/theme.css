@@ -39,7 +39,7 @@
   /* Text / ink */
   --ink-primary:      #e6ecec;
   --ink-secondary:    #9aa8b0;
-  --ink-dim:          #6b7885;
+  --ink-dim:          #707d8a;
   --ink-lab:          #b8f0d0;
 
   /* Signal */
@@ -80,27 +80,6 @@
   --rim-teal:  0 0 0 1px rgba(20, 184, 166, 0.35), inset 0 1px 0 rgba(180, 240, 220, 0.08);
   --rim-iron:  0 0 0 1px rgba(180, 180, 190, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --rim-bio:   0 0 0 1px rgba(127, 255, 155, 0.4), var(--bio-glow);
-}
-
-/* Register role assignments — screens set data-register to flip these */
-[data-register='lab'] {
-  --register-ground:     var(--ground-void);
-  --register-panel:      var(--ground-panel);
-  --register-raised:     var(--ground-raised);
-  --register-rim:        var(--rim-teal);
-  --register-ink:        var(--ink-lab);
-  --register-accent:     var(--teal);
-  --register-hover-glow: var(--bio-glow);
-}
-
-[data-register='conquest'] {
-  --register-ground:     var(--iron-plate);
-  --register-panel:      var(--iron);
-  --register-raised:     var(--iron-light);
-  --register-rim:        var(--rim-iron);
-  --register-ink:        var(--ink-primary);
-  --register-accent:     var(--rust);
-  --register-hover-glow: 0 0 10px rgba(184, 84, 30, 0.5);
 }
 
 /* ---------- Global reset + atmosphere ---------- */

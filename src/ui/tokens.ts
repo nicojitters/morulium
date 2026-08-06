@@ -34,7 +34,7 @@ export const TOKENS = {
 
   inkPrimary:    '#e6ecec',
   inkSecondary:  '#9aa8b0',
-  inkDim:        '#6b7885',
+  inkDim:        '#707d8a',
   inkLab:        '#b8f0d0',
 
   signalWarn:    '#f0b840',

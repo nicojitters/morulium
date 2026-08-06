@@ -110,14 +110,6 @@ export const styles = {
 
   decantButton: {
     padding: '10px 20px',
-    borderRadius: TOKENS.radiusSm,
-    background: TOKENS.groundPanel,
-    fontFamily: TOKENS.fontDisplay,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
   } as CSSProperties,
 
   emptyState: {
@@ -160,43 +152,17 @@ export const styles = {
 
   emptyStateCta: {
     padding: '14px 28px',
-    borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.teal}`,
-    background: TOKENS.groundPanel,
-    color: TOKENS.inkLab,
-    fontFamily: TOKENS.fontDisplay,
     fontSize: 15,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
   } as CSSProperties,
 
   decantButtonDisabled: {
     padding: '10px 20px',
-    borderRadius: TOKENS.radiusSm,
-    background: TOKENS.groundPanel,
-    fontFamily: TOKENS.fontDisplay,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'not-allowed',
     opacity: 0.5,
   } as CSSProperties,
 
   emptyStateCtaDisabled: {
     padding: '14px 28px',
-    borderRadius: TOKENS.radiusSm,
-    border: `1px solid ${TOKENS.iron}`,
-    background: TOKENS.groundPanel,
-    color: TOKENS.inkDim,
-    fontFamily: TOKENS.fontDisplay,
     fontSize: 15,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'not-allowed',
     opacity: 0.5,
   } as CSSProperties,
 
@@ -227,26 +193,10 @@ export const styles = {
 
   breedButton: {
     padding: '10px 20px',
-    borderRadius: TOKENS.radiusSm,
-    background: TOKENS.groundPanel,
-    fontFamily: TOKENS.fontDisplay,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
   } as CSSProperties,
 
   breedButtonDisabled: {
     padding: '10px 20px',
-    borderRadius: TOKENS.radiusSm,
-    background: TOKENS.groundPanel,
-    fontFamily: TOKENS.fontDisplay,
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    cursor: 'not-allowed',
     opacity: 0.5,
   } as CSSProperties,
 
@@ -864,7 +814,7 @@ export const styles = {
     padding: '6px 8px',
     cursor: 'pointer',
     fontSize: 12,
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+    fontFamily: TOKENS.fontMono,
     borderRadius: 4,
     color: TOKENS.inkLab,
   } as CSSProperties,
