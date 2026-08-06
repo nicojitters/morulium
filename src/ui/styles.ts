@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Tier } from '../sim/types';
+import { TOKENS } from './tokens';
 
 export const TIER_COLORS: Readonly<Record<Tier, string>> = {
   baseline:   '#94a3b8', // slate
@@ -11,21 +12,28 @@ export const TIER_COLORS: Readonly<Record<Tier, string>> = {
 
 export const styles = {
   page: {
-    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontFamily: TOKENS.fontUi,
     padding: 24,
     maxWidth: 1400,
     margin: '0 auto',
+    color: TOKENS.inkPrimary,
   } as CSSProperties,
 
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 600,
+    fontFamily: TOKENS.fontDisplay,
+    fontSize: 28,
+    fontWeight: 800,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+    color: TOKENS.inkPrimary,
     marginBottom: 4,
   } as CSSProperties,
 
   headerSub: {
-    color: '#666',
-    fontSize: 14,
+    color: TOKENS.inkDim,
+    fontFamily: TOKENS.fontMono,
+    fontSize: 13,
+    letterSpacing: '0.02em',
     marginBottom: 16,
   } as CSSProperties,
 
@@ -317,33 +325,39 @@ export const styles = {
     padding: '12px 24px 0 24px',
     maxWidth: 1400,
     margin: '0 auto',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: `1px solid ${TOKENS.tealDeep}`,
+    background: TOKENS.groundDeep,
   } as CSSProperties,
 
   navTab: {
     padding: '10px 16px',
-    borderRadius: '6px 6px 0 0',
+    borderRadius: '4px 4px 0 0',
     border: 'none',
     background: 'transparent',
-    color: '#64748b',
-    fontSize: 14,
-    fontWeight: 500,
+    color: TOKENS.inkSecondary,
+    fontFamily: TOKENS.fontDisplay,
+    fontSize: 13,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
     cursor: 'pointer',
-    fontFamily: 'inherit',
     borderBottom: '2px solid transparent',
+    transition: 'color 160ms ease, border-color 160ms ease',
   } as CSSProperties,
 
   navTabActive: {
     padding: '10px 16px',
-    borderRadius: '6px 6px 0 0',
+    borderRadius: '4px 4px 0 0',
     border: 'none',
     background: 'transparent',
-    color: '#0f172a',
-    fontSize: 14,
-    fontWeight: 600,
+    color: TOKENS.inkPrimary,
+    fontFamily: TOKENS.fontDisplay,
+    fontSize: 13,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
     cursor: 'pointer',
-    fontFamily: 'inherit',
-    borderBottom: '2px solid #8b5cf6',
+    borderBottom: `2px solid ${TOKENS.teal}`,
   } as CSSProperties,
 
   breedSection: {
@@ -873,39 +887,45 @@ export const styles = {
 
   hudRow: {
     display: 'flex',
-    gap: 16,
+    gap: 12,
     alignItems: 'center',
     padding: '8px 24px',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: `1px solid ${TOKENS.tealDeep}`,
     fontSize: 13,
-    fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-    color: '#334155',
+    fontFamily: TOKENS.fontMono,
+    color: TOKENS.inkLab,
     maxWidth: 1400,
     margin: '0 auto',
+    background: TOKENS.groundDeep,
   } as CSSProperties,
 
   hudItem: {
-    padding: '2px 8px',
-    borderRadius: 4,
-    background: '#f8fafc',
-    border: '1px solid #e2e8f0',
+    padding: '3px 10px',
+    borderRadius: 3,
+    background: TOKENS.groundRaised,
+    border: `1px solid ${TOKENS.tealDeep}`,
+    color: TOKENS.inkLab,
+    letterSpacing: '0.02em',
   } as CSSProperties,
 
   hudDirectiveEmpty: {
-    color: '#94a3b8',
+    color: TOKENS.inkDim,
     fontStyle: 'italic',
   } as CSSProperties,
 
   navTabLocked: {
     padding: '10px 16px',
-    borderRadius: '6px 6px 0 0',
+    borderRadius: '4px 4px 0 0',
     border: 'none',
     background: 'transparent',
-    color: '#cbd5e1',
-    fontSize: 14,
-    fontWeight: 500,
+    color: TOKENS.inkDim,
+    fontFamily: TOKENS.fontDisplay,
+    fontSize: 13,
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
     cursor: 'not-allowed',
-    fontFamily: 'inherit',
+    opacity: 0.4,
     borderBottom: '2px solid transparent',
   } as CSSProperties,
 

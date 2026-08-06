@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useColonyStore, capOf } from '../../state/colony';
 import { TERMS } from '../terms';
 import { styles } from '../styles';
@@ -11,12 +11,12 @@ export function StatusHud(props: { directiveText: string | null }): ReactElement
 
   return (
     <div style={styles.hudRow} data-testid="status-hud">
-      <span style={styles.hudItem} data-testid="hud-serum">
+      <FlashOnChange value={serum} testid="hud-serum">
         {TERMS.serumAbbr} {serum}
-      </span>
-      <span style={styles.hudItem} data-testid="hud-colony-cap">
+      </FlashOnChange>
+      <FlashOnChange value={unitCount} testid="hud-colony-cap">
         {TERMS.colony} {unitCount}/{cap}
-      </span>
+      </FlashOnChange>
       <FreeDecantsBadge />
       <span
         style={props.directiveText ? styles.hudItem : { ...styles.hudItem, ...styles.hudDirectiveEmpty }}
@@ -28,11 +28,30 @@ export function StatusHud(props: { directiveText: string | null }): ReactElement
   );
 }
 
+function FlashOnChange(props: { value: number; testid: string; children: React.ReactNode }): ReactElement {
+  const first = useRef(true);
+  const [flashKey, setFlashKey] = useState(0);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    setFlashKey((k) => k + 1);
+  }, [props.value]);
+  return (
+    <span
+      key={flashKey}
+      className={flashKey > 0 ? 'a-flash-number' : undefined}
+      style={styles.hudItem}
+      data-testid={props.testid}
+    >
+      {props.children}
+    </span>
+  );
+}
+
 function FreeDecantsBadge(): ReactElement {
   const free = useColonyStore((s) => s.freeDecantsRemaining);
   return (
-    <span style={styles.hudItem} data-testid="hud-free-decants">
+    <FlashOnChange value={free} testid="hud-free-decants">
       {TERMS.freeDecant}: {free}
-    </span>
+    </FlashOnChange>
   );
 }
