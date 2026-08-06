@@ -207,7 +207,6 @@ export function Vat(): ReactElement {
           <section
             key={tier}
             data-testid={`vat-tier-group-${tier}`}
-            style={{ marginTop: 16 }}
           >
             <div style={styles.tierSectionHeader(TIER_COLORS[tier])}>
               <h2 style={styles.tierSectionLabel(TIER_COLORS[tier])}>
