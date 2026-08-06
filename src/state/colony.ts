@@ -48,6 +48,7 @@ import {
   computeGarrisonIncome,
   computeHardeningFor,
 } from './occupation';
+import { DEFAULT_UNLOCKS, type UnlocksMap } from './unlocks';
 import { VAT_INPUT_SIZE } from './vat';
 import { resolveVatOperation } from '../sim/vat';
 import {
@@ -78,6 +79,7 @@ interface ColonyStore {
     readonly medbay: boolean;
   };
   readonly lastRestTickAt: number;
+  readonly unlocks: UnlocksMap;
 
   decant: () => Unit;
   breed: (parentAId: number, parentBId: number) => Unit;
@@ -186,6 +188,7 @@ export const useColonyStore = create<ColonyStore>()(
       lastGarrisonTickAt: Date.now(),
       buildings: { barracks: false, medbay: false },
       lastRestTickAt: Date.now(),
+      unlocks: DEFAULT_UNLOCKS,
 
       decant: () => {
         const state = get();
@@ -668,7 +671,7 @@ export const useColonyStore = create<ColonyStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 9,
+      version: 10,
       migrate: (state, from) => {
         let s = state as ColonyStore;
         if (from < 2) {
@@ -754,6 +757,9 @@ export const useColonyStore = create<ColonyStore>()(
             lastRestTickAt: (s as Partial<ColonyStore>).lastRestTickAt ?? Date.now(),
           };
         }
+        if (from < 10) {
+          s = { ...s, unlocks: (s as Partial<ColonyStore>).unlocks ?? DEFAULT_UNLOCKS };
+        }
         return s;
       },
       partialize: (state) => ({
@@ -770,6 +776,7 @@ export const useColonyStore = create<ColonyStore>()(
         lastGarrisonTickAt: state.lastGarrisonTickAt,   // NEW
         buildings: state.buildings,
         lastRestTickAt: state.lastRestTickAt,
+        unlocks: state.unlocks,
         // activeIncursion excluded (transient — ticker not resumable)
       }),
     },
