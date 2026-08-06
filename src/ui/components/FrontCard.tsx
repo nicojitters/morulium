@@ -53,6 +53,7 @@ export function FrontCard({
 
   return (
     <div
+      className="card card--front"
       style={style}
       onClick={() => { if (clickable) onClick(); }}
       data-testid={`front-card-${frontId}`}

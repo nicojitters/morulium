@@ -62,6 +62,7 @@ export function BreedButton({ onClick, disabled = false }: Props): ReactElement 
   return (
     <button
       type="button"
+      className="btn btn--primary"
       style={style}
       onClick={() => { if (!isDisabled) onClick(); }}
       disabled={isDisabled}

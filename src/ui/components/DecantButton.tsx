@@ -63,6 +63,7 @@ export function DecantButton({ label, variant = 'header' }: Props): ReactElement
   return (
     <button
       type="button"
+      className="btn btn--primary"
       style={style}
       onClick={() => { if (!disabled) decant(); }}
       disabled={disabled}

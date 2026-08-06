@@ -70,6 +70,7 @@ export function SpecimenCard({
 
   return (
     <div
+      className="card card--specimen"
       style={cardStyle}
       data-testid="specimen-card"
       data-highlighted={highlighted || undefined}
