@@ -53,6 +53,7 @@ export const TOKENS = {
 
   bioGlow:     '0 0 12px rgba(127, 255, 155, 0.45)',
   bioGlowHot:  '0 0 20px rgba(127, 255, 155, 0.75), 0 0 4px rgba(127, 255, 155, 1)',
+  rimInner:    'inset 0 1px 0 rgba(255, 255, 255, 0.06)',
   rimTeal:     '0 0 0 1px rgba(20, 184, 166, 0.35), inset 0 1px 0 rgba(180, 240, 220, 0.08)',
   rimIron:     '0 0 0 1px rgba(180, 180, 190, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
   rimBio:      '0 0 0 1px rgba(127, 255, 155, 0.4), 0 0 12px rgba(127, 255, 155, 0.45)',
