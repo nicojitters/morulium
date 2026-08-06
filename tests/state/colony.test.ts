@@ -25,6 +25,7 @@ describe('colony store', () => {
       harvestsToday: 0,
       harvestDayKey: todayLocalKey(),
       droughtCount: 0,
+      freeDecantsRemaining: 0,
       breedsToday: 0,
       breedDayKey: todayLocalKey(),
       fronts: FRESH_FRONTS,
@@ -119,6 +120,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 0,
+      freeDecantsRemaining: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     // The current allele distribution gives Chimera+ ~5% of the time; over
@@ -148,6 +150,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 1, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: 10,
+      freeDecantsRemaining: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const unit = useColonyStore.getState().decant();
@@ -163,6 +166,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 42, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
+      freeDecantsRemaining: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const unit = useColonyStore.getState().decant();
@@ -175,6 +179,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
+      freeDecantsRemaining: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const first = useColonyStore.getState().decant();
@@ -182,6 +187,7 @@ describe('colony store', () => {
     useColonyStore.setState({
       units: [], nextId: 99, lastDecantedId: null,
       harvestsToday: 0, harvestDayKey: todayLocalKey(), droughtCount: DROUGHT_THRESHOLD,
+      freeDecantsRemaining: 0,
       breedsToday: 0, breedDayKey: todayLocalKey(),
     });
     const second = useColonyStore.getState().decant();
