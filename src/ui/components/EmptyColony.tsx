@@ -22,7 +22,7 @@ export function EmptyColony(): ReactElement {
 
   return (
     <div style={styles.emptyState} data-testid="empty-colony">
-      <div style={styles.emptyStateTitle}>Your Colony is empty</div>
+      <div className="text-stamp" style={styles.emptyStateTitle}>Your Colony is empty</div>
       <div style={styles.emptyStateBody}>
         {bodyContent}
       </div>

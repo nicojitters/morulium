@@ -62,7 +62,7 @@ export function Vivarium(): ReactElement {
   const cap = capOf({ buildings });
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="vivarium" title="Vivarium" body="Buildings shape your Colony." action="Build the Barracks first." />
       <h1 style={styles.headerTitle}>Morulium — Vivarium</h1>
       <p style={styles.headerSub}>

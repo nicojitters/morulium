@@ -9,6 +9,7 @@ import type { FrontId } from '../../sim/data/fronts';
 import type { FrontState } from '../../state/incursion';
 import { TERMS } from '../terms';
 import { styles, TIER_COLORS } from '../styles';
+import { TOKENS } from '../tokens';
 import { SpecimenCard } from '../components/SpecimenCard';
 import { DecantButton } from '../components/DecantButton';
 import { EmptyColony } from '../components/EmptyColony';
@@ -84,9 +85,20 @@ export function Colony(): ReactElement {
     return () => clearTimeout(t);
   }, [lastDecantedId, clearHighlight]);
 
+  // Group units by tier for stamped section headers
+  const unitsByTier = useMemo(() => {
+    const groups: Partial<Record<Tier, typeof sortedUnits>> = {};
+    for (const unit of sortedUnits) {
+      const { tier } = computeRarity(unit.genome);
+      if (!groups[tier]) groups[tier] = [];
+      groups[tier]!.push(unit);
+    }
+    return groups;
+  }, [sortedUnits]);
+
   if (units.length === 0) {
     return (
-      <main style={styles.page}>
+      <main style={styles.page} data-register="lab">
         <FirstVisitCallout surface="colony" title="Your Colony" body="Every specimen you Decant lives here." action="Decant a Morula." />
         <EmptyColony />
       </main>
@@ -94,7 +106,7 @@ export function Colony(): ReactElement {
   }
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} data-register="lab">
       <FirstVisitCallout surface="colony" title="Your Colony" body="Every specimen you Decant lives here." action="Decant a Morula." />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
@@ -115,19 +127,36 @@ export function Colony(): ReactElement {
           </span>
         ))}
       </div>
-      <div style={styles.grid} data-testid="colony-grid">
-        {sortedUnits.map((unit) => (
-          <SpecimenCard
-            key={unit.id}
-            row={unitToRow(unit)}
-            highlighted={unit.id === lastDecantedId}
-            lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
-            restState={restStateFor(unit, now)}
-            garrisonedAt={garrisonedAtFor(unit.id, fronts)}
-            culled={unit.culled}
-            onToggleCull={() => useColonyStore.getState().toggleCulled(unit.id)}
-          />
-        ))}
+      <div data-testid="colony-grid">
+        {TIERS.filter((tier) => (unitsByTier[tier]?.length ?? 0) > 0).map((tier) => {
+          const groupUnits = unitsByTier[tier]!;
+          return (
+            <div key={tier}>
+              <div style={styles.tierSectionHeader(TIER_COLORS[tier])}>
+                <h2 style={styles.tierSectionLabel(TIER_COLORS[tier])} data-testid={`colony-tier-header-${tier}`}>
+                  {TERMS.tiers[tier]}
+                </h2>
+                <span style={{ color: TOKENS.inkDim, fontFamily: TOKENS.fontMono, fontSize: 12 }}>
+                  {groupUnits.length} on ice
+                </span>
+              </div>
+              <div style={styles.grid}>
+                {groupUnits.map((unit) => (
+                  <SpecimenCard
+                    key={unit.id}
+                    row={unitToRow(unit)}
+                    highlighted={unit.id === lastDecantedId}
+                    lineage={{ generation: unit.generation, parentIds: unit.parentIds }}
+                    restState={restStateFor(unit, now)}
+                    garrisonedAt={garrisonedAtFor(unit.id, fronts)}
+                    culled={unit.culled}
+                    onToggleCull={() => useColonyStore.getState().toggleCulled(unit.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </main>
   );
