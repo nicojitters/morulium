@@ -148,3 +148,112 @@ button {
   font-family: inherit;
   color: inherit;
 }
+
+/* ---------- Keyframes (juice library) ---------- */
+
+@keyframes bio-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(127, 255, 155, 0.4), 0 0 8px rgba(127, 255, 155, 0.35); }
+  50%      { box-shadow: 0 0 0 1px rgba(127, 255, 155, 0.7), 0 0 18px rgba(127, 255, 155, 0.65); }
+}
+
+@keyframes vat-bubble {
+  0%   { transform: translateY(0) scale(0.9); opacity: 0; }
+  30%  { opacity: 0.35; }
+  100% { transform: translateY(-14px) scale(1.05); opacity: 0; }
+}
+
+@keyframes drip {
+  0%   { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(6px); opacity: 0; }
+}
+
+@keyframes flash-number {
+  0%   { color: var(--bio-green); text-shadow: 0 0 8px rgba(127, 255, 155, 0.7); }
+  100% { color: inherit; text-shadow: none; }
+}
+
+@keyframes stamp-in {
+  0%   { transform: scale(0.94); }
+  60%  { transform: scale(1.02); }
+  100% { transform: scale(1.00); }
+}
+
+@keyframes toast-slide {
+  0%   { transform: translateY(12px); opacity: 0; box-shadow: 0 0 0 0 rgba(127, 255, 155, 0); }
+  60%  { transform: translateY(0);    opacity: 1; box-shadow: 0 0 18px 0 rgba(127, 255, 155, 0.55); }
+  100% { transform: translateY(0);    opacity: 1; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+}
+
+@keyframes screen-fade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes membrane-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ticker-glitch {
+  0%   { text-shadow: -1px 0 rgba(255, 0, 60, 0.6), 1px 0 rgba(0, 255, 200, 0.6); }
+  100% { text-shadow: none; }
+}
+
+@keyframes decant-emerge {
+  0%   { transform: scale(0.9); opacity: 0; filter: brightness(1.6) blur(2px); }
+  100% { transform: scale(1);   opacity: 1; filter: brightness(1) blur(0); }
+}
+
+/* ---------- Animation utility classes ---------- */
+
+.a-bio-pulse       { animation: bio-pulse       2.4s ease-in-out infinite; }
+.a-flash-number    { animation: flash-number    240ms var(--ease-clinic) 1; }
+.a-stamp-in        { animation: stamp-in        220ms var(--ease-stamp) 1; }
+.a-toast-slide     { animation: toast-slide     280ms var(--ease-lab) 1; }
+.a-screen-fade     { animation: screen-fade     160ms var(--ease-clinic) 1; }
+.a-decant-emerge   { animation: decant-emerge   380ms var(--ease-lab) 1; }
+.a-membrane-shimmer{
+  background-image: linear-gradient(120deg,
+    transparent 30%,
+    rgba(184, 240, 208, 0.03) 50%,
+    transparent 70%);
+  background-size: 200% 100%;
+  animation: membrane-shimmer 8s linear infinite;
+}
+.a-ticker-glitch   { animation: ticker-glitch   40ms linear 1; }
+.a-drip            { animation: drip            4s ease-in infinite; }
+.a-vat-bubble      { animation: vat-bubble      3s ease-out infinite; }
+
+/* ---------- Text effect utilities ---------- */
+
+.text-glow-bio {
+  color: var(--bio-green);
+  text-shadow: 0 0 6px currentColor;
+}
+
+.text-stamp {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.text-readout {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+}
+
+/* ---------- Reduced motion — non-negotiable ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
