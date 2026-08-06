@@ -8,8 +8,14 @@ import { FRESH_FRONTS } from '../../src/state/incursion';
 import { SERUM_STARTING_BALANCE } from '../../src/state/serum';
 import { DEFAULT_UNLOCKS } from '../../src/state/unlocks';
 
+function bootIntoApp(getByTestId: (id: string) => HTMLElement) {
+  // NewGameGate always mounts first; click New Game to enter the shell.
+  fireEvent.click(getByTestId('new-game-gate-new-game'));
+}
+
 describe('App', () => {
   beforeEach(() => {
+    localStorage.clear();
     useColonyStore.setState({
       units: [],
       nextId: 1,
@@ -31,14 +37,30 @@ describe('App', () => {
   });
   afterEach(() => cleanup());
 
+  it('shows NewGameGate on first load with no localStorage', () => {
+    localStorage.clear();
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('new-game-gate')).toBeDefined();
+  });
+
+  it('New Game button resets state and enters the shell', () => {
+    useColonyStore.setState({ serum: 999 });
+    const { getByTestId } = render(<App />);
+    fireEvent.click(getByTestId('new-game-gate-new-game'));
+    expect(getByTestId('status-hud')).toBeDefined();
+    expect(useColonyStore.getState().serum).toBe(SERUM_STARTING_BALANCE);
+  });
+
   it('renders Colony by default', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     // Empty Colony state renders when there are no units
     expect(getByTestId('empty-colony')).toBeDefined();
   });
 
   it('clicking the Breed tab switches to the Breed screen', () => {
     const { getByTestId, queryByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-breed'));
     // Empty Breed state renders when Colony has < 2 units
     expect(getByTestId('breed-empty-state')).toBeDefined();
@@ -47,6 +69,7 @@ describe('App', () => {
 
   it('clicking the Colony tab switches back', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-breed'));
     fireEvent.click(getByTestId('nav-tab-colony'));
     expect(getByTestId('empty-colony')).toBeDefined();
@@ -54,6 +77,7 @@ describe('App', () => {
 
   it('clicking the Incursion tab switches to the Incursion screen', () => {
     const { getByTestId, queryByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-incursion'));
     // Empty Incursion state renders when Colony has < 4 units
     expect(getByTestId('incursion-empty-state')).toBeDefined();
@@ -62,6 +86,7 @@ describe('App', () => {
 
   it('nav round-trip: Colony → Breed → Incursion → Colony', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-breed'));
     expect(getByTestId('breed-empty-state')).toBeDefined();
     fireEvent.click(getByTestId('nav-tab-incursion'));
@@ -72,12 +97,14 @@ describe('App', () => {
 
   it('renders StatusHud with serum in the header', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     const item = getByTestId('hud-serum');
     expect(item.textContent).toContain('200');
   });
 
   it('renders every nav tab (9 surfaces)', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     for (const id of [
       'colony', 'dna-lab', 'breed', 'incursion',
       'conquest-map', 'vivarium', 'vat', 'sequencer', 'registry',
@@ -89,6 +116,7 @@ describe('App', () => {
 
 describe('nav — Vat tab (M7a)', () => {
   beforeEach(() => {
+    localStorage.clear();
     useColonyStore.setState({
       units: [],
       nextId: 1,
@@ -112,6 +140,7 @@ describe('nav — Vat tab (M7a)', () => {
 
   it('renders 4 nav tabs including Vat', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     expect(getByTestId('nav-tab-colony')).not.toBeNull();
     expect(getByTestId('nav-tab-breed')).not.toBeNull();
     expect(getByTestId('nav-tab-incursion')).not.toBeNull();
@@ -120,6 +149,7 @@ describe('nav — Vat tab (M7a)', () => {
 
   it('clicking Vat tab switches to the Vat screen', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-vat'));
     // Empty colony → Vat empty-state visible
     expect(getByTestId('vat-empty-state')).not.toBeNull();
@@ -146,6 +176,7 @@ describe('nav — Vivarium tab (M7b)', () => {
 
   it('renders 5 nav tabs including Vivarium', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     expect(getByTestId('nav-tab-colony')).not.toBeNull();
     expect(getByTestId('nav-tab-breed')).not.toBeNull();
     expect(getByTestId('nav-tab-incursion')).not.toBeNull();
@@ -155,6 +186,7 @@ describe('nav — Vivarium tab (M7b)', () => {
 
   it('clicking Vivarium tab switches to the Vivarium screen', () => {
     const { getByTestId } = render(<App />);
+    bootIntoApp(getByTestId);
     fireEvent.click(getByTestId('nav-tab-vivarium'));
     expect(getByTestId('barracks-panel')).not.toBeNull();
   });
