@@ -10,6 +10,7 @@ export interface FrontRequirement {
 export interface FrontProfile {
   readonly id: FrontId;
   readonly label: string;
+  readonly regionId: 'region-1';   // widen later when multi-region content ships
   readonly requirements: Readonly<Partial<Record<Stat, FrontRequirement>>>;
   readonly flavor: {
     readonly launchBlurb: string;
@@ -29,6 +30,7 @@ export const FRONTS: Readonly<Record<FrontId, FrontProfile>> = {
   infrastructure: {
     id: 'infrastructure',
     label: 'Infrastructure',
+    regionId: 'region-1',
     requirements: {
       INT: { threshold: 22, weight: 0.6 }, // [CALIBRATING]
       SPD: { threshold: 18, weight: 0.4 }, // [CALIBRATING]
@@ -42,6 +44,7 @@ export const FRONTS: Readonly<Record<FrontId, FrontProfile>> = {
   military: {
     id: 'military',
     label: 'Military',
+    regionId: 'region-1',
     requirements: {
       PWR: { threshold: 22, weight: 0.6 }, // [CALIBRATING]
       VIT: { threshold: 20, weight: 0.4 }, // [CALIBRATING]
@@ -55,6 +58,7 @@ export const FRONTS: Readonly<Record<FrontId, FrontProfile>> = {
   guerrilla: {
     id: 'guerrilla',
     label: 'Guerrilla',
+    regionId: 'region-1',
     requirements: {
       GUI: { threshold: 22, weight: 0.6 }, // [CALIBRATING]
       SPD: { threshold: 18, weight: 0.4 }, // [CALIBRATING]
