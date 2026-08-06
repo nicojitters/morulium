@@ -361,6 +361,14 @@ button {
   overflow: hidden;
 }
 
+.card--highlighted {
+  box-shadow: var(--rim-bio), var(--rim-inner);
+  transition: box-shadow 240ms ease;
+}
+.card--highlighted:hover {
+  box-shadow: var(--rim-bio), var(--rim-inner), var(--bio-glow);
+}
+
 .card--front {
   background: var(--iron-plate);
   box-shadow: var(--rim-iron), var(--rim-inner);

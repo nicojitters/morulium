@@ -74,7 +74,7 @@ export function Registry(): ReactElement {
       <h1 className="text-stamp" style={styles.headerTitle}>{TERMS.registry}</h1>
 
       <section data-testid="registry-vocab" style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 14, fontFamily: TOKENS.fontDisplay, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: TOKENS.inkSecondary, borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Vocabulary</h2>
+        <h2 style={{ ...styles.tierSectionLabel(TOKENS.inkSecondary), borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Vocabulary</h2>
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {VOCAB.map((k) => (
             <Row key={k} termKey={k} discovered={discovered[k] === true} />
@@ -83,7 +83,7 @@ export function Registry(): ReactElement {
       </section>
 
       <section data-testid="registry-tiers" style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 14, fontFamily: TOKENS.fontDisplay, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: TOKENS.inkSecondary, borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Tiers</h2>
+        <h2 style={{ ...styles.tierSectionLabel(TOKENS.inkSecondary), borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Tiers</h2>
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {TIERS.map((k) => (
             <Row key={k} termKey={k} discovered={discovered[k] === true} />
@@ -92,7 +92,7 @@ export function Registry(): ReactElement {
       </section>
 
       <section data-testid="registry-stats" style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 14, fontFamily: TOKENS.fontDisplay, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: TOKENS.inkSecondary, borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Your record</h2>
+        <h2 style={{ ...styles.tierSectionLabel(TOKENS.inkSecondary), borderBottom: `1px solid ${TOKENS.tealDeep}`, paddingBottom: 6, marginBottom: 4 }}>Your record</h2>
         <ul style={{ listStyle: 'none', padding: 0, fontFamily: TOKENS.fontMono, fontSize: 13, color: TOKENS.inkSecondary }}>
           <li style={{ padding: '6px 0', borderBottom: `1px solid ${TOKENS.tealDeep}` }}>Specimens Decanted: <span style={{ color: TOKENS.inkLab }}>{decanted}</span></li>
           <li style={{ padding: '6px 0', borderBottom: `1px solid ${TOKENS.tealDeep}` }}>Specimens bred: <span style={{ color: TOKENS.inkLab }}>{bred}</span></li>

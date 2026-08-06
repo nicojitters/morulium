@@ -67,15 +67,7 @@ export const styles = {
   } as CSSProperties,
 
   card: (bgTint: string): CSSProperties => ({
-    position: 'relative',
-    aspectRatio: '5 / 7',
-    background: bgTint,   // caller passes tint, still valid — but tints should be dark
-    border: `1px solid ${TOKENS.tealDeep}`,
-    borderRadius: 8,
-    padding: 8,
-    boxShadow: TOKENS.rimTeal,
-    overflow: 'hidden',
-    color: TOKENS.inkPrimary,
+    background: bgTint,   // the ONE parameterized property this function exists for
   }),
 
   cardSprite: {
@@ -116,10 +108,7 @@ export const styles = {
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
   }),
 
-  highlightedCard: {
-    boxShadow: TOKENS.rimBio,
-    transition: 'box-shadow 240ms ease',
-  } as CSSProperties,
+  highlightedCard: {} as CSSProperties,
 
   decantButton: {
     padding: '10px 20px',
@@ -142,10 +131,6 @@ export const styles = {
 
   emptyStateTitle: {
     fontSize: 20,
-    fontFamily: TOKENS.fontDisplay,
-    fontWeight: 800,
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
     color: TOKENS.inkLab,
     marginBottom: 8,
   } as CSSProperties,

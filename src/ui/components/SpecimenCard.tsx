@@ -58,9 +58,7 @@ export function SpecimenCard({
 
   const bgTint = isInjured ? TOKENS.tealAbyss : TOKENS.groundPanel;
 
-  let cardStyle = highlighted
-    ? { ...styles.card(bgTint), ...styles.highlightedCard }
-    : styles.card(bgTint);
+  let cardStyle = styles.card(bgTint);
   if (isInjured) {
     cardStyle = { ...cardStyle, ...styles.injuredCardOverlay };
   }
@@ -70,7 +68,7 @@ export function SpecimenCard({
 
   return (
     <div
-      className="card card--specimen"
+      className={`card card--specimen${highlighted ? ' card--highlighted' : ''}`}
       style={cardStyle}
       data-testid="specimen-card"
       data-highlighted={highlighted || undefined}
