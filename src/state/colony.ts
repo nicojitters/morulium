@@ -218,6 +218,33 @@ export const useColonyStore = create<ColonyStore>()(
           throw new Error('Colony full — Cull or Vat first');
         }
 
+        // Free-Decant path: consume before hitting the daily limiter or failsafe machinery.
+        if (s.freeDecantsRemaining > 0) {
+          const seed = s.nextId;
+          const rng = createRng(seed);
+          const genome = rollGenome(rng);
+          const newUnit: Unit = {
+            id: s.nextId,
+            seed,
+            decantedAt: now,
+            genome,
+            generation: 0,
+            parentIds: null,
+            wear: {},
+            restCurrent: REST_MAX,
+            injuredUntil: null,
+            culled: false,
+          };
+          set({
+            ...flareDelta, ...tickDelta, ...restDelta,
+            units: [...s.units, newUnit],
+            nextId: s.nextId + 1,
+            lastDecantedId: newUnit.id,
+            freeDecantsRemaining: s.freeDecantsRemaining - 1,
+          });
+          return newUnit;
+        }
+
         const today = todayLocalKey();
         const dayRolledOver = s.harvestDayKey !== today;
 
