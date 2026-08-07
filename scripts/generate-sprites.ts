@@ -3,7 +3,7 @@ import { readdir, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import sharp from 'sharp';
-import { computeBbox, type RGB } from './lib/sprite-image';
+import { computeBbox, remapPixel, type RGB } from './lib/sprite-image';
 import { PALETTES } from '../src/sim/data/palettes';
 
 const REPO = resolve(process.cwd());
@@ -68,6 +68,29 @@ async function main() {
 
   // Sanity: unknown palettes / empty palette set would silently produce zero variants.
   if (Object.keys(PALETTES).length === 0) throw new Error('PALETTES is empty');
+
+  const paletteIds = Object.keys(PALETTES).sort();
+
+  for (const allele of Object.keys(manifest)) {
+    const src = join(SRC_DIR, `${allele}.png`);
+    const raw = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const { width, height } = raw.info;
+
+    for (const paletteId of paletteIds) {
+      const palette = PALETTES[paletteId]!;
+      const target: readonly RGB[] = palette.ramp.map(hexToRgb);
+      const out = Buffer.from(raw.data); // copy source RGBA
+      for (let i = 0; i < out.length; i += 4) {
+        const a = out[i + 3]!;
+        if (a < ALPHA_THRESHOLD) continue; // preserve near-transparent pixels
+        const [nr, ng, nb] = remapPixel(out[i]!, out[i + 1]!, out[i + 2]!, REF, target);
+        out[i] = nr; out[i + 1] = ng; out[i + 2] = nb;
+      }
+      const dst = join(OUT_DIR, `${allele}_${paletteId}.png`);
+      await sharp(out, { raw: { width, height, channels: 4 } }).png().toFile(dst);
+    }
+    console.log(`  ${allele}: wrote ${paletteIds.length} palette variants`);
+  }
 
   const source = renderManifestModule(manifest, INTENTIONALLY_EMPTY);
   await writeFile(MANIFEST_PATH, source, 'utf8');
