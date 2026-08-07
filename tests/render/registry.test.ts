@@ -1,27 +1,42 @@
 import { describe, it, expect } from 'vitest';
-import { PATHS } from '../../src/render/paths/registry';
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { SPRITE_MANIFEST, INTENTIONALLY_EMPTY } from '../../src/render/sprite-manifest.generated';
+import { ALLELES } from '../../src/sim/data/alleles';
 import { LOCI } from '../../src/sim/data/loci';
+import { PALETTES } from '../../src/sim/data/palettes';
 
-describe('sprite paths registry — completeness', () => {
-  it('every non-palette qualitative allele has a registered PathFn', () => {
-    for (const locus of Object.values(LOCI)) {
-      if (locus.type !== 'qualitative') continue;
-      if (locus.id === 'palette') continue; // palette drives color, not shape
-      for (const alleleId of locus.alleles) {
-        expect(PATHS[alleleId], `missing PathFn for allele "${alleleId}" (locus ${locus.id})`).toBeDefined();
-      }
+const COMPUTED_DIR = resolve(process.cwd(), 'public/assets/pixellab/traits-computed');
+
+// Loci whose alleles drive the sprite (all qualitative loci except 'palette' —
+// the palette locus picks WHICH variant to load, not a layer of its own).
+const SPRITE_LOCI = ['head', 'eyes', 'carapace', 'hide_pattern', 'locomotion', 'appendage', 'aberration'];
+
+describe('sprite manifest — completeness', () => {
+  it('every sprite-driving allele is either in SPRITE_MANIFEST or INTENTIONALLY_EMPTY', () => {
+    const missing: string[] = [];
+    for (const allele of Object.values(ALLELES)) {
+      const locus = LOCI[allele.locus];
+      if (!locus) throw new Error(`unknown locus: ${allele.locus}`);
+      if (!SPRITE_LOCI.includes(allele.locus)) continue;
+      if (INTENTIONALLY_EMPTY.has(allele.id)) continue;
+      if (!SPRITE_MANIFEST[allele.id]) missing.push(`${allele.locus}:${allele.id}`);
     }
+    expect(missing).toEqual([]);
   });
 
-  it('registry has no orphan entries (every registered id belongs to a qualitative locus)', () => {
-    const qualitativeIds = new Set<string>();
-    for (const locus of Object.values(LOCI)) {
-      if (locus.type !== 'qualitative') continue;
-      if (locus.id === 'palette') continue;
-      for (const alleleId of locus.alleles) qualitativeIds.add(alleleId);
+  it('every manifest entry has a palette variant PNG on disk for every palette', () => {
+    const missing: string[] = [];
+    for (const alleleId of Object.keys(SPRITE_MANIFEST)) {
+      for (const paletteId of Object.keys(PALETTES)) {
+        const path = join(COMPUTED_DIR, `${alleleId}_${paletteId}.png`);
+        if (!existsSync(path)) missing.push(`${alleleId}_${paletteId}.png`);
+      }
     }
-    for (const registeredId of Object.keys(PATHS)) {
-      expect(qualitativeIds.has(registeredId), `orphan PathFn: "${registeredId}"`).toBe(true);
-    }
+    expect(missing).toEqual([]);
+  });
+
+  it('INTENTIONALLY_EMPTY contains only the documented three "no visible feature" alleles', () => {
+    expect([...INTENTIONALLY_EMPTY].sort()).toEqual(['ab_none', 'app_none', 'hide_plain']);
   });
 });
