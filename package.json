@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "demo": "vite-node src/sim/__demo__.ts",
-    "verify:rarity": "vite-node scripts/verify-rarity.ts"
+    "verify:rarity": "vite-node scripts/verify-rarity.ts",
+    "generate:sprites": "vite-node scripts/generate-sprites.ts"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -21,10 +22,12 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.1.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^29.1.1",
+    "sharp": "^0.35.3",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.6"
